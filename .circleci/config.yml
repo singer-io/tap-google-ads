@@ -11,6 +11,7 @@ jobs:
             python3 -mvenv /usr/local/share/virtualenvs/tap-google-ads
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
             pip install -U pip setuptools
+            pip install -e .[dev]
       - run:
           name: 'pylint'
           command: |

@@ -10,12 +10,10 @@ setup(name='tap-google-ads',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
       py_modules=['tap_google_ads'],
       install_requires=[
-          'attrs',
           'singer-python==5.12.2',
-          'requests',
-          'backoff',
-          'requests_mock',
-          'google-ads',
+          'requests==2.26.0',
+          'backoff==1.11.1',
+          'google-ads==14.1.0',
       ],
       extras_require= {
           'dev': [

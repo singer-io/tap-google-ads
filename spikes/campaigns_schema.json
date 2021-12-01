@@ -359,6 +359,102 @@
           }
         }
       }
-    } 
+    },
+    "localCampaignSetting": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "locationSourceType": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      }
+    },
+    "appCampaignSetting": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "biddingStrategyGoalType": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "appStore": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "appId": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      }
+    },
+    "labels": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "string"
+        ]
+      }
+    },
+    "accessibleBiddingStrategy": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "frequencyCaps": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "string"
+        ]
+      }
+    },
+    "videoBrandSafetySuitability": {
+      "type": [
+        "null",
+        "sting"
+      ]
+    },
+    "vanityPharma": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "vanityPharmaDisplayUrlMode": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "vanityPharmaText": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      }
+    }
   }
 }

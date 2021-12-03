@@ -156,4 +156,4 @@ with open("auto_ad_group.json", "w") as f:
     json.dump(root_get_schema({}, ad_group.AdGroup()._pb), f)
 with open("auto_account.json", "w") as f:
     json.dump(root_get_schema({}, customer.Customer()._pb), f)
-print("Wrote schemas to local directory under auto_*.json, please review and manually set datetime formats.")
+print("Wrote schemas to local directory under auto_*.json, please review and manually set datetime formats on datetime fields and change Enum field types to 'string' schema.")

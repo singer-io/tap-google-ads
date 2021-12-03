@@ -37,31 +37,6 @@ type_lookup = {"google.ads.googleads.v9.common.FinalAppUrl": "google.ads.googlea
                "google.ads.googleads.v9.common.TargetRestrictionOperation": "google.ads.googleads.v9.common.types.targeting_setting.TargetRestrictionOperation",
                }
 
-def import_class(base_module_name):
-    dir_path = os.path.dirname(os.path.realpath(base_path))
-    sub_modules = [n for _f,n,_p in pkgutil.walk_packages(path=[dir_path])
-               if n not in ['base', 'spec']]
-    for name in sub_modules:
-        dynamic_module = base_module_name + '.' + name
-        try:
-            mod = importlib.import_module(dynamic_module)
-        except ImportError as ex:
-            print("WARNING Unable to import module: {}, Error is: {}".
-                  format(dynamic_module, ex))
-            continue
-        BaseTapTest = getattr(mod, 'BaseTapTest', None)
-        unittest_exists = getattr(mod, 'unittest', None)
-        TestCase_exists = getattr(mod, 'TestCase', None)
-        if BaseTapTest is None and unittest_exists is None and TestCase_exists is None:
-            # Indicates we're not in a module with a test that inherits from the base test or TestCase
-            continue
-        tests_in_module = [a for a in dir(mod) if (inspect.isclass(getattr(mod, a)) and
-                                                   (safe_issubclass(getattr(mod, a), BaseTapTest) or
-                                                    safe_issubclass(getattr(mod, a), TestCase)) and
-                                                   a != 'BaseTapTest')]
-        for test in tests_in_module:
-            setattr(sys.modules[base_module_name], test, getattr(mod, test))
-
 # From: https://stackoverflow.com/questions/19053707/converting-snake-case-to-lower-camel-case-lowercamelcase
 def to_camel_case(snake_str):
     components = snake_str.split('_')
@@ -88,20 +63,16 @@ def handle_scalar_container(acc, prop_val, prop_camel):
         prop_val.append(True)
         prop_val.append(0.0)
     except TypeError as e:
-        re_result = re.search(r"expected (.+) got ", str(e))
+        re_result = re.search(r"but expected one of: (.+)$", str(e))
         if re_result:
-            actual_type = re_result.groups()[0]
-            mod = importlib.import_module('.'.join(actual_type.split('.')[:-1]))
-            obj = getattr(mod, actual_type.split('.')[-1])()
-            acc[prop_camel] = {"type": ["null", "array"],
-                               "items": get_schema({},obj._pb)}
-        else:
-            actual_types = re.search(r"but expected one of: (.+)$", str(e)).groups()[0].split(',')
+            actual_types = re_result.groups()[0].split(',')
             actual_types = [t.strip() for t in actual_types]
             acc[prop_camel] = {"type": ["null", "array"],
                                "items": {"anyOf": [type_to_json_schema(t) for t in actual_types]}}
+        else:
+            raise
 
-
+ref_schema_lookup = {}
 def handle_composite_container(acc, prop_val, prop_camel):
     try:
         prop_val.append(1)
@@ -124,9 +95,11 @@ def handle_composite_container(acc, prop_val, prop_camel):
                 obj = getattr(mod, actual_type.split('.')[-1]).CountryConstraint()
             else:
                 obj = getattr(mod, actual_type.split('.')[-1])()
+            type_name = shown_type.split('.')[-1]
             acc[prop_camel] = {"type": ["null", "array"],
-                               "items": get_schema({},obj._pb)}
-
+                               "items":{"$ref": f"#/definitions/{type_name}"}}
+            if type_name not in ref_schema_lookup:
+                ref_schema_lookup[type_name] = get_schema({},obj._pb)
 
 def get_schema(acc, current):
     for prop in filter(lambda p: re.search(r"^[a-z]", p), dir(current)):
@@ -136,8 +109,11 @@ def get_schema(acc, current):
             if isinstance(prop_val.__class__, GeneratedProtocolMessageType):
                 # TODO: Should we just build the objects based on the type name and insert them as a definition and $ref to save space?
                 new_acc_obj = {}
-                acc[prop_camel] = {"type": ["null", "object"],
-                                   "properties": get_schema(new_acc_obj, prop_val)}
+                type_name = type(prop_val).__qualname__
+                acc[prop_camel] = {"$ref": f"#/definitions/{type_name}"}
+                if type_name not in ref_schema_lookup:
+                    ref_schema_lookup[type_name] = {"type": ["null", "object"],
+                                                     "properties": get_schema(new_acc_obj, prop_val)}
             elif isinstance(prop_val, bool):
                 acc[prop_camel] = {"type": ["null", "boolean"]}
             elif isinstance(prop_val, str):
@@ -165,12 +141,19 @@ def get_schema(acc, current):
          #   1+1
     return acc
 
+def root_get_schema(obj, pb):
+    schema = get_schema(obj, pb)
+    global ref_schema_lookup
+    schema["definitions"] = ref_schema_lookup
+    ref_schema_lookup = {}
+    return schema
+    
 with open("auto_campaign.json", "w") as f:
-    json.dump(get_schema({}, campaign.Campaign()._pb), f)
+    json.dump(root_get_schema({}, campaign.Campaign()._pb), f)
 with open("auto_ad.json", "w") as f:
-    json.dump(get_schema({}, ad.Ad()._pb), f)
+    json.dump(root_get_schema({}, ad.Ad()._pb), f)
 with open("auto_ad_group.json", "w") as f:
-    json.dump(get_schema({}, ad_group.AdGroup()._pb), f)
+    json.dump(root_get_schema({}, ad_group.AdGroup()._pb), f)
 with open("auto_account.json", "w") as f:
-    json.dump(get_schema({}, customer.Customer()._pb), f)
+    json.dump(root_get_schema({}, customer.Customer()._pb), f)
 print("Wrote schemas to local directory under auto_*.json, please review and manually set datetime formats.")

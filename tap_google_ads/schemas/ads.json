@@ -977,12 +977,6 @@
               "integer"
             ]
           },
-          "data": {
-            "type": [
-              "null",
-              "UNSUPPORTED_string"
-            ]
-          },
           "imageUrl": {
             "type": [
               "null",

@@ -12,6 +12,11 @@ from singer import (transform,
                     UNIX_MILLISECONDS_INTEGER_DATETIME_PARSING,
                     Transformer)
 
+from google.ads.googleads.client import GoogleAdsClient
+from google.ads.googleads.errors import GoogleAdsException
+from google.protobuf.json_format import MessageToJson
+
+
 LOGGER = singer.get_logger()
 CORE_ENDPOINT_MAPPINGS =    {"campaigns": {'primary_keys': ["id"],
                                            'service_name': 'CampaignService'},
@@ -42,10 +47,10 @@ def get_abs_path(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
 def load_schema(entity):
-    return utils.load_json(get_abs_path("schemas/{}.json".format(entity)))
+    return utils.load_json(get_abs_path(f"schemas/{entity}.json"))
 
 def load_metadata(entity):
-   return utils.load_json(get_abs_path("metadata/{}.json".format(entity)))
+    return utils.load_json(get_abs_path(f"metadata/{entity}.json"))
 
 def do_discover_core_endpoints():
     streams = []
@@ -61,8 +66,8 @@ def do_discover_core_endpoints():
     LOGGER.info("Core discovery complete")
     return streams
 
-def do_discover(customer_ids):
-    # sdk_client = create_sdk_client(customer_ids[0])
+def do_discover():
+    #sdk_client = create_sdk_client()
     core_streams = do_discover_core_endpoints()
     # report_streams = do_discover_reports(sdk_client)
     streams = []
@@ -70,19 +75,12 @@ def do_discover(customer_ids):
     # streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
-def create_sdk_client(customer_id):
-    oauth2_client = oauth2.GoogleRefreshTokenClient(
-        CONFIG['oauth_client_id'], \
-        CONFIG['oauth_client_secret'], \
-        CONFIG['refresh_token'])
-
-    sdk_client = adwords.AdWordsClient(CONFIG['developer_token'], \
-                                 oauth2_client, user_agent=CONFIG['user_agent'], \
-                                 client_customer_id=customer_id)
+def create_sdk_client():
+    sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
     return sdk_client
 
 def main():
-    do_discover(1234567890)
+    do_discover()
 
 if __name__ == "__main__":
     main()

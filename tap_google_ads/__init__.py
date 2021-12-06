@@ -76,6 +76,7 @@ def do_discover():
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 def create_sdk_client():
+    CONFIG = {}
     sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
     return sdk_client
 

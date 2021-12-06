@@ -17,7 +17,7 @@ CORE_ENDPOINT_MAPPINGS =    {"campaigns": {'primary_keys': ["id"],
                                            'service_name': 'CampaignService'},
                              "ad_groups": {'primary_keys': ["id"],
                                            'service_name': 'AdGroupService'},
-                             "ads":       {'primary_keys': ["adGroupId"],
+                             "ads":       {'primary_keys': ["id"],
                                            'service_name': 'AdGroupAdService'},
                              "accounts":  {'primary_keys': ["customerId"],
                                            'service_name': 'ManagedCustomerService'}}

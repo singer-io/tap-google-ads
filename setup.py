@@ -14,6 +14,7 @@ setup(name='tap-google-ads',
           'requests==2.26.0',
           'backoff==1.8.0',
           'google-ads==14.1.0',
+          'protobuf==3.17.3',
       ],
       extras_require= {
           'dev': [

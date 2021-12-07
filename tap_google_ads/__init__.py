@@ -24,7 +24,7 @@ CORE_ENDPOINT_MAPPINGS =    {"campaigns": {'primary_keys': ["id"],
                                            'service_name': 'AdGroupService'},
                              "ads":       {'primary_keys': ["id"],
                                            'service_name': 'AdGroupAdService'},
-                             "accounts":  {'primary_keys': ["customerId"],
+                             "accounts":  {'primary_keys': ["id"],
                                            'service_name': 'ManagedCustomerService'}}
 
 def create_field_metadata(stream, schema):

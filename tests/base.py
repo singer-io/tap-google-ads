@@ -43,12 +43,10 @@ class GoogleAdsBase(unittest.TestCase):
     def get_properties(self):
         #our test data is on the 9/15
         return {'start_date':   '2018-04-12T00:00:00Z',
-                'end_date':     '2018-04-15T00:00:00Z',
-                'conversion_window_days' : '-1',
+               # 'end_date':     '2018-04-15T00:00:00Z',
                 'user_id':      'not used?',
                 'customer_ids': os.getenv('TAP_ADWORDS_CUSTOMER_IDS')}
 
-    @staticmethod
     def get_credentials(self):
         return {'developer_token': os.getenv('TAP_ADWORDS_DEVELOPER_TOKEN'),
                 'oauth_client_id': os.getenv('TAP_ADWORDS_OAUTH_CLIENT_ID'),
@@ -61,133 +59,133 @@ class GoogleAdsBase(unittest.TestCase):
         return {
             # Core Objects
             "Accounts": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.FULL,
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
             },
             "Campaigns": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.FULL,
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
             },
             "AdGroups": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.FULL,
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
             },
             "Ads": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.FULL,
-            },
-            # Standard Reports
-            "ACCOUNT_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "ADGROUP_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "AD_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "AGE_RANGE_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "AUDIENCE_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "CALL_METRICS_CALL_DETAILS_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "CAMPAIGN_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "CLICK_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "CRITERIA_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "DISPLAY_KEYWORD_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "DISPLAY_TOPICS_PERFORMANCE_REPORTFINAL_URL_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "GENDER_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "GEO_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "KEYWORDLESS_QUERY_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "KEYWORDS_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "PLACEHOLDER_FEED_ITEM_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "PLACEHOLDER_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "PLACEMENT_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "SEARCH_QUERY_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "SHOPPING_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "VIDEO_PERFORMANCE_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            # Custom Reports TODO
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+            }
+            # # Standard Reports
+            # "ACCOUNT_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "ADGROUP_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "AD_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "AGE_RANGE_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "AUDIENCE_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "CALL_METRICS_CALL_DETAILS_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "CAMPAIGN_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "CLICK_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "CRITERIA_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "DISPLAY_KEYWORD_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "DISPLAY_TOPICS_PERFORMANCE_REPORTFINAL_URL_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "GENDER_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "GEO_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "KEYWORDLESS_QUERY_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "KEYWORDS_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "PLACEHOLDER_FEED_ITEM_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "PLACEHOLDER_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "PLACEMENT_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "SEARCH_QUERY_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "SHOPPING_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "VIDEO_PERFORMANCE_REPORT": {
+            #     self.PRIMARY_KEYS: {"TODO"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # # Custom Reports TODO
         }
     
 
 
-    def expected_sync_streams(self):
+    def expected_streams(self):
         """A set of expected stream names"""
         return set(self.expected_metadata().keys())
 
@@ -265,8 +263,7 @@ class GoogleAdsBase(unittest.TestCase):
         found_catalogs = menagerie.get_catalogs(conn_id)
         self.assertGreater(len(found_catalogs), 0, msg="unable to locate schemas for connection {}".format(conn_id))
 
-        found_catalog_names = set(map(lambda c: c['stream_name'], found_catalogs))
-
+        found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
         self.assertSetEqual(self.expected_sync_streams(), found_catalog_names, msg="discovered schemas do not match")
         print("discovered schemas are OK")
 

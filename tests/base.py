@@ -58,19 +58,19 @@ class GoogleAdsBase(unittest.TestCase):
 
         return {
             # Core Objects
-            "Accounts": {
+            "accounts": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
             },
-            "Campaigns": {
+            "campaigns": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
             },
-            "AdGroups": {
+            "ad_groups": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
             },
-            "Ads": {
+            "ads": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
             }
@@ -182,7 +182,7 @@ class GoogleAdsBase(unittest.TestCase):
             # },
             # # Custom Reports TODO
         }
-    
+
 
 
     def expected_streams(self):
@@ -264,7 +264,7 @@ class GoogleAdsBase(unittest.TestCase):
         self.assertGreater(len(found_catalogs), 0, msg="unable to locate schemas for connection {}".format(conn_id))
 
         found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
-        self.assertSetEqual(self.expected_sync_streams(), found_catalog_names, msg="discovered schemas do not match")
+        self.assertSetEqual(self.expected_streams(), found_catalog_names, msg="discovered schemas do not match")
         print("discovered schemas are OK")
 
         return found_catalogs

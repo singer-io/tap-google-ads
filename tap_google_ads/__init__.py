@@ -18,6 +18,16 @@ from google.protobuf.json_format import MessageToJson
 
 
 LOGGER = singer.get_logger()
+
+REQUIRED_CONFIG_KEYS = [
+    "start_date",
+    "oauth_client_id",
+    "oauth_client_secret",
+    "refresh_token",
+    "customer_ids",
+    "developer_token",
+]
+
 CORE_ENDPOINT_MAPPINGS =    {"campaigns": {'primary_keys': ["id"],
                                            'service_name': 'CampaignService'},
                              "ad_groups": {'primary_keys': ["id"],
@@ -63,7 +73,6 @@ def do_discover_core_endpoints():
                         'tap_stream_id': stream_name,
                         'schema': schema,
                         'metadata': md})
-    LOGGER.info("Core discovery complete")
     return streams
 
 def do_discover():
@@ -81,7 +90,11 @@ def create_sdk_client():
     return sdk_client
 
 def main():
-    do_discover()
+    args = utils.parse_args(REQUIRED_CONFIG_KEYS)
+
+    if args.discover:
+        do_discover()
+        LOGGER.info("Discovery complete")
 
 if __name__ == "__main__":
     main()

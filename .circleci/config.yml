@@ -1,4 +1,7 @@
-version: 2
+version: 2.1
+orbs:
+  slack: circleci/slack@3.4.2
+
 jobs:
   build:
     docker:
@@ -8,6 +11,7 @@ jobs:
       - run:
           name: 'Setup virtual env'
           command: |
+            aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             python3 -mvenv /usr/local/share/virtualenvs/tap-google-ads
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
             pip install -U pip setuptools
@@ -18,20 +22,39 @@ jobs:
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
             # TODO: Adjust the pylint disables
             pylint tap_google_ads --disable 'broad-except,chained-comparison,empty-docstring,fixme,invalid-name,line-too-long,missing-class-docstring,missing-function-docstring,missing-module-docstring,no-else-raise,no-else-return,too-few-public-methods,too-many-arguments,too-many-branches,too-many-lines,too-many-locals,ungrouped-imports,wrong-spelling-in-comment,wrong-spelling-in-docstring,bad-whitespace,missing-class-docstring'
+      # TODO implement this run block when tests are avialable!
+      # - run:
+      #     name: 'Unit Tests'
+      #     command: |
+      #       source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
+      #       nosetests tests/unittests
+      - run:
+          name: 'Integration Tests'
+          command: |
+            source dev_env.sh
+            source /usr/local/share/virtualenvs/tap-tester/bin/activate
+            run-test --tap=tap-google-ads tests
+      - slack/notify-on-failure:
+          only_for_branches: main
+
 workflows:
   version: 2
   commit:
     jobs:
       - build:
-          context: circleci-user
+          context:
+            - circleci-user
+            - tap-tester-user
   build_daily:
     triggers:
       - schedule:
-          cron: "0 13 * * *"
+          cron: "0 3 * * *"
           filters:
             branches:
               only:
-                - master
+                - main
     jobs:
       - build:
-          context: circleci-user
+          context:
+            - circleci-user
+            - tap-tester-user

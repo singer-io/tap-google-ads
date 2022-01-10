@@ -45,7 +45,8 @@ class GoogleAdsBase(unittest.TestCase):
         return {'start_date':   '2018-04-12T00:00:00Z',
                # 'end_date':     '2018-04-15T00:00:00Z',
                 'user_id':      'not used?',
-                'customer_ids': os.getenv('TAP_ADWORDS_CUSTOMER_IDS')}
+                'customer_ids': os.getenv('TAP_ADWORDS_CUSTOMER_IDS'),
+                'login_customer_ids': '',}
 
     def get_credentials(self):
         return {'developer_token': os.getenv('TAP_ADWORDS_DEVELOPER_TOKEN'),

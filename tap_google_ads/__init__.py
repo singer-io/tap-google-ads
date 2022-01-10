@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import sys
 
 import singer
@@ -29,56 +30,224 @@ REQUIRED_CONFIG_KEYS = [
     "developer_token",
 ]
 
-CORE_ENDPOINT_MAPPINGS =    {"campaigns": {'primary_keys': ["id"],
-                                           'service_name': 'CampaignService'},
-                             "ad_groups": {'primary_keys': ["id"],
-                                           'service_name': 'AdGroupService'},
-                             "ads":       {'primary_keys': ["id"],
-                                           'service_name': 'AdGroupAdService'},
-                             "accounts":  {'primary_keys': ["id"],
-                                           'service_name': 'ManagedCustomerService'}}
+CORE_ENDPOINT_MAPPINGS = {
+    "campaign": {'primary_keys': ["id"],
+                 'stream_name': 'campaigns'},
+    "ad_group": {'primary_keys': ["id"],
+                 'stream_name': 'ad_groups'},
+    "ad_group_ad": {'primary_keys': ["id"],
+                    'stream_name': 'ads'},
+    "customer": {'primary_keys': ["id"],
+                 'stream_name': 'accounts'}
+}
 
-#### Start Field Exclusion Stuff
+REPORTS = ["age_range_view", "campaign_audience_view", "call_view", "click_view", "display_keyword_view", "topic_view", "gender_view", "geographic_view", "user_location_view", "dynamic_search_ads_search_term_view", "keyword_view", "landing_page_view", "expanded_landing_page_view", "feed_item", "feed_item_target", "feed_placeholder_view", "managed_placement_view", "search_term_view", "shopping_performance_view", "video"]
 
-def do_field_exclusion(config):
-    accounts = json.loads(config['login_customer_ids'])
+CATEGORY_MAP = {
+    0: "UNSPECIFIED",
+    1: "UNKNOWN",
+    2: "RESOURCE",
+    3: "ATTRIBUTE",
+    5: "SEGMENT",
+    6: "METRIC"
+}
 
-    
+def get_attributes(api_objects, resource):
+    resource_attributes = []
+
+    if CATEGORY_MAP[resource.category] != "RESOURCE":
+        # Attributes, segments, and metrics do not have attributes
+        return resource_attributes
+
+    attributed_resources = set(resource.attribute_resources)
+    for field in api_objects:
+        root_object_name = field.name.split('.')[0]
+        does_field_exist_on_resource = root_object_name == resource.name or root_object_name in attributed_resources
+        is_field_an_attribute = CATEGORY_MAP[field.category] == 'ATTRIBUTE'
+        if is_field_an_attribute and does_field_exist_on_resource:
+            resource_attributes.append(field.name)
+    return resource_attributes
+
+
+def create_resource_schema(config):
     client = GoogleAdsClient.load_from_dict(
         get_client_config(config)
     )
-
     gaf_service = client.get_service("GoogleAdsFieldService")
 
-    exclusions = defaultdict(lambda: defaultdict(list))
-    
-    # for report_type in ['customer', 'ad_group_ad']:
-    for report_type in ["customer", "ad_group_ad", "ad_group", "age_range_view", "campaign_audience_view", "group_placement_view", "bidding_strategy", "campaign_budget", "call_view", "ad_schedule_view", "campaign_criterion", "campaign", "campaign_shared_set", "location_view", "click_view", "display_keyword_view", "topic_view", "gender_view", "geographic_view", "dynamic_search_ads_search_term_view", "keyword_view", "label", "landing_page_view", "paid_organic_search_term_view", "parental_status_view", "feed_item", "feed_placeholder_view", "managed_placement_view", "product_group_view", "search_term_view", "shared_criterion", "shared_set", "shopping_performance_view", "detail_placement_view", "distance_view", "video"]:
+    query = "SELECT name, category, data_type, selectable, filterable, sortable, selectable_with, metrics, segments, is_repeated, type_url, enum_values, attribute_resources"
 
-        report_response = gaf_service.get_google_ads_field({'resource_name': f'googleAdsFields/{report_type}'})
+    api_objects = gaf_service.search_google_ads_fields(query=query)
 
-        metrics = [x for x in report_response.metrics]
-        segments = [x for x in report_response.segments]
-        fields = metrics + segments
-        print(f'About to run for {len(fields)} fields')
-        for field in fields:
-            field_response = gaf_service.get_google_ads_field({'resource_name': f'googleAdsFields/{field}'})
-            exclusions[report_type][field].extend([x for x in field_response.selectable_with])
+    category_map = {0: "UNSPECIFIED", 1: "UNKNOWN", 2: "RESOURCE", 3: "ATTRIBUTE", 5: "SEGMENT", 6: "METRIC"}
+    # These are the data types returned from google. They are mapped to json schema. UNSPECIFIED and UNKNOWN have never been returned.
+    # 0: "UNSPECIFIED", 1: "UNKNOWN", 2: "BOOLEAN", 3: "DATE", 4: "DOUBLE", 5: "ENUM", 6: "FLOAT", 7: "INT32", 8: "INT64", 9: "MESSAGE", 10: "RESOURCE_NAME", 11: "STRING", 12: "UINT64"
+    data_type_map = {
+        0: {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        1: {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        2: {
+            "type": [
+                "null",
+                "boolean"
+            ]
+        },
+        3: {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        4: {
+            "type": [
+                "null",
+                "string"
+            ],
+            "format": "singer.decimal"
+        },
+        5: {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        6:  {
+            "type": [
+                "null",
+                "string"
+            ],
+            "format": "singer.decimal"
+        },
+        7:  {
+            "type": [
+                "null",
+                "integer"
+            ]
+        },
+        8: {
+            "type": [
+                "null",
+                "integer"
+            ]
+        },
+        9: {
+            "type": [
+                "null",
+                "object"
+            ],
+            "properties": {}
+        },
+        10: {
+            "type": [
+                "null",
+                "object"
+            ],
+            "properties": {}
+        },
+        11: {
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        12: {
+            "type": [
+                "null",
+                "integer"
+            ]
+        }
+    }
 
-    import ipdb; ipdb.set_trace()
-    1+1
+    resource_schema = {}
 
-    
+    for resource in api_objects:
 
-        
+        attributes = get_attributes(api_objects, resource)
 
+        resource_metadata = {
+            "name": resource.name,
+            "category": CATEGORY_MAP[resource.category],
+            "json_schema": data_type_map[resource.data_type],
+            "selectable": resource.selectable,
+            "filterable": resource.filterable,
+            "sortable": resource.sortable,
+            "selectable_with": set(resource.selectable_with),
+            "metrics": list(resource.metrics),
+            "segments": list(resource.segments),
+            "attributes": attributes
+        }
+        resource_schema[resource.name] = resource_metadata
 
-### End Field Exclusion Stuff
+    for report in REPORTS:
+        report_object = resource_schema[report]
+        fields = {}
+        attributes = report_object["attributes"]
+        metrics = report_object["metrics"]
+        segments = report_object["segments"]
+        for field in attributes+metrics+segments:
+            field_schema = resource_schema[field]
+            fields[field_schema['name']] = {
+                "field_details": field_schema,
+                "incompatible_fields": []
+            }
 
+        metrics_and_segments = set(metrics + segments)
+        for field_name, field  in fields.items():
+            for compared_field in metrics_and_segments:
+                if field_name != compared_field and field_name not in resource_schema[compared_field]["selectable_with"]:
+                    field["incompatible_fields"].append(compared_field)
+        report_object["fields"] = fields
+    return resource_schema
 
-def create_field_metadata(stream, schema):
-    primary_key = CORE_ENDPOINT_MAPPINGS[stream]['primary_keys']
+def canonicalize_name(name):
+    """Remove all dot and underscores and camel case the name."""
+    tokens = re.split("\.|_", name)
 
+    first_word = [tokens[0]]
+    other_words = [word.capitalize() for word in tokens[1:]]
+
+    return "".join(first_word + other_words)
+
+def do_discover_reports(resource_schema):
+    catalog = []
+    for report in REPORTS:
+        report_object = resource_schema[report]
+        fields = report_object["fields"]
+        report_schema = {}
+        report_metadata = {}
+
+        for field, props  in fields.items():
+            the_schema = props['field_details']['json_schema']
+            report_schema[field] = the_schema
+            report_metadata[("properties", field)] = {
+                "inclusion": "available",
+                "fieldExclusions": props['incompatible_fields'],
+                "behavior": props["field_details"]["category"]
+            }
+
+        catalog_entry = {
+            'tap_stream_id': report,
+            'stream': report,
+            'schema': {
+                "type": ["null", "object"],
+                "is_report": True,
+                "properties": report_schema
+            },
+            'metadata': singer.metadata.to_list(report_metadata),
+        }
+        catalog.append(catalog_entry)
+    return catalog
+
+def create_field_metadata(primary_key, schema):
     mdata = {}
     mdata = metadata.write(mdata, (), 'inclusion', 'available')
     mdata = metadata.write(mdata, (), 'table-key-properties', primary_key)
@@ -101,158 +270,26 @@ def load_schema(entity):
 def load_metadata(entity):
     return utils.load_json(get_abs_path(f"metadata/{entity}.json"))
 
-def do_discover_core_endpoints():
+def do_discover_core_streams(resource_schema):
     streams = []
     LOGGER.info("Starting core discovery")
-    for stream_name in CORE_ENDPOINT_MAPPINGS:
-        LOGGER.info('Loading schema for %s', stream_name)
+    for resource_name, properties in CORE_ENDPOINT_MAPPINGS.items():
+        LOGGER.info('Loading schema for %s', resource_name)
+        stream_name = properties['stream_name']
         schema = load_schema(stream_name)
-        md = create_field_metadata(stream_name, schema)
+        md = create_field_metadata(properties['primary_keys'], schema)
         streams.append({'stream': stream_name,
                         'tap_stream_id': stream_name,
                         'schema': schema,
                         'metadata': md})
     return streams
 
-def do_discover_reports(config, client):
-    accounts = json.loads(config['login_customer_ids'])
-
-    googleads_service = client.get_service("GoogleAdsService")
-
-    query = ('SELECT customer_client.id '
-             'FROM customer_client '
-             'WHERE customer_client.level <= 1')
-    for account in accounts:
-        customer_id = account['customerId']
-        login_customer_id = account['loginCustomerId']
-
-        response = googleads_service.search(customer_id=customer_id,
-                                            query=query)
-        
-        import ipdb; ipdb.set_trace()
-        1+1
-    return []
-
-def do_discover_reports(config):
-    accounts = json.loads(config['login_customer_ids'])
-
-    query = """
-    SELECT customer.currency_code,
-customer.descriptive_name,
-customer.time_zone,
-metrics.active_view_cpm,
-metrics.active_view_ctr,
-metrics.active_view_impressions,
-metrics.active_view_measurability,
-metrics.active_view_measurable_cost_micros,
-metrics.active_view_measurable_impressions,
-metrics.active_view_viewability,
-segments.ad_network_type,
-segments.ad_network_type,
-metrics.all_conversions_from_interactions_rate,
-metrics.all_conversions_value,
-metrics.all_conversions,
-metrics.average_cost,
-metrics.average_cpc,
-metrics.average_cpe,
-metrics.average_cpm,
-metrics.average_cpv,
-customer.manager,
-segments.click_type,
-metrics.clicks,
-metrics.content_budget_lost_impression_share,
-metrics.content_impression_share,
-metrics.content_rank_lost_impression_share,
-segments.conversion_adjustment,
-segments.conversion_or_adjustment_lag_bucket,
-segments.conversion_action_category,
-segments.conversion_lag_bucket,
-metrics.conversions_from_interactions_rate,
-segments.conversion_action,
-segments.conversion_action_name,
-metrics.conversions_value,
-metrics.conversions,
-metrics.cost_micros,
-metrics.cost_per_all_conversions,
-metrics.cost_per_conversion,
-metrics.cross_device_conversions,
-metrics.ctr,
-customer.descriptive_name,
-segments.date,
-segments.day_of_week,
-segments.device,
-metrics.engagement_rate,
-metrics.engagements,
-segments.external_conversion_source,
-customer.id,
-segments.hour,
-metrics.impressions,
-metrics.interaction_rate,
-metrics.interaction_event_types,
-metrics.interactions,
-metrics.invalid_click_rate,
-metrics.invalid_clicks,
-customer.auto_tagging_enabled,
-customer.test_account,
-segments.month,
-segments.month_of_year,
-segments.quarter,
-metrics.search_budget_lost_impression_share,
-metrics.search_exact_match_impression_share,
-metrics.search_impression_share,
-metrics.search_rank_lost_impression_share,
-segments.slot,
-metrics.value_per_all_conversions,
-metrics.value_per_conversion,
-metrics.video_view_rate,
-metrics.video_views,
-metrics.view_through_conversions,
-segments.week,
-segments.year
-    FROM customer
-    WHERE segments.date DURING LAST_7_DAYS
-    """
-
-    customer_segments = ['segments.ad_network_type', 'segments.click_type', 'segments.conversion_action', 'segments.conversion_action_category', 'segments.conversion_action_name', 'segments.conversion_adjustment', 'segments.conversion_lag_bucket', 'segments.conversion_or_adjustment_lag_bucket', 'segments.conversion_value_rule_primary_dimension', 'segments.date', 'segments.day_of_week', 'segments.device', 'segments.external_conversion_source', 'segments.hour', 'segments.month', 'segments.month_of_year', 'segments.quarter', 'segments.recommendation_type', 'segments.sk_ad_network_conversion_value', 'segments.slot', 'segments.week', 'segments.year']
-
-    customer_metrics = ['metrics.active_view_cpm', 'metrics.active_view_ctr', 'metrics.active_view_impressions', 'metrics.active_view_measurability', 'metrics.active_view_measurable_cost_micros', 'metrics.active_view_measurable_impressions', 'metrics.active_view_viewability', 'metrics.all_conversions', 'metrics.all_conversions_by_conversion_date', 'metrics.all_conversions_from_interactions_rate', 'metrics.all_conversions_value', 'metrics.all_conversions_value_by_conversion_date', 'metrics.average_cost', 'metrics.average_cpc', 'metrics.average_cpe', 'metrics.average_cpm', 'metrics.average_cpv', 'metrics.clicks', 'metrics.content_budget_lost_impression_share', 'metrics.content_impression_share', 'metrics.content_rank_lost_impression_share', 'metrics.conversions', 'metrics.conversions_by_conversion_date', 'metrics.conversions_from_interactions_rate', 'metrics.conversions_value', 'metrics.conversions_value_by_conversion_date', 'metrics.cost_micros', 'metrics.cost_per_all_conversions', 'metrics.cost_per_conversion', 'metrics.cross_device_conversions', 'metrics.ctr', 'metrics.engagement_rate', 'metrics.engagements', 'metrics.impressions', 'metrics.interaction_event_types', 'metrics.interaction_rate', 'metrics.interactions', 'metrics.invalid_click_rate', 'metrics.invalid_clicks', 'metrics.optimization_score_uplift', 'metrics.optimization_score_url', 'metrics.search_budget_lost_impression_share', 'metrics.search_exact_match_impression_share', 'metrics.search_impression_share', 'metrics.search_rank_lost_impression_share', 'metrics.sk_ad_network_conversions', 'metrics.value_per_all_conversions', 'metrics.value_per_all_conversions_by_conversion_date', 'metrics.value_per_conversion', 'metrics.value_per_conversions_by_conversion_date', 'metrics.video_view_rate', 'metrics.video_views', 'metrics.view_through_conversions']
-    
-    for account in accounts:
-        customer_id = account['customerId']
-        login_customer_id = account['loginCustomerId']
-        
-        client = GoogleAdsClient.load_from_dict(
-            get_client_config(config, login_customer_id)
-        )
-        
-        googleads_service = client.get_service("GoogleAdsService")
-
-        gaf_service = client.get_service("GoogleAdsFieldService")
-
-        try:
-            # response = googleads_service.search(customer_id=customer_id,
-            #                                     query=query)
-            # import ipdb; ipdb.set_trace()
-            # 1+1
-            response = gaf_service.get_google_ads_field({'resource_name':'googleAdsFields/segments.click_type'})
-            import ipdb; ipdb.set_trace()
-            1+1
-        except Exception as error:
-            import ipdb; ipdb.set_trace()
-            1+1
-
-        for row in response:
-            print(row)
-        import ipdb; ipdb.set_trace()
-        1+1
-    return []
-
 def do_discover(config):
-    #sdk_client = create_sdk_client(config)
-    #client_config = get_client_config(config)
-    core_streams = do_discover_core_endpoints()
-    # report_streams = do_discover_reports(config, sdk_client)
-    report_streams = do_discover_reports(config)
+    sdk_client = create_sdk_client(config)
+    client_config = get_client_config(config)
+    resource_schema = create_resource_schema(config)
+    core_streams = do_discover_core_streams(resource_schema)
+    report_streams = do_discover_reports(resource_schema)
     streams = []
     streams.extend(core_streams)
     streams.extend(report_streams)
@@ -264,7 +301,7 @@ def create_sdk_client(config):
         'developer_token': config['developer_token'],
         'client_id': config['oauth_client_id'],
         'client_secret': config['oauth_client_secret'],
-        #'access_token': config['access_token'],
+        'access_token': config['access_token'],
         'refresh_token': config['refresh_token'],
     }
     sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
@@ -295,8 +332,7 @@ def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
     if args.discover:
-        #do_discover(args.config)
-        do_field_exclusion(args.config)
+        do_discover(args.config)
         LOGGER.info("Discovery complete")
 
 if __name__ == "__main__":

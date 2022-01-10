@@ -77,7 +77,28 @@ class GoogleAdsBase(unittest.TestCase):
             "ads": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-            }
+            },
+            "age_range_view":{},
+            "campaign_audience_view":{},
+            "call_view":{},
+            "click_view":{},
+            "display_keyword_view":{},
+            "topic_view":{},
+            "gender_view":{},
+            "geographic_view":{},
+            "user_location_view":{},
+            "dynamic_search_ads_search_term_view":{},
+            "keyword_view":{},
+            "landing_page_view":{},
+            "expanded_landing_page_view":{},
+            "feed_item":{},
+            "feed_item_target":{},
+            "feed_placeholder_view":{},
+            "managed_placement_view":{},
+            "search_term_view":{},
+            "shopping_performance_view":{},
+            "video":{},
+
             # # Standard Reports
             # "ACCOUNT_PERFORMANCE_REPORT": {
             #     self.PRIMARY_KEYS: {"TODO"},

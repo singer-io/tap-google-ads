@@ -174,7 +174,7 @@ def do_discover_reports(resource_schema):
         report_object = resource_schema[report]
         fields = report_object["fields"]
         report_schema = {}
-        report_metadata = {}
+        report_metadata = {tuple(): {"inclusion": "available"}}
 
         for field, props in fields.items():
             the_schema = props["field_details"]["json_schema"]

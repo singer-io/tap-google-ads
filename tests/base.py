@@ -41,17 +41,27 @@ class GoogleAdsBase(unittest.TestCase):
         return "platform.google-ads"
 
     def get_properties(self):
-        #our test data is on the 9/15
-        return {'start_date':   '2018-04-12T00:00:00Z',
-               # 'end_date':     '2018-04-15T00:00:00Z',
-                'user_id':      'not used?',
-                'customer_ids': os.getenv('TAP_ADWORDS_CUSTOMER_IDS')}
+        return {
+            'start_date':   '2020-12-01T00:00:00Z',
+            'user_id':      'not used?',
+            'customer_ids': '5548074409,2728292456',
+            'login_customer_ids': [
+                {
+                    'customerId': '5548074409',
+                    'loginCustomerId': '2728292456',
+                 },
+                {
+                    'customerId': '2728292456',
+                    'loginCustomerId': '2728292456',
+                 },
+            ],
+        }
 
     def get_credentials(self):
-        return {'developer_token': os.getenv('TAP_ADWORDS_DEVELOPER_TOKEN'),
-                'oauth_client_id': os.getenv('TAP_ADWORDS_OAUTH_CLIENT_ID'),
-                'oauth_client_secret': os.getenv('TAP_ADWORDS_OAUTH_CLIENT_SECRET'),
-                'refresh_token':     os.getenv('TAP_ADWORDS_REFRESH_TOKEN')}
+        return {'developer_token': os.getenv('TAP_GOOGLE_ADS_DEVELOPER_TOKEN'),
+                'oauth_client_id': os.getenv('TAP_GOOGLE_ADS_OAUTH_CLIENT_ID'),
+                'oauth_client_secret': os.getenv('TAP_GOOGLE_ADS_OAUTH_CLIENT_SECRET'),
+                'refresh_token':     os.getenv('TAP_GOOGLE_ADS_REFRESH_TOKEN')}
 
     def expected_metadata(self):
         """The expected streams and metadata about the streams"""

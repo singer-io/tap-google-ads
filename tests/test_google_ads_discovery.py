@@ -13,9 +13,6 @@ class DiscoveryTest(GoogleAdsBase):
     def name():
         return "tt_google_ads_disco"
 
-    def test_name(self):
-        print("Discovery Test for tap-google-ads")
-
     def test_run(self):
         """
         Testing that discovery creates the appropriate catalog with valid metadata.
@@ -33,6 +30,7 @@ class DiscoveryTest(GoogleAdsBase):
           are given the inclusion of automatic.
         • verify that all other fields have inclusion of available metadata.
         """
+        print("Discovery Test for tap-google-ads")
 
         conn_id = connections.ensure_connection(self)
 
@@ -40,7 +38,7 @@ class DiscoveryTest(GoogleAdsBase):
 
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
-        print(found_catalogs)
+        print(f"found_catalogs: {found_catalogs}")
 
         # Verify stream names follow naming convention
         # streams should only have lowercase alphas and underscores

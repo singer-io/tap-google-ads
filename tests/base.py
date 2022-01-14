@@ -106,107 +106,107 @@ class GoogleAdsBase(unittest.TestCase):
             # "video":{},
 
             # Standard Reports
-            "ACCOUNT_PERFORMANCE_REPORT": {
+            "Account_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "ADGROUP_PERFORMANCE_REPORT": {
+            "Adgroup_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "AD_PERFORMANCE_REPORT": {
+            "Ad_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "AGE_RANGE_PERFORMANCE_REPORT": {
+            "Age_Range_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "AUDIENCE_PERFORMANCE_REPORT": {
+            "Audience_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "CALL_METRICS_CALL_DETAILS_REPORT": {
+            "Call_Metrics_Call_Details_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "CAMPAIGN_PERFORMANCE_REPORT": {
+            "Campaign_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "CLICK_PERFORMANCE_REPORT": {
+            "Click_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            # "CRITERIA_PERFORMANCE_REPORT": {
+            # "Criteria_Performance_Report": {
             #     self.PRIMARY_KEYS: {"TODO"},
             #     self.REPLICATION_METHOD: self.INCREMENTAL,
             #     self.REPLICATION_KEYS: {"date"},
             # },
-            "DISPLAY_KEYWORD_PERFORMANCE_REPORT": {
+            "Display_Keyword_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "DISPLAY_TOPICS_PERFORMANCE_REPORT": {
+            "Display_Topics_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "GENDER_PERFORMANCE_REPORT": {
+            "Gender_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "GEO_PERFORMANCE_REPORT": {
+            "Geo_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "KEYWORDLESS_QUERY_REPORT": {
+            "Keywordless_Query_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "KEYWORDS_PERFORMANCE_REPORT": {
+            "Keywords_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "PLACEHOLDER_FEED_ITEM_REPORT": {
+            "Placeholder_Feed_Item_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "PLACEHOLDER_REPORT": {
+            "Placeholder_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "PLACEMENT_PERFORMANCE_REPORT": {
+            "Placement_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "SEARCH_QUERY_PERFORMANCE_REPORT": {
+            "Search_Query_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "SHOPPING_PERFORMANCE_REPORT": {
+            "Shopping_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),
             },
-            "VIDEO_PERFORMANCE_REPORT": {
+            "Video_Performance_Report": {
                 self.PRIMARY_KEYS: set(),
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: set(),

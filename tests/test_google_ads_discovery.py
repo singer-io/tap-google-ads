@@ -122,7 +122,7 @@ class DiscoveryTest(GoogleAdsBase):
 
                 # verify all other fields are given inclusion of available
                 self.assertTrue(
-                    all({item.get("metadata").get("inclusion") == "available"
+                    all({item.get("metadata").get("inclusion") in {"available", "unsupported"}
                          for item in metadata
                          if item.get("breadcrumb", []) != []
                          and item.get("breadcrumb", ["properties", None])[1]

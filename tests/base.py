@@ -68,22 +68,22 @@ class GoogleAdsBase(unittest.TestCase):
 
         return {
             # Core Objects
-            # "accounts": {
-            #     self.PRIMARY_KEYS: {"id"},
-            #     self.REPLICATION_METHOD: self.FULL_TABLE,
-            # },
-            # "campaigns": {
-            #     self.PRIMARY_KEYS: {"id"},
-            #     self.REPLICATION_METHOD: self.FULL_TABLE,
-            # },
-            # "ad_groups": {
-            #     self.PRIMARY_KEYS: {"id"},
-            #     self.REPLICATION_METHOD: self.FULL_TABLE,
-            # },
-            # "ads": {
-            #     self.PRIMARY_KEYS: {"id"},
-            #     self.REPLICATION_METHOD: self.FULL_TABLE,
-            # },
+            "Accounts": {
+                self.PRIMARY_KEYS: {"customer.id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+            },
+            "Campaigns": {
+                self.PRIMARY_KEYS: {"campaign.id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+            },
+            "Ad_Groups": {
+                self.PRIMARY_KEYS: {"ad_group.id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+            },
+            "Ads": {
+                self.PRIMARY_KEYS: {"ad_group_ad.ad.id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+            },
             # "age_range_view":{},
             # "campaign_audience_view":{},
             # "call_view":{},

@@ -1,9 +1,14 @@
+ACCOUNT_FIELDS = []
+AD_GROUP_FIELDS  = []
+AD_GROUP_AD_FIELDS = []
+CAMPAIGN_FIELDS = []
 ACCOUNT_PERFORMANCE_REPORT_FIELDS = ['customer.currency_code', 'customer.descriptive_name', 'customer.time_zone', 'metrics.active_view_cpm', 'metrics.active_view_ctr', 'metrics.active_view_impressions', 'metrics.active_view_measurability', 'metrics.active_view_measurable_cost_micros', 'metrics.active_view_measurable_impressions', 'metrics.active_view_viewability', 'segments.ad_network_type', 'metrics.all_conversions_from_interactions_rate', 'metrics.all_conversions_value', 'metrics.all_conversions', 'metrics.average_cost', 'metrics.average_cpc', 'metrics.average_cpe', 'metrics.average_cpm', 'metrics.average_cpv', 'customer.manager', 'segments.click_type', 'metrics.clicks', 'metrics.content_budget_lost_impression_share', 'metrics.content_impression_share', 'metrics.content_rank_lost_impression_share', 'segments.conversion_adjustment', 'segments.conversion_or_adjustment_lag_bucket', 'segments.conversion_action_category', 'segments.conversion_lag_bucket', 'metrics.conversions_from_interactions_rate', 'segments.conversion_action', 'segments.conversion_action_name', 'metrics.conversions_value', 'metrics.conversions', 'metrics.cost_micros', 'metrics.cost_per_all_conversions', 'metrics.cost_per_conversion', 'metrics.cross_device_conversions', 'metrics.ctr', 'customer.descriptive_name', 'segments.date', 'segments.day_of_week', 'segments.device', 'metrics.engagement_rate', 'metrics.engagements', 'segments.external_conversion_source', 'customer.id', 'segments.hour', 'metrics.impressions', 'metrics.interaction_rate', 'metrics.interaction_event_types', 'metrics.interactions', 'metrics.invalid_click_rate', 'metrics.invalid_clicks', 'customer.auto_tagging_enabled', 'customer.test_account', 'segments.month', 'segments.month_of_year', 'segments.quarter', 'metrics.search_budget_lost_impression_share', 'metrics.search_exact_match_impression_share', 'metrics.search_impression_share', 'metrics.search_rank_lost_impression_share', 'segments.slot', 'metrics.value_per_all_conversions', 'metrics.value_per_conversion', 'metrics.video_view_rate', 'metrics.video_views', 'metrics.view_through_conversions', 'segments.week', 'segments.year']
 ADGROUP_PERFORMANCE_REPORT_FIELDS = ['metrics.absolute_top_impression_percentage', 'customer.currency_code', 'customer.descriptive_name', 'customer.time_zone', 'metrics.active_view_cpm', 'metrics.active_view_ctr', 'metrics.active_view_impressions', 'metrics.active_view_measurability', 'metrics.active_view_measurable_cost_micros', 'metrics.active_view_measurable_impressions', 'metrics.active_view_viewability', 'ad_group.id', 'ad_group.name', 'ad_group.status', 'ad_group.type', 'segments.ad_network_type', 'ad_group.ad_rotation_mode', 'metrics.all_conversions_from_interactions_rate', 'metrics.all_conversions_value', 'metrics.all_conversions', 'metrics.average_cost', 'metrics.average_cpc', 'metrics.average_cpe', 'metrics.average_cpm', 'metrics.average_cpv', 'metrics.average_page_views', 'metrics.average_time_on_site', 'ad_group.base_ad_group', 'campaign.base_campaign', 'campaign.bidding_strategy', 'campaign.bidding_strategy_type', 'metrics.bounce_rate', 'campaign.id', 'campaign.name', 'campaign.status', 'segments.click_type', 'metrics.clicks', 'ad_group.display_custom_bid_dimension', 'metrics.content_impression_share', 'metrics.content_rank_lost_impression_share', 'segments.conversion_adjustment', 'segments.conversion_or_adjustment_lag_bucket', 'segments.conversion_action_category', 'segments.conversion_lag_bucket', 'metrics.conversions_from_interactions_rate', 'segments.conversion_action', 'segments.conversion_action_name', 'metrics.conversions_value', 'metrics.conversions', 'metrics.cost_micros', 'metrics.cost_per_all_conversions', 'metrics.cost_per_conversion', 'metrics.cost_per_current_model_attributed_conversion', 'ad_group.cpc_bid_micros', 'ad_group.cpm_bid_micros', 'ad_group.cpv_bid_micros', 'metrics.cross_device_conversions', 'metrics.ctr', 'metrics.current_model_attributed_conversions_value', 'metrics.current_model_attributed_conversions', 'customer.descriptive_name', 'segments.date', 'segments.day_of_week', 'segments.device', 'ad_group.effective_target_roas', 'ad_group.effective_target_roas_source', 'metrics.engagement_rate', 'metrics.engagements', 'campaign.manual_cpc.enhanced_cpc_enabled', 'campaign.percent_cpc.enhanced_cpc_enabled', 'segments.external_conversion_source', 'customer.id', 'ad_group.final_url_suffix', 'metrics.gmail_forwards', 'metrics.gmail_saves', 'metrics.gmail_secondary_clicks', 'segments.hour', 'metrics.impressions', 'metrics.interaction_rate', 'metrics.interaction_event_types', 'metrics.interactions', 'label.resource_name', 'segments.month', 'segments.month_of_year', 'metrics.phone_impressions', 'metrics.phone_calls', 'metrics.phone_through_rate', 'metrics.percent_new_visitors', 'segments.quarter', 'metrics.relative_ctr', 'metrics.search_absolute_top_impression_share', 'metrics.search_budget_lost_absolute_top_impression_share', 'metrics.search_budget_lost_top_impression_share', 'metrics.search_exact_match_impression_share', 'metrics.search_impression_share', 'metrics.search_rank_lost_absolute_top_impression_share', 'metrics.search_rank_lost_impression_share', 'metrics.search_rank_lost_top_impression_share', 'metrics.search_top_impression_share', 'segments.slot', 'ad_group.effective_target_cpa_micros', 'ad_group.effective_target_cpa_source', 'metrics.top_impression_percentage', 'ad_group.tracking_url_template', 'ad_group.url_custom_parameters', 'metrics.value_per_all_conversions', 'metrics.value_per_conversion', 'metrics.value_per_current_model_attributed_conversion', 'metrics.video_quartile_p100_rate', 'metrics.video_quartile_p25_rate', 'metrics.video_quartile_p50_rate', 'metrics.video_quartile_p75_rate', 'metrics.video_view_rate', 'metrics.video_views', 'metrics.view_through_conversions', 'segments.week', 'segments.year']
 AD_PERFORMANCE_REPORT_FIELDS = ['metrics.absolute_top_impression_percentage', 'ad_group_ad.ad.legacy_responsive_display_ad.accent_color', 'customer.currency_code', 'customer.descriptive_name', 'customer.time_zone', 'metrics.active_view_cpm', 'metrics.active_view_ctr', 'metrics.active_view_impressions', 'metrics.active_view_measurability', 'metrics.active_view_measurable_cost_micros', 'metrics.active_view_measurable_impressions', 'metrics.active_view_viewability', 'ad_group.id', 'ad_group.name', 'ad_group.status', 'segments.ad_network_type', 'ad_group_ad.ad_strength', 'ad_group_ad.ad.type', 'metrics.all_conversions_from_interactions_rate', 'metrics.all_conversions_value', 'metrics.all_conversions', 'ad_group_ad.ad.legacy_responsive_display_ad.allow_flexible_color', 'ad_group_ad.ad.added_by_google_ads', 'metrics.average_cost', 'metrics.average_cpc', 'metrics.average_cpe', 'metrics.average_cpm', 'metrics.average_cpv', 'metrics.average_page_views', 'metrics.average_time_on_site', 'ad_group.base_ad_group', 'campaign.base_campaign', 'metrics.bounce_rate', 'ad_group_ad.ad.legacy_responsive_display_ad.business_name', 'ad_group_ad.ad.call_ad.phone_number', 'ad_group_ad.ad.legacy_responsive_display_ad.call_to_action_text', 'campaign.id', 'campaign.name', 'campaign.status', 'segments.click_type', 'metrics.clicks', 'ad_group_ad.policy_summary.approval_status', 'segments.conversion_adjustment', 'segments.conversion_or_adjustment_lag_bucket', 'segments.conversion_action_category', 'segments.conversion_lag_bucket', 'metrics.conversions_from_interactions_rate', 'segments.conversion_action', 'segments.conversion_action_name', 'metrics.conversions_value', 'metrics.conversions', 'metrics.cost_micros', 'metrics.cost_per_all_conversions', 'metrics.cost_per_conversion', 'metrics.cost_per_current_model_attributed_conversion', 'ad_group_ad.ad.final_mobile_urls', 'ad_group_ad.ad.final_urls', 'ad_group_ad.ad.tracking_url_template', 'ad_group_ad.ad.url_custom_parameters', 'segments.keyword.ad_group_criterion', 'metrics.cross_device_conversions', 'metrics.ctr', 'metrics.current_model_attributed_conversions_value', 'metrics.current_model_attributed_conversions', 'customer.descriptive_name', 'segments.date', 'segments.day_of_week',
                                 'ad_group_ad.ad.legacy_responsive_display_ad.description', 'ad_group_ad.ad.expanded_text_ad.description',
                                 'ad_group_ad.ad.text_ad.description1', 'ad_group_ad.ad.call_ad.description1',
                                 'ad_group_ad.ad.text_ad.description2', 'ad_group_ad.ad.call_ad.description2',
+                                'ad_group_criterion.negative',
                                 'segments.device', 'ad_group_ad.ad.device_preference', 'ad_group_ad.ad.display_url', 'metrics.engagement_rate', 'metrics.engagements', 'ad_group_ad.ad.legacy_responsive_display_ad.logo_image', 'ad_group_ad.ad.legacy_responsive_display_ad.square_logo_image', 'ad_group_ad.ad.legacy_responsive_display_ad.marketing_image', 'ad_group_ad.ad.legacy_responsive_display_ad.square_marketing_image', 'ad_group_ad.ad.expanded_dynamic_search_ad.description', 'ad_group_ad.ad.expanded_text_ad.description2', 'ad_group_ad.ad.expanded_text_ad.headline_part3', 'segments.external_conversion_source', 'customer.id', 'ad_group_ad.ad.legacy_responsive_display_ad.format_setting', 'ad_group_ad.ad.gmail_ad.header_image', 'ad_group_ad.ad.gmail_ad.teaser.logo_image', 'ad_group_ad.ad.gmail_ad.marketing_image', 'metrics.gmail_forwards', 'metrics.gmail_saves', 'metrics.gmail_secondary_clicks', 'ad_group_ad.ad.gmail_ad.teaser.business_name', 'ad_group_ad.ad.gmail_ad.teaser.description', 'ad_group_ad.ad.gmail_ad.teaser.headline', 'ad_group_ad.ad.text_ad.headline', 'ad_group_ad.ad.expanded_text_ad.headline_part1', 'ad_group_ad.ad.expanded_text_ad.headline_part2', 'ad_group_ad.ad.id', 'ad_group_ad.ad.image_ad.image_url', 'ad_group_ad.ad.image_ad.pixel_height', 'ad_group_ad.ad.image_ad.pixel_width', 'ad_group_ad.ad.image_ad.mime_type', 'ad_group_ad.ad.image_ad.name', 'metrics.impressions', 'metrics.interaction_rate', 'metrics.interaction_event_types', 'metrics.interactions', 'label.resource_name', 'label.name', 'ad_group_ad.ad.legacy_responsive_display_ad.long_headline', 'ad_group_ad.ad.legacy_responsive_display_ad.main_color', 'ad_group_ad.ad.gmail_ad.marketing_image_display_call_to_action.text', 'ad_group_ad.ad.gmail_ad.marketing_image_display_call_to_action.text_color', 'ad_group_ad.ad.gmail_ad.marketing_image_headline', 'ad_group_ad.ad.gmail_ad.marketing_image_description', 'segments.month', 'segments.month_of_year', 'ad_group_ad.ad.responsive_display_ad.accent_color', 'ad_group_ad.ad.responsive_display_ad.allow_flexible_color', 'ad_group_ad.ad.responsive_display_ad.business_name', 'ad_group_ad.ad.responsive_display_ad.call_to_action_text', 'ad_group_ad.ad.responsive_display_ad.descriptions', 'ad_group_ad.ad.responsive_display_ad.price_prefix', 'ad_group_ad.ad.responsive_display_ad.promo_text', 'ad_group_ad.ad.responsive_display_ad.format_setting', 'ad_group_ad.ad.responsive_display_ad.headlines', 'ad_group_ad.ad.responsive_display_ad.logo_images', 'ad_group_ad.ad.responsive_display_ad.square_logo_images', 'ad_group_ad.ad.responsive_display_ad.long_headline', 'ad_group_ad.ad.responsive_display_ad.main_color', 'ad_group_ad.ad.responsive_display_ad.marketing_images', 'ad_group_ad.ad.responsive_display_ad.square_marketing_images', 'ad_group_ad.ad.responsive_display_ad.youtube_videos', 'ad_group_ad.ad.expanded_text_ad.path1', 'ad_group_ad.ad.expanded_text_ad.path2', 'metrics.percent_new_visitors',
                                 'ad_group_ad.policy_summary.policy_topic_entries',
                                 #'ad_group_ad.policy_summary.review_state',
@@ -112,7 +117,7 @@ VIDEO_PERFORMANCE_REPORT_FIELDS = ['customer.currency_code', 'customer.descripti
 
 from collections import defaultdict
 
-class BaseReport:
+class BaseStream:
     def add_extra_fields(self, resource_schema):
         """This function should add fields to `field_exclusions`, `schema`, and
         `behavior` that are not covered by Google's resource_schema
@@ -148,8 +153,7 @@ class BaseReport:
         #self.schema = self.compute_schema(resource_schema)
 
 
-
-class AdGroupPerformanceReport(BaseReport):
+class AdGroupPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
         field_name = 'label.resource_name'
@@ -158,7 +162,7 @@ class AdGroupPerformanceReport(BaseReport):
         self.schema[field_name] = {"type": ["null", "string"]}
         self.behavior[field_name] = "ATTRIBUTE"
 
-class AdPerformanceReport(BaseReport):
+class AdPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
         for field_name in ['label.resource_name','label.name']:
@@ -171,7 +175,7 @@ class AdPerformanceReport(BaseReport):
             self.schema[field_name] = {"type": ["null", "boolean"]}
             self.behavior[field_name] = "ATTRIBUTE"
 
-class AudiencePerformanceReport(BaseReport):
+class AudiencePerformanceReport(BaseStream):
     "hi"
     # COMMENT FROM GOOGLE
     #'bidding_strategy.name must be selected withy the resources  bidding_strategy or campaign.',
@@ -224,7 +228,7 @@ class AudiencePerformanceReport(BaseReport):
         #     self.schema[field_name] = {"type": ["null", "string"]}
         #     self.behavior[field_name] = "SEGMENT"
 
-class CampaignPerformanceReport(BaseReport):
+class CampaignPerformanceReport(BaseStream):
     # TODO: The sync needs to select from campaign_criterion if campaign_criterion.device.type is selected
     # TODO: The sync needs to select from campaign_label if label.resource_name
     def add_extra_fields(self, resource_schema):
@@ -233,7 +237,7 @@ class CampaignPerformanceReport(BaseReport):
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
 
-class DisplayKeywordPerformanceReport(BaseReport):
+class DisplayKeywordPerformanceReport(BaseStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
         for field_name in ['bidding_strategy.name',]:
@@ -241,7 +245,7 @@ class DisplayKeywordPerformanceReport(BaseReport):
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "SEGMENT"
 
-class GeoPerformanceReport(BaseReport):
+class GeoPerformanceReport(BaseStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
         for resource_name in self.google_ads_resources_name:
@@ -251,7 +255,7 @@ class GeoPerformanceReport(BaseReport):
                 self.schema[full_field_name] = {"type": ["null", "string"]}
                 self.behavior[full_field_name] = "ATTRIBUTE"
 
-class KeywordsPerformanceReport(BaseReport):
+class KeywordsPerformanceReport(BaseStream):
     # TODO: The sync needs to select from ad_group_label if label.name is selected
     # TODO: The sync needs to select from ad_group_label if label.resource_name is selected
     def add_extra_fields(self, resource_schema):
@@ -260,7 +264,7 @@ class KeywordsPerformanceReport(BaseReport):
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
 
-class PlaceholderFeedItemPerformanceReport(BaseReport):
+class PlaceholderFeedItemPerformanceReport(BaseStream):
     # TODO: The sync needs to select from feed_item_target if feed_item_target.device is selected
     # TODO: The sync needs to select from feed_item if feed_item.policy_infos is selected
     def add_extra_fields(self, resource_schema):
@@ -270,53 +274,62 @@ class PlaceholderFeedItemPerformanceReport(BaseReport):
             self.behavior[field_name] = "ATTRIBUTE"
 
 
+def initialize_core_streams(resource_schema):
+    return {
+        "Accounts": BaseStream(ACCOUNT_FIELDS, ["customer"], resource_schema, ["customer.id"]),
+        "Ad_Groups": BaseStream(AD_GROUP_FIELDS, ["ad_group"], resource_schema, ["ad_group.id"]),
+        "Ads": BaseStream(AD_GROUP_AD_FIELDS, ["ad_group_ad"], resource_schema, ["ad_group_ad.ad.id"]),
+        "Campaigns": BaseStream(CAMPAIGN_FIELDS, ["campaign"], resource_schema, ["campaign.id"]),
+    }
+
+
 def initialize_reports(resource_schema):
     return {
-        "ACCOUNT_PERFORMANCE_REPORT": BaseReport(
+        "Account_Performance_Report": BaseStream(
             ACCOUNT_PERFORMANCE_REPORT_FIELDS,
             ["customer"],
             resource_schema,
             ['customer.id'],
         ),
         # TODO: This needs to link with ad_group_ad_label
-        "ADGROUP_PERFORMANCE_REPORT": AdGroupPerformanceReport(ADGROUP_PERFORMANCE_REPORT_FIELDS, ["ad_group"], resource_schema, ['ad_group.id'],),
-        "AD_PERFORMANCE_REPORT": AdPerformanceReport(AD_PERFORMANCE_REPORT_FIELDS, ["ad_group_ad"], resource_schema, ['ad_group_ad.ad.id'],),
-        "AGE_RANGE_PERFORMANCE_REPORT": BaseReport(AGE_RANGE_PERFORMANCE_REPORT_FIELDS, ["age_range_view"], resource_schema, ['ad_group_criterion.criterion_id'],),
-        "AUDIENCE_PERFORMANCE_REPORT": AudiencePerformanceReport(AUDIENCE_PERFORMANCE_REPORT_FIELDS, ["campaign_audience_view", "ad_group_audience_view"], resource_schema, ['ad_group_criterion.criterion_id'],),
-        # "AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT": BaseReport(AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
-        # "BID_GOAL_PERFORMANCE_REPORT": BaseReport(BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
-        # "BUDGET_PERFORMANCE_REPORT": BaseReport(BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
-        "CALL_METRICS_CALL_DETAILS_REPORT": BaseReport(CALL_METRICS_CALL_DETAILS_REPORT_FIELDS, ["call_view"], resource_schema, [''],),
-        # "CAMPAIGN_AD_SCHEDULE_TARGET_REPORT": BaseReport(CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
-        # "CAMPAIGN_CRITERIA_REPORT": BaseReport(CAMPAIGN_CRITERIA_REPORT_FIELDS, ["campaign_criterion"], resource_schema),
-        # "CAMPAIGN_LOCATION_TARGET_REPORT": BaseReport(CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
-        "CAMPAIGN_PERFORMANCE_REPORT": CampaignPerformanceReport(CAMPAIGN_PERFORMANCE_REPORT_FIELDS, ["campaign"], resource_schema, [''],),
-        # "CAMPAIGN_SHARED_SET_REPORT": BaseReport(CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
-        "CLICK_PERFORMANCE_REPORT": BaseReport(CLICK_PERFORMANCE_REPORT_FIELDS, ["click_view"], resource_schema, [''],),
-        "DISPLAY_KEYWORD_PERFORMANCE_REPORT": DisplayKeywordPerformanceReport(
+        "Adgroup_Performance_Report": AdGroupPerformanceReport(ADGROUP_PERFORMANCE_REPORT_FIELDS, ["ad_group"], resource_schema, ['ad_group.id'],),
+        "Ad_Performance_Report": AdPerformanceReport(AD_PERFORMANCE_REPORT_FIELDS, ["ad_group_ad"], resource_schema, ['ad_group_ad.ad.id'],),
+        "Age_Range_Performance_Report": BaseStream(AGE_RANGE_PERFORMANCE_REPORT_FIELDS, ["age_range_view"], resource_schema, ['ad_group_criterion.criterion_id'],),
+        "Audience_Performance_Report": AudiencePerformanceReport(AUDIENCE_PERFORMANCE_REPORT_FIELDS, ["campaign_audience_view", "ad_group_audience_view"], resource_schema, ['ad_group_criterion.criterion_id'],),
+        # "AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT": BaseStream(AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
+        # "BID_GOAL_PERFORMANCE_REPORT": BaseStream(BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
+        # "BUDGET_PERFORMANCE_REPORT": BaseStream(BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
+        "Call_Metrics_Call_Details_Report": BaseStream(CALL_METRICS_CALL_DETAILS_REPORT_FIELDS, ["call_view"], resource_schema, [''],),
+        # "CAMPAIGN_AD_SCHEDULE_TARGET_REPORT": BaseStream(CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
+        # "CAMPAIGN_CRITERIA_REPORT": BaseStream(CAMPAIGN_CRITERIA_REPORT_FIELDS, ["campaign_criterion"], resource_schema),
+        # "CAMPAIGN_LOCATION_TARGET_REPORT": BaseStream(CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
+        "Campaign_Performance_Report": CampaignPerformanceReport(CAMPAIGN_PERFORMANCE_REPORT_FIELDS, ["campaign"], resource_schema, [''],),
+        # "CAMPAIGN_SHARED_SET_REPORT": BaseStream(CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
+        "Click_Performance_Report": BaseStream(CLICK_PERFORMANCE_REPORT_FIELDS, ["click_view"], resource_schema, [''],),
+        "Display_Keyword_Performance_Report": DisplayKeywordPerformanceReport(
             DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
             ["display_keyword_view"],
             resource_schema,
             ['ad_group_criterion.criterion_id'],
         ),
-        "DISPLAY_TOPICS_PERFORMANCE_REPORT": DisplayKeywordPerformanceReport(DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS, ["topic_view"], resource_schema, [''],),
-        "GENDER_PERFORMANCE_REPORT": BaseReport(GENDER_PERFORMANCE_REPORT_FIELDS, ["gender_view"], resource_schema, [''],),
-        "GEO_PERFORMANCE_REPORT": GeoPerformanceReport(GEO_PERFORMANCE_REPORT_FIELDS, ["geographic_view", "user_location_view"], resource_schema, [''],),
-        "KEYWORDLESS_QUERY_REPORT": BaseReport(KEYWORDLESS_QUERY_REPORT_FIELDS, ["dynamic_search_ads_search_term_view"], resource_schema, [''],),
-        "KEYWORDS_PERFORMANCE_REPORT": KeywordsPerformanceReport(KEYWORDS_PERFORMANCE_REPORT_FIELDS, ["keyword_view"], resource_schema, [''],),
-        # "LABEL_REPORT": BaseReport(LABEL_REPORT_FIELDS, ["label"], resource_schema),
-        # "LANDING_PAGE_REPORT": BaseReport(LANDING_PAGE_REPORT_FIELDS, ["landing_page_view", "expanded_landing_page_view"], resource_schema),
-        # "PAID_ORGANIC_QUERY_REPORT": BaseReport(PAID_ORGANIC_QUERY_REPORT_FIELDS, ["paid_organic_search_term_view"], resource_schema),
-        # "PARENTAL_STATUS_PERFORMANCE_REPORT": BaseReport(PARENTAL_STATUS_PERFORMANCE_REPORT_FIELDS, ["parental_status_view"], resource_schema),
-        "PLACEHOLDER_FEED_ITEM_REPORT": BaseReport(PLACEHOLDER_FEED_ITEM_REPORT_FIELDS, ["feed_item", "feed_item_target"], resource_schema, [''],),
-        "PLACEHOLDER_REPORT": BaseReport(PLACEHOLDER_REPORT_FIELDS, ["feed_placeholder_view"], resource_schema, [''],),
-        "PLACEMENT_PERFORMANCE_REPORT": BaseReport(PLACEMENT_PERFORMANCE_REPORT_FIELDS, ["managed_placement_view"], resource_schema, [''],),
-        # "PRODUCT_PARTITION_REPORT": BaseReport(PRODUCT_PARTITION_REPORT_FIELDS, ["product_group_view"], resource_schema),
-        "SEARCH_QUERY_PERFORMANCE_REPORT": BaseReport(SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS, ["search_term_view"], resource_schema, [''],),
-        # "SHARED_SET_CRITERIA_REPORT": BaseReport(SHARED_SET_CRITERIA_REPORT_FIELDS, ["shared_criterion"], resource_schema),
-        "SHOPPING_PERFORMANCE_REPORT": BaseReport(SHOPPING_PERFORMANCE_REPORT_FIELDS, ["shopping_performance_view"], resource_schema, [''],),
-        # "URL_PERFORMANCE_REPORT": BaseReport(URL_PERFORMANCE_REPORT_FIELDS, ["detail_placement_view"], resource_schema),
-        # "USER_AD_DISTANCE_REPORT": BaseReport(USER_AD_DISTANCE_REPORT_FIELDS, ["distance_view"], resource_schema),
-        "VIDEO_PERFORMANCE_REPORT": BaseReport(VIDEO_PERFORMANCE_REPORT_FIELDS, ["video"], resource_schema, [''],),
+        "Display_Topics_Performance_Report": DisplayKeywordPerformanceReport(DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS, ["topic_view"], resource_schema, [''],),
+        "Gender_Performance_Report": BaseStream(GENDER_PERFORMANCE_REPORT_FIELDS, ["gender_view"], resource_schema, [''],),
+        "Geo_Performance_Report": GeoPerformanceReport(GEO_PERFORMANCE_REPORT_FIELDS, ["geographic_view", "user_location_view"], resource_schema, [''],),
+        "Keywordless_Query_Report": BaseStream(KEYWORDLESS_QUERY_REPORT_FIELDS, ["dynamic_search_ads_search_term_view"], resource_schema, [''],),
+        "Keywords_Performance_Report": KeywordsPerformanceReport(KEYWORDS_PERFORMANCE_REPORT_FIELDS, ["keyword_view"], resource_schema, [''],),
+        # "LABEL_REPORT": BaseStream(LABEL_REPORT_FIELDS, ["label"], resource_schema),
+        # "LANDING_PAGE_REPORT": BaseStream(LANDING_PAGE_REPORT_FIELDS, ["landing_page_view", "expanded_landing_page_view"], resource_schema),
+        # "PAID_ORGANIC_QUERY_REPORT": BaseStream(PAID_ORGANIC_QUERY_REPORT_FIELDS, ["paid_organic_search_term_view"], resource_schema),
+        # "PARENTAL_STATUS_PERFORMANCE_REPORT": BaseStream(PARENTAL_STATUS_PERFORMANCE_REPORT_FIELDS, ["parental_status_view"], resource_schema),
+        "Placeholder_Feed_Item_Report": BaseStream(PLACEHOLDER_FEED_ITEM_REPORT_FIELDS, ["feed_item", "feed_item_target"], resource_schema, [''],),
+        "Placeholder_Report": BaseStream(PLACEHOLDER_REPORT_FIELDS, ["feed_placeholder_view"], resource_schema, [''],),
+        "Placement_Performance_Report": BaseStream(PLACEMENT_PERFORMANCE_REPORT_FIELDS, ["managed_placement_view"], resource_schema, [''],),
+        # "PRODUCT_PARTITION_REPORT": BaseStream(PRODUCT_PARTITION_REPORT_FIELDS, ["product_group_view"], resource_schema),
+        "Search_Query_Performance_Report": BaseStream(SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS, ["search_term_view"], resource_schema, [''],),
+        # "SHARED_SET_CRITERIA_REPORT": BaseStream(SHARED_SET_CRITERIA_REPORT_FIELDS, ["shared_criterion"], resource_schema),
+        "Shopping_Performance_Report": BaseStream(SHOPPING_PERFORMANCE_REPORT_FIELDS, ["shopping_performance_view"], resource_schema, [''],),
+        # "URL_PERFORMANCE_REPORT": BaseStream(URL_PERFORMANCE_REPORT_FIELDS, ["detail_placement_view"], resource_schema),
+        # "USER_AD_DISTANCE_REPORT": BaseStream(USER_AD_DISTANCE_REPORT_FIELDS, ["distance_view"], resource_schema),
+        "Video_Performance_Report": BaseStream(VIDEO_PERFORMANCE_REPORT_FIELDS, ["video"], resource_schema, [''],),
         # RESOURCES: "",
     }

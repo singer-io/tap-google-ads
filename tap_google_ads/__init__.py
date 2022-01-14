@@ -14,6 +14,7 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf.json_format import MessageToJson
 
+from tap_google_ads.reports import initialize_core_streams
 from tap_google_ads.reports import initialize_reports
 
 API_VERSION = "v9"
@@ -211,34 +212,37 @@ def canonicalize_name(name):
     return "".join(first_word + other_words)
 
 
-def do_discover_reports(resource_schema):
+def do_discover_core_streams(resource_schema):
+    adwords_to_google_ads = initialize_core_streams(resource_schema)
+
     catalog = []
-    for report in REPORTS:
-        report_object = resource_schema[report]
-        fields = report_object["fields"]
+    for stream_name, stream in adwords_to_google_ads.items():
+        resource_object = resource_schema[stream.google_ads_resources_name[0]]
+        fields = resource_object["fields"]
         report_schema = {}
-        report_metadata = {tuple(): {"inclusion": "available"}}
+        report_metadata = {tuple(): {"inclusion": "available", "table-key-properties": stream.primary_keys}}
 
         for field, props in fields.items():
-            the_schema = props["field_details"]["json_schema"]
-            report_schema[field] = the_schema
-            report_metadata[("properties", field)] = {
-                "fieldExclusions": props["incompatible_fields"],
-                "behavior": props["field_details"]["category"],
-            }
-
-            if props["field_details"]["selectable"]:
-                inclusion = "available"
-            else:
-                inclusion = "unsupported"
-            report_metadata[("properties", field)]["inclusion"] = inclusion
+            if props["field_details"]["category"] == "ATTRIBUTE":
+                the_schema = props["field_details"]["json_schema"]
+                report_schema[field] = the_schema
+                report_metadata[("properties", field)] = {
+                    "fieldExclusions": props["incompatible_fields"],
+                    "behavior": props["field_details"]["category"],
+                }
+                if field in stream.primary_keys:
+                    inclusion = "automatic"
+                elif props["field_details"]["selectable"]:
+                    inclusion = "available"
+                else:
+                    inclusion = "unsupported"
+                report_metadata[("properties", field)]["inclusion"] = inclusion
 
         catalog_entry = {
-            "tap_stream_id": report,
-            "stream": report,
+            "tap_stream_id": stream_name,
+            "stream": stream_name,
             "schema": {
                 "type": ["null", "object"],
-                "is_report": True,
                 "properties": report_schema,
             },
             "metadata": singer.metadata.to_list(report_metadata),
@@ -276,39 +280,17 @@ def load_metadata(entity):
     return utils.load_json(get_abs_path(f"metadata/{entity}.json"))
 
 
-# TODO Remove this function
-def do_discover_core_streams(resource_schema):
-    streams = []
-    LOGGER.info("Starting core discovery")
-    for resource_name, properties in CORE_ENDPOINT_MAPPINGS.items():
-        LOGGER.info("Loading schema for %s", resource_name)
-        stream_name = properties["stream_name"]
-        schema = load_schema(stream_name)
-        md = create_field_metadata(properties["primary_keys"], schema)
-        streams.append(
-            {
-                "stream": stream_name,
-                "tap_stream_id": stream_name,
-                "schema": schema,
-                "metadata": md,
-            }
-        )
-    return streams
-
-
 def do_discover(config):
     resource_schema = create_resource_schema(config)
-    # core_streams = do_discover_core_streams(resource_schema)
+    core_streams = do_discover_core_streams(resource_schema)
     report_streams = do_discover_reports(resource_schema)
     streams = []
-    # streams.extend(core_streams)
+    streams.extend(core_streams)
     streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 
-def generate_new_schemas(config):
-    resource_schema = create_resource_schema(config)
-
+def do_discover_reports(resource_schema):
     ADWORDS_TO_GOOGLE_ADS = initialize_reports(resource_schema)
     field_lengths = [field for report in ADWORDS_TO_GOOGLE_ADS.values() for field in report.fields if len(field) > 60]
 
@@ -347,7 +329,7 @@ def generate_new_schemas(config):
         }
         streams.append(catalog_entry)
 
-    return {"streams": streams}
+    return streams
 
 
 def get_client_config(config, login_customer_id=None):
@@ -370,8 +352,7 @@ def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
     if args.discover:
-        json.dump(generate_new_schemas(args.config),  sys.stdout, indent=2)
-        #do_discover(args.config)
+        do_discover(args.config)
         LOGGER.info("Discovery complete")
 
 

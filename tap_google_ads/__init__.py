@@ -14,6 +14,9 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf.json_format import MessageToJson
 
+from tap_google_ads.reports import initialize_reports
+
+API_VERSION = "v9"
 
 LOGGER = singer.get_logger()
 
@@ -34,25 +37,30 @@ CORE_ENDPOINT_MAPPINGS = {
 }
 
 REPORTS = [
+    "ad_group",
+    "ad_group_ad",
+    "ad_group_audience_view",
     "age_range_view",
-    "campaign_audience_view",
     "call_view",
+    "campaign",
+    "campaign_audience_view",
     "click_view",
+    "customer",
     "display_keyword_view",
-    "topic_view",
-    "gender_view",
-    "geographic_view",
-    "user_location_view",
     "dynamic_search_ads_search_term_view",
-    "keyword_view",
-    "landing_page_view",
     "expanded_landing_page_view",
     "feed_item",
     "feed_item_target",
     "feed_placeholder_view",
+    "gender_view",
+    "geographic_view",
+    "keyword_view",
+    "landing_page_view",
     "managed_placement_view",
     "search_term_view",
     "shopping_performance_view",
+    "topic_view",
+    "user_location_view",
     "video",
 ]
 
@@ -86,6 +94,24 @@ def get_attributes(api_objects, resource):
     return resource_attributes
 
 
+def get_segments(resource_schema, resource):
+    resource_segments = []
+
+    if resource['category'] != "RESOURCE":
+        # Attributes, segments, and metrics do not have attributes
+        return resource_segments
+
+    segments = resource['segments']
+    for segment in segments:
+        if segment.startswith("segments."):
+            resource_segments.append(segment)
+        else:
+            segment_schema = resource_schema[segment]
+            segment_attributes = [attribute for attribute in segment_schema['attributes']
+                                  if attribute.startswith(f"{segment}.")]
+            resource_segments.extend(segment_attributes)
+    return resource_segments
+
 def create_resource_schema(config):
     client = GoogleAdsClient.load_from_dict(get_client_config(config))
     gaf_service = client.get_service("GoogleAdsFieldService")
@@ -106,8 +132,8 @@ def create_resource_schema(config):
         6: {"type": ["null", "string"], "format": "singer.decimal"},
         7: {"type": ["null", "integer"]},
         8: {"type": ["null", "integer"]},
-        9: {"type": ["null", "object"], "properties": {}},
-        10: {"type": ["null", "object"], "properties": {}},
+        9: {"type": ["null", "object", "string"], "properties": {}},
+        10: {"type": ["null", "object", "string"], "properties": {}},
         11: {"type": ["null", "string"]},
         12: {"type": ["null", "integer"]},
     }
@@ -115,7 +141,6 @@ def create_resource_schema(config):
     resource_schema = {}
 
     for resource in api_objects:
-
         attributes = get_attributes(api_objects, resource)
 
         resource_metadata = {
@@ -130,7 +155,13 @@ def create_resource_schema(config):
             "segments": list(resource.segments),
             "attributes": attributes,
         }
+
         resource_schema[resource.name] = resource_metadata
+
+    for resource_name, resource in resource_schema.items():
+       updated_segments = get_segments(resource_schema, resource)
+
+       resource['segments'] = updated_segments
 
     for report in REPORTS:
         report_object = resource_schema[report]
@@ -139,7 +170,11 @@ def create_resource_schema(config):
         metrics = report_object["metrics"]
         segments = report_object["segments"]
         for field in attributes + metrics + segments:
-            field_schema = resource_schema[field]
+            field_schema = dict(resource_schema[field])
+
+            if field_schema['name'] in segments:
+                field_schema['category'] = 'SEGMENT'
+
             fields[field_schema["name"]] = {
                 "field_details": field_schema,
                 "incompatible_fields": [],
@@ -148,12 +183,20 @@ def create_resource_schema(config):
         metrics_and_segments = set(metrics + segments)
         for field_name, field in fields.items():
             for compared_field in metrics_and_segments:
-                if (
-                    field_name != compared_field
-                    and field_name
-                    not in resource_schema[compared_field]["selectable_with"]
-                ):
-                    field["incompatible_fields"].append(compared_field)
+
+                if not (field_name.startswith('segments.') or field_name.startswith('metrics.')):
+                    field_root_resource = field_name.split('.')[0]
+                else:
+                    field_root_resource = None
+
+                if (field_name != compared_field) and (compared_field.startswith("metrics.") or compared_field.startswith("segments.")):
+                    if field_root_resource:
+                        if field_root_resource not in resource_schema[compared_field]["selectable_with"]:
+                            field["incompatible_fields"].append(compared_field)
+                    else:
+                        if field_name not in resource_schema[compared_field]["selectable_with"]:
+                            field["incompatible_fields"].append(compared_field)
+
         report_object["fields"] = fields
     return resource_schema
 
@@ -180,10 +223,15 @@ def do_discover_reports(resource_schema):
             the_schema = props["field_details"]["json_schema"]
             report_schema[field] = the_schema
             report_metadata[("properties", field)] = {
-                "inclusion": "available",
                 "fieldExclusions": props["incompatible_fields"],
                 "behavior": props["field_details"]["category"],
             }
+
+            if props["field_details"]["selectable"]:
+                inclusion = "available"
+            else:
+                inclusion = "unsupported"
+            report_metadata[("properties", field)]["inclusion"] = inclusion
 
         catalog_entry = {
             "tap_stream_id": report,
@@ -228,7 +276,8 @@ def load_metadata(entity):
     return utils.load_json(get_abs_path(f"metadata/{entity}.json"))
 
 
-def do_discover_core_streams():
+# TODO Remove this function
+def do_discover_core_streams(resource_schema):
     streams = []
     LOGGER.info("Starting core discovery")
     for resource_name, properties in CORE_ENDPOINT_MAPPINGS.items():
@@ -249,53 +298,80 @@ def do_discover_core_streams():
 
 def do_discover(config):
     resource_schema = create_resource_schema(config)
-    core_streams = do_discover_core_streams()
+    # core_streams = do_discover_core_streams(resource_schema)
     report_streams = do_discover_reports(resource_schema)
     streams = []
-    streams.extend(core_streams)
+    # streams.extend(core_streams)
     streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 
-def create_sdk_client(config):
-    CONFIG = {
+def generate_new_schemas(config):
+    resource_schema = create_resource_schema(config)
+
+    ADWORDS_TO_GOOGLE_ADS = initialize_reports(resource_schema)
+    field_lengths = [field for report in ADWORDS_TO_GOOGLE_ADS.values() for field in report.fields if len(field) > 60]
+
+    streams = []
+    for adwords_report_name, report in ADWORDS_TO_GOOGLE_ADS.items():
+        report_schema = {}
+        report_mdata = {tuple(): {"inclusion": "available"}}
+        try:
+            for report_field in report.fields:
+                # field  = resource_schema[report_field]
+                report_mdata[("properties", report_field)] = {
+                    #"fieldExclusions": report.field_exclusions.get(report_field, []),
+                    #"behavior": report.behavior.get(report_field, "ATTRIBUTE"),
+                    "fieldExclusions": report.field_exclusions[report_field],
+                    "behavior": report.behavior[report_field]
+                }
+
+                if report.behavior[report_field]:
+                    inclusion = "available"
+                else:
+                    inclusion = "unsupported"
+                report_mdata[("properties", report_field)]["inclusion"] = inclusion
+        except Exception as err:
+            print(f'Error in {adwords_report_name}')
+            raise err
+
+        catalog_entry = {
+            "tap_stream_id": adwords_report_name,
+            "stream": adwords_report_name,
+            "schema": {
+                "type": ["null", "object"],
+                "is_report": True,
+                "properties": report.schema,
+            },
+            "metadata": singer.metadata.to_list(report_mdata),
+        }
+        streams.append(catalog_entry)
+
+    return {"streams": streams}
+
+
+def get_client_config(config, login_customer_id=None):
+    client_config = {
         "use_proto_plus": False,
         "developer_token": config["developer_token"],
         "client_id": config["oauth_client_id"],
         "client_secret": config["oauth_client_secret"],
-        "access_token": config["access_token"],
         "refresh_token": config["refresh_token"],
+        #"access_token": config["access_token"],
     }
-    sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
-    return sdk_client
-
-
-def get_client_config(config, login_customer_id=None):
 
     if login_customer_id:
-        return {
-            "use_proto_plus": False,
-            "developer_token": config["developer_token"],
-            "client_id": config["oauth_client_id"],
-            "client_secret": config["oauth_client_secret"],
-            "refresh_token": config["refresh_token"],
-            "login_customer_id": login_customer_id,
-        }
-    else:
-        return {
-            "use_proto_plus": False,
-            "developer_token": config["developer_token"],
-            "client_id": config["oauth_client_id"],
-            "client_secret": config["oauth_client_secret"],
-            "refresh_token": config["refresh_token"],
-        }
+        client_config["login_customer_id"] = login_customer_id
+
+    return client_config
 
 
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
     if args.discover:
-        do_discover(args.config)
+        json.dump(generate_new_schemas(args.config),  sys.stdout, indent=2)
+        #do_discover(args.config)
         LOGGER.info("Discovery complete")
 
 

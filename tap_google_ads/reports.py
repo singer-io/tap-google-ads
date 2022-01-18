@@ -1,20 +1,12 @@
 from collections import defaultdict
 import json
-import os
-import re
-import sys
 
 import singer
-from singer import utils
-from singer import bookmarks
-from singer import metadata
-from singer import transform, UNIX_MILLISECONDS_INTEGER_DATETIME_PARSING, Transformer
+from singer import Transformer
 
-from google.ads.googleads.client import GoogleAdsClient
-from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf.json_format import MessageToJson
 
-import report_definitions
+from . import report_definitions
 
 LOGGER = singer.get_logger()
 
@@ -44,8 +36,10 @@ def flatten(obj):
 
 class BaseStream:
 
-    def sync(self, sdk_client, customer, stream, report_name, stream_name):
+    def sync(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
+        resource_name = self.google_ads_resources_name[0]
+        stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = []
         for mdata in stream_mdata:
@@ -56,7 +50,7 @@ class BaseStream:
             ):
                 selected_fields.append(mdata["breadcrumb"][1])
 
-        query = f"SELECT {','.join(selected_fields)} FROM {report_name}"
+        query = f"SELECT {','.join(selected_fields)} FROM {resource_name}"
 
         response = gas.search(query=query, customer_id=customer["customerId"])
         with Transformer() as transformer:
@@ -68,8 +62,8 @@ class BaseStream:
                 flattened_obj = flatten(obj)
                 record = transformer.transform(flattened_obj, stream["schema"])
                 singer.write_record(stream_name, record)
-        
-    
+
+
     def add_extra_fields(self, resource_schema):
         """This function should add fields to `field_exclusions`, `schema`, and
         `behavior` that are not covered by Google's resource_schema
@@ -102,7 +96,6 @@ class BaseStream:
         self.google_ads_resources_name = google_ads_resource_name
         self.primary_keys = primary_keys
         self.extract_field_information(resource_schema)
-        #self.schema = self.compute_schema(resource_schema)
 
 
 class AdGroupPerformanceReport(BaseStream):
@@ -228,7 +221,7 @@ class PlaceholderFeedItemReport(BaseStream):
 
 def initialize_core_streams(resource_schema):
     return {
-        "Accounts": BaseStream(report_defintions.ACCOUNT_FIELDS, ["customer"], resource_schema, ["customer.id"]),
+        "Accounts": BaseStream(report_definitions.ACCOUNT_FIELDS, ["customer"], resource_schema, ["customer.id"]),
         "Ad_Groups": BaseStream(report_definitions.AD_GROUP_FIELDS, ["ad_group"], resource_schema, ["ad_group.id"]),
         "Ads": BaseStream(report_definitions.AD_GROUP_AD_FIELDS, ["ad_group_ad"], resource_schema, ["ad_group_ad.ad.id"]),
         "Campaigns": BaseStream(report_definitions.CAMPAIGN_FIELDS, ["campaign"], resource_schema, ["campaign.id"]),

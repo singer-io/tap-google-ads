@@ -314,19 +314,19 @@ def do_sync(config, catalog, resource_schema):
 
     for customer in customers:
         sdk_client = create_sdk_client(config, customer["loginCustomerId"])
-        for stream in selected_streams:
-            if stream["stream"] in core_streams:
-                stream_obj = core_streams[stream["stream"]]
-                resource_name = stream["tap_stream_id"]
-                stream_name = stream["stream"]
-                mdata_map = singer.metadata.to_map(stream["metadata"])
+        for catalog_entry in selected_streams:
+            stream_name = catalog_entry["stream"]
+            if stream_name in core_streams:
+                stream_obj = core_streams[stream_name]
+
+                mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
 
                 primary_key = (
                     mdata_map[()].get("metadata", {}).get("table-key-properties", [])
                 )
-                singer.messages.write_schema(stream_name, stream["schema"], primary_key)
+                singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
                 stream_obj.sync(
-                    sdk_client, customer, stream
+                    sdk_client, customer, catalog_entry
                 )
 
 

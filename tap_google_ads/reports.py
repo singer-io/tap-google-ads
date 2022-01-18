@@ -35,7 +35,6 @@ def flatten(obj):
 
 
 class BaseStream:
-
     def sync(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
@@ -63,7 +62,6 @@ class BaseStream:
                 record = transformer.transform(flattened_obj, stream["schema"])
                 singer.write_record(stream_name, record)
 
-
     def add_extra_fields(self, resource_schema):
         """This function should add fields to `field_exclusions`, `schema`, and
         `behavior` that are not covered by Google's resource_schema
@@ -81,13 +79,15 @@ class BaseStream:
             fields = resource_schema[resource_name]["fields"]
             for field_name, field in fields.items():
                 if field_name in self.fields:
-                    self.field_exclusions[field_name].update(field["incompatible_fields"])
+                    self.field_exclusions[field_name].update(
+                        field["incompatible_fields"]
+                    )
 
-                    self.schema[field_name] = field['field_details']['json_schema']
+                    self.schema[field_name] = field["field_details"]["json_schema"]
 
-                    self.behavior[field_name] = field['field_details']['category']
+                    self.behavior[field_name] = field["field_details"]["category"]
 
-                    self.selectable[field_name] = field['field_details']['selectable']
+                    self.selectable[field_name] = field["field_details"]["selectable"]
             self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
 
@@ -101,24 +101,28 @@ class BaseStream:
 class AdGroupPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
-        field_name = 'label.resource_name'
-        #for field_name in []:
+        field_name = "label.resource_name"
+        # for field_name in []:
         self.field_exclusions[field_name] = {}
         self.schema[field_name] = {"type": ["null", "string"]}
         self.behavior[field_name] = "ATTRIBUTE"
 
+
 class AdPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
-        for field_name in ['label.resource_name','label.name']:
+        for field_name in ["label.resource_name", "label.name"]:
             self.field_exclusions[field_name] = {}
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
 
-        for field_name in ['ad_group_criterion.negative',]:
+        for field_name in [
+            "ad_group_criterion.negative",
+        ]:
             self.field_exclusions[field_name] = {}
             self.schema[field_name] = {"type": ["null", "boolean"]}
             self.behavior[field_name] = "ATTRIBUTE"
+
 
 class AudiencePerformanceReport(BaseStream):
     "hi"
@@ -134,86 +138,74 @@ class AudiencePerformanceReport(BaseStream):
 
     # We think this means
     # `SELECT bidding_strategy.type from bidding_strategy`
+
     # `SELECT campaign.bidding_strategy_type from campaign`
 
     # 'user_list.name' is a "Segmenting resource"
     # `select user_list.name from `
 
-    # def add_extra_fields(self):
-    #     for field_name in ['campaign.bidding_strategy_type']:
-    #         self.field_exclusions[field_name] = set()
-    #         self.schema[field_name] = {"type": ["null", "string"]}
-    #         self.behavior[field_name] = "ATTRIBUTE"
-
-
-        # for field_name in ['bidding_strategy.name']:
-        #     segments = []
-        #     self.field_exclusions[field_name] = [
-        #         'segments.hotel_date_selection_type',
-        #         'metrics.active_view_cpm',
-        #         'metrics.active_view_ctr',
-        #         'metrics.active_view_impressions',
-        #         'metrics.active_view_measurability',
-        #         'metrics.active_view_measurable_cost_micros',
-        #         'metrics.active_view_measurable_impressions',
-        #         'metrics.active_view_viewability',
-        #         'metrics.all_conversions_by_conversion_date',
-        #         'metrics.all_conversions_value_by_conversion_date',
-        #         'metrics.average_cpe',
-        #         'metrics.conversions_by_conversion_date',
-        #     ]
-        #     self.schema[field_name] = {"type": ["null", "string"]}
-        #     self.behavior[field_name] = "SEGMENT"
-
-        # for field_name in ['bidding_strategy.name', 'user_list.name']:
-        #     self.field_exclusions[field_name] = [field
-        #                                          for field in self.fields
-        #                                          if field.startswith('segments.')
-        #                                          or field.startswith('metrics.')]
-        #     self.schema[field_name] = {"type": ["null", "string"]}
-        #     self.behavior[field_name] = "SEGMENT"
-
 class CampaignPerformanceReport(BaseStream):
     # TODO: The sync needs to select from campaign_criterion if campaign_criterion.device.type is selected
     # TODO: The sync needs to select from campaign_label if label.resource_name
     def add_extra_fields(self, resource_schema):
-        for field_name in ['campaign_criterion.device.type', 'label.resource_name',]:
+        for field_name in [
+            "campaign_criterion.device.type",
+            "label.resource_name",
+        ]:
             self.field_exclusions[field_name] = set()
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
 
+
 class DisplayKeywordPerformanceReport(BaseStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
-        for field_name in ['bidding_strategy.name',]:
-            self.field_exclusions[field_name] = resource_schema[self.google_ads_resources_name[0]]['fields'][field_name]['incompatible_fields']
+        for field_name in [
+            "bidding_strategy.name",
+        ]:
+            self.field_exclusions[field_name] = resource_schema[
+                self.google_ads_resources_name[0]
+            ]["fields"][field_name]["incompatible_fields"]
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "SEGMENT"
+
 
 class GeoPerformanceReport(BaseStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
         for resource_name in self.google_ads_resources_name:
-            for field_name in ['country_criterion_id',]:
+            for field_name in [
+                "country_criterion_id",
+            ]:
                 full_field_name = f"{resource_name}.{field_name}"
-                self.field_exclusions[full_field_name] = resource_schema[resource_name]['fields'][full_field_name]['incompatible_fields'] or set()
+                self.field_exclusions[full_field_name] = (
+                    resource_schema[resource_name]["fields"][full_field_name][
+                        "incompatible_fields"
+                    ]
+                    or set()
+                )
                 self.schema[full_field_name] = {"type": ["null", "string"]}
                 self.behavior[full_field_name] = "ATTRIBUTE"
+
 
 class KeywordsPerformanceReport(BaseStream):
     # TODO: The sync needs to select from ad_group_label if label.name is selected
     # TODO: The sync needs to select from ad_group_label if label.resource_name is selected
     def add_extra_fields(self, resource_schema):
-        for field_name in ['label.resource_name', 'label.name',]:
+        for field_name in [
+            "label.resource_name",
+            "label.name",
+        ]:
             self.field_exclusions[field_name] = set()
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
+
 
 class PlaceholderFeedItemReport(BaseStream):
     # TODO: The sync needs to select from feed_item_target if feed_item_target.device is selected
     # TODO: The sync needs to select from feed_item if feed_item.policy_infos is selected
     def add_extra_fields(self, resource_schema):
-        for field_name in ['feed_item_target.device', 'feed_item.policy_infos']:
+        for field_name in ["feed_item_target.device", "feed_item.policy_infos"]:
             self.field_exclusions[field_name] = set()
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
@@ -221,10 +213,30 @@ class PlaceholderFeedItemReport(BaseStream):
 
 def initialize_core_streams(resource_schema):
     return {
-        "Accounts": BaseStream(report_definitions.ACCOUNT_FIELDS, ["customer"], resource_schema, ["customer.id"]),
-        "Ad_Groups": BaseStream(report_definitions.AD_GROUP_FIELDS, ["ad_group"], resource_schema, ["ad_group.id"]),
-        "Ads": BaseStream(report_definitions.AD_GROUP_AD_FIELDS, ["ad_group_ad"], resource_schema, ["ad_group_ad.ad.id"]),
-        "Campaigns": BaseStream(report_definitions.CAMPAIGN_FIELDS, ["campaign"], resource_schema, ["campaign.id"]),
+        "Accounts": BaseStream(
+            report_definitions.ACCOUNT_FIELDS,
+            ["customer"],
+            resource_schema,
+            ["customer.id"],
+        ),
+        "Ad_Groups": BaseStream(
+            report_definitions.AD_GROUP_FIELDS,
+            ["ad_group"],
+            resource_schema,
+            ["ad_group.id"],
+        ),
+        "Ads": BaseStream(
+            report_definitions.AD_GROUP_AD_FIELDS,
+            ["ad_group_ad"],
+            resource_schema,
+            ["ad_group_ad.ad.id"],
+        ),
+        "Campaigns": BaseStream(
+            report_definitions.CAMPAIGN_FIELDS,
+            ["campaign"],
+            resource_schema,
+            ["campaign.id"],
+        ),
     }
 
 
@@ -234,47 +246,137 @@ def initialize_reports(resource_schema):
             report_definitions.ACCOUNT_PERFORMANCE_REPORT_FIELDS,
             ["customer"],
             resource_schema,
-            ['customer.id'],
+            ["customer.id"],
         ),
         # TODO: This needs to link with ad_group_ad_label
-        "Adgroup_Performance_Report": AdGroupPerformanceReport(report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS, ["ad_group"], resource_schema, ['ad_group.id'],),
-        "Ad_Performance_Report": AdPerformanceReport(report_definitions.AD_PERFORMANCE_REPORT_FIELDS, ["ad_group_ad"], resource_schema, ['ad_group_ad.ad.id'],),
-        "Age_Range_Performance_Report": BaseStream(report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS, ["age_range_view"], resource_schema, ['ad_group_criterion.criterion_id'],),
-        "Audience_Performance_Report": AudiencePerformanceReport(report_definitions.AUDIENCE_PERFORMANCE_REPORT_FIELDS, ["campaign_audience_view", "ad_group_audience_view"], resource_schema, ['ad_group_criterion.criterion_id'],),
+        "Adgroup_Performance_Report": AdGroupPerformanceReport(
+            report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
+            ["ad_group"],
+            resource_schema,
+            ["ad_group.id"],
+        ),
+        "Ad_Performance_Report": AdPerformanceReport(
+            report_definitions.AD_PERFORMANCE_REPORT_FIELDS,
+            ["ad_group_ad"],
+            resource_schema,
+            ["ad_group_ad.ad.id"],
+        ),
+        "Age_Range_Performance_Report": BaseStream(
+            report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS,
+            ["age_range_view"],
+            resource_schema,
+            ["ad_group_criterion.criterion_id"],
+        ),
+        "Audience_Performance_Report": AudiencePerformanceReport(
+            report_definitions.AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+            ["campaign_audience_view", "ad_group_audience_view"],
+            resource_schema,
+            ["ad_group_criterion.criterion_id"],
+        ),
         # "AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT": BaseStream(report_definitions.AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
         # "BID_GOAL_PERFORMANCE_REPORT": BaseStream(report_definitions.BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
         # "BUDGET_PERFORMANCE_REPORT": BaseStream(report_definitions.BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
-        "Call_Metrics_Call_Details_Report": BaseStream(report_definitions.CALL_METRICS_CALL_DETAILS_REPORT_FIELDS, ["call_view"], resource_schema, [''],),
+        "Call_Metrics_Call_Details_Report": BaseStream(
+            report_definitions.CALL_METRICS_CALL_DETAILS_REPORT_FIELDS,
+            ["call_view"],
+            resource_schema,
+            [""],
+        ),
         # "CAMPAIGN_AD_SCHEDULE_TARGET_REPORT": BaseStream(report_definitions.CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
         # "CAMPAIGN_CRITERIA_REPORT": BaseStream(report_definitions.CAMPAIGN_CRITERIA_REPORT_FIELDS, ["campaign_criterion"], resource_schema),
         # "CAMPAIGN_LOCATION_TARGET_REPORT": BaseStream(report_definitions.CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
-        "Campaign_Performance_Report": CampaignPerformanceReport(report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS, ["campaign"], resource_schema, [''],),
+        "Campaign_Performance_Report": CampaignPerformanceReport(
+            report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
+            ["campaign"],
+            resource_schema,
+            [""],
+        ),
         # "CAMPAIGN_SHARED_SET_REPORT": BaseStream(report_definitions.CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
-        "Click_Performance_Report": BaseStream(report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS, ["click_view"], resource_schema, [''],),
-        "Display_Keyword_Performance_Report": DisplayKeywordPerformanceReport(report_definitions.
-            DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
+        "Click_Performance_Report": BaseStream(
+            report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS,
+            ["click_view"],
+            resource_schema,
+            [""],
+        ),
+        "Display_Keyword_Performance_Report": DisplayKeywordPerformanceReport(
+            report_definitions.DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
             ["display_keyword_view"],
             resource_schema,
-            ['ad_group_criterion.criterion_id'],
+            ["ad_group_criterion.criterion_id"],
         ),
-        "Display_Topics_Performance_Report": DisplayKeywordPerformanceReport(report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS, ["topic_view"], resource_schema, [''],),
-        "Gender_Performance_Report": BaseStream(report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS, ["gender_view"], resource_schema, [''],),
-        "Geo_Performance_Report": GeoPerformanceReport(report_definitions.GEO_PERFORMANCE_REPORT_FIELDS, ["geographic_view", "user_location_view"], resource_schema, [''],),
-        "Keywordless_Query_Report": BaseStream(report_definitions.KEYWORDLESS_QUERY_REPORT_FIELDS, ["dynamic_search_ads_search_term_view"], resource_schema, [''],),
-        "Keywords_Performance_Report": KeywordsPerformanceReport(report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS, ["keyword_view"], resource_schema, [''],),
+        "Display_Topics_Performance_Report": DisplayKeywordPerformanceReport(
+            report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS,
+            ["topic_view"],
+            resource_schema,
+            [""],
+        ),
+        "Gender_Performance_Report": BaseStream(
+            report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
+            ["gender_view"],
+            resource_schema,
+            [""],
+        ),
+        "Geo_Performance_Report": GeoPerformanceReport(
+            report_definitions.GEO_PERFORMANCE_REPORT_FIELDS,
+            ["geographic_view", "user_location_view"],
+            resource_schema,
+            [""],
+        ),
+        "Keywordless_Query_Report": BaseStream(
+            report_definitions.KEYWORDLESS_QUERY_REPORT_FIELDS,
+            ["dynamic_search_ads_search_term_view"],
+            resource_schema,
+            [""],
+        ),
+        "Keywords_Performance_Report": KeywordsPerformanceReport(
+            report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS,
+            ["keyword_view"],
+            resource_schema,
+            [""],
+        ),
         # "LABEL_REPORT": BaseStream(report_definitions.LABEL_REPORT_FIELDS, ["label"], resource_schema),
         # "LANDING_PAGE_REPORT": BaseStream(report_definitions.LANDING_PAGE_REPORT_FIELDS, ["landing_page_view", "expanded_landing_page_view"], resource_schema),
         # "PAID_ORGANIC_QUERY_REPORT": BaseStream(report_definitions.PAID_ORGANIC_QUERY_REPORT_FIELDS, ["paid_organic_search_term_view"], resource_schema),
         # "PARENTAL_STATUS_PERFORMANCE_REPORT": BaseStream(report_definitions.PARENTAL_STATUS_PERFORMANCE_REPORT_FIELDS, ["parental_status_view"], resource_schema),
-        "Placeholder_Feed_Item_Report": PlaceholderFeedItemReport(report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS, ["feed_item", "feed_item_target"], resource_schema, [''],),
-        "Placeholder_Report": BaseStream(report_definitions.PLACEHOLDER_REPORT_FIELDS, ["feed_placeholder_view"], resource_schema, [''],),
-        "Placement_Performance_Report": BaseStream(report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS, ["managed_placement_view"], resource_schema, [''],),
+        "Placeholder_Feed_Item_Report": PlaceholderFeedItemReport(
+            report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
+            ["feed_item", "feed_item_target"],
+            resource_schema,
+            [""],
+        ),
+        "Placeholder_Report": BaseStream(
+            report_definitions.PLACEHOLDER_REPORT_FIELDS,
+            ["feed_placeholder_view"],
+            resource_schema,
+            [""],
+        ),
+        "Placement_Performance_Report": BaseStream(
+            report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS,
+            ["managed_placement_view"],
+            resource_schema,
+            [""],
+        ),
         # "PRODUCT_PARTITION_REPORT": BaseStream(report_definitions.PRODUCT_PARTITION_REPORT_FIELDS, ["product_group_view"], resource_schema),
-        "Search_Query_Performance_Report": BaseStream(report_definitions.SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS, ["search_term_view"], resource_schema, [''],),
+        "Search_Query_Performance_Report": BaseStream(
+            report_definitions.SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS,
+            ["search_term_view"],
+            resource_schema,
+            [""],
+        ),
         # "SHARED_SET_CRITERIA_REPORT": BaseStream(report_definitions.SHARED_SET_CRITERIA_REPORT_FIELDS, ["shared_criterion"], resource_schema),
-        "Shopping_Performance_Report": BaseStream(report_definitions.SHOPPING_PERFORMANCE_REPORT_FIELDS, ["shopping_performance_view"], resource_schema, [''],),
+        "Shopping_Performance_Report": BaseStream(
+            report_definitions.SHOPPING_PERFORMANCE_REPORT_FIELDS,
+            ["shopping_performance_view"],
+            resource_schema,
+            [""],
+        ),
         # "URL_PERFORMANCE_REPORT": BaseStream(report_definitions.URL_PERFORMANCE_REPORT_FIELDS, ["detail_placement_view"], resource_schema),
         # "USER_AD_DISTANCE_REPORT": BaseStream(report_definitions.USER_AD_DISTANCE_REPORT_FIELDS, ["distance_view"], resource_schema),
-        "Video_Performance_Report": BaseStream(report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS, ["video"], resource_schema, [''],),
+        "Video_Performance_Report": BaseStream(
+            report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS,
+            ["video"],
+            resource_schema,
+            [""],
+        ),
         # RESOURCES: "",
     }

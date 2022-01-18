@@ -326,7 +326,7 @@ def do_sync(config, catalog, resource_schema):
                 )
                 singer.messages.write_schema(stream_name, stream["schema"], primary_key)
                 stream_obj.sync(
-                    sdk_client, customer, stream, resource_name, stream_name
+                    sdk_client, customer, stream
                 )
 
 

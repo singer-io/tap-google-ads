@@ -37,6 +37,8 @@ CORE_ENDPOINT_MAPPINGS = {
     "customer": {"primary_keys": ["id"], "stream_name": "accounts"},
 }
 
+CORE_STREAMS = ["Campaigns", "Ad_Groups", "Ads", "Accounts"]
+
 REPORTS = [
     "ad_group",
     "ad_group_ad",
@@ -160,9 +162,8 @@ def create_resource_schema(config):
         resource_schema[resource.name] = resource_metadata
 
     for resource_name, resource in resource_schema.items():
-       updated_segments = get_segments(resource_schema, resource)
-
-       resource['segments'] = updated_segments
+        updated_segments = get_segments(resource_schema, resource)
+        resource['segments'] = updated_segments
 
     for report in REPORTS:
         report_object = resource_schema[report]
@@ -239,7 +240,7 @@ def do_discover_core_streams(resource_schema):
                 report_metadata[("properties", field)]["inclusion"] = inclusion
 
         catalog_entry = {
-            "tap_stream_id": stream_name,
+            "tap_stream_id": stream.google_ads_resources_name[0],
             "stream": stream_name,
             "schema": {
                 "type": ["null", "object"],
@@ -268,20 +269,53 @@ def create_field_metadata(primary_key, schema):
     return mdata
 
 
-def get_abs_path(path):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
+def create_sdk_client(config, login_customer_id=None):
+    CONFIG = {
+        "use_proto_plus": False,
+        "developer_token": config["developer_token"],
+        "client_id": config["oauth_client_id"],
+        "client_secret": config["oauth_client_secret"],
+        "access_token": config["access_token"],
+        "refresh_token": config["refresh_token"],
+    }
+
+    if login_customer_id:
+        CONFIG["login_customer_id"] = login_customer_id
+
+    sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
+    return sdk_client
 
 
-def load_schema(entity):
-    return utils.load_json(get_abs_path(f"schemas/{entity}.json"))
+def do_sync(config, catalog, resource_schema):
+    customers = json.loads(config["login_customer_ids"])
+
+    selected_streams = [
+        stream
+        for stream in catalog["streams"]
+        if singer.metadata.to_map(stream["metadata"])[()].get("selected")
+    ]
+
+    core_streams = initialize_core_streams(resource_schema)
+
+    for customer in customers:
+        sdk_client = create_sdk_client(config, customer["loginCustomerId"])
+        for stream in selected_streams:
+            if stream["stream"] in core_streams:
+                stream_obj = core_streams[stream["stream"]]
+                resource_name = stream["tap_stream_id"]
+                stream_name = stream["stream"]
+                mdata_map = singer.metadata.to_map(stream["metadata"])
+
+                primary_key = (
+                    mdata_map[()].get("metadata", {}).get("table-key-properties", [])
+                )
+                singer.messages.write_schema(stream_name, stream["schema"], primary_key)
+                stream_obj.sync(
+                    sdk_client, customer, stream, resource_name, stream_name
+                )
 
 
-def load_metadata(entity):
-    return utils.load_json(get_abs_path(f"metadata/{entity}.json"))
-
-
-def do_discover(config):
-    resource_schema = create_resource_schema(config)
+def do_discover(resource_schema):
     core_streams = do_discover_core_streams(resource_schema)
     report_streams = do_discover_reports(resource_schema)
     streams = []
@@ -351,9 +385,16 @@ def get_client_config(config, login_customer_id=None):
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
+    resource_schema = create_resource_schema(args.config)
     if args.discover:
-        do_discover(args.config)
+        do_discover(resource_schema)
         LOGGER.info("Discovery complete")
+    elif args.catalog:
+        do_sync(args.config, args.catalog.to_dict(), resource_schema)
+        LOGGER.info("Sync Completed")
+    else:
+        LOGGER.info("No properties were selected")
+
 
 
 if __name__ == "__main__":

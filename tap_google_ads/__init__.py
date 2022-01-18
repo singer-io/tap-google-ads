@@ -165,7 +165,7 @@ def create_resource_schema(config):
 
         resource_schema[resource.name] = resource_metadata
 
-    for resource_name, resource in resource_schema.items():
+    for resource in resource_schema.values():
         updated_segments = get_segments(resource_schema, resource)
         resource["segments"] = updated_segments
 
@@ -202,18 +202,12 @@ def create_resource_schema(config):
                     compared_field.startswith("metrics.")
                     or compared_field.startswith("segments.")
                 ):
-                    if field_root_resource:
-                        if (
-                            field_root_resource
-                            not in resource_schema[compared_field]["selectable_with"]
-                        ):
-                            field["incompatible_fields"].append(compared_field)
-                    else:
-                        if (
-                            field_name
-                            not in resource_schema[compared_field]["selectable_with"]
-                        ):
-                            field["incompatible_fields"].append(compared_field)
+                    field_to_check = field_root_resource or field_name
+                    if (
+                        field_to_check
+                        not in resource_schema[compared_field]["selectable_with"]
+                    ):
+                        field["incompatible_fields"].append(compared_field)
 
         report_object["fields"] = fields
     return resource_schema
@@ -338,7 +332,7 @@ def do_sync(config, catalog, resource_schema):
 
 def do_discover(resource_schema):
     core_streams = do_discover_core_streams(resource_schema)
-    report_streams = do_discover_reports(resource_schema)
+    # report_streams = do_discover_reports(resource_schema)
     streams = []
     streams.extend(core_streams)
     # streams.extend(report_streams)
@@ -347,16 +341,9 @@ def do_discover(resource_schema):
 
 def do_discover_reports(resource_schema):
     ADWORDS_TO_GOOGLE_ADS = initialize_reports(resource_schema)
-    field_lengths = [
-        field
-        for report in ADWORDS_TO_GOOGLE_ADS.values()
-        for field in report.fields
-        if len(field) > 60
-    ]
 
     streams = []
     for adwords_report_name, report in ADWORDS_TO_GOOGLE_ADS.items():
-        report_schema = {}
         report_mdata = {tuple(): {"inclusion": "available"}}
         try:
             for report_field in report.fields:

@@ -286,7 +286,7 @@ def do_discover(config):
     report_streams = do_discover_reports(resource_schema)
     streams = []
     streams.extend(core_streams)
-    streams.extend(report_streams)
+    # streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 

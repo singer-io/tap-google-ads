@@ -189,6 +189,8 @@ def create_resource_schema(config):
 
         metrics_and_segments = set(metrics + segments)
         for field_name, field in fields.items():
+            if field["field_details"]["category"] == "ATTRIBUTE":
+                continue
             for compared_field in metrics_and_segments:
 
                 if not (

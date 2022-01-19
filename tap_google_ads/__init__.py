@@ -37,16 +37,17 @@ CORE_ENDPOINT_MAPPINGS = {
     "customer": {"primary_keys": ["id"], "stream_name": "accounts"},
 }
 
-CORE_STREAMS = ["Campaigns", "Ad_Groups", "Ads", "Accounts"]
-
 REPORTS = [
+    "accessible_bidding_strategy",
     "ad_group",
     "ad_group_ad",
     "ad_group_audience_view",
     "age_range_view",
+    "bidding_strategy",
     "call_view",
     "campaign",
     "campaign_audience_view",
+    "campaign_budget",
     "click_view",
     "customer",
     "display_keyword_view",

@@ -242,7 +242,7 @@ def do_discover_core_streams(resource_schema):
         }
 
         for field, props in fields.items():
-            resource_matches = field.startswith(resource_object["name"])
+            resource_matches = field.startswith(resource_object["name"] + ".")
             is_id_field = field.endswith(".id")
 
             if props["field_details"]["category"] == "ATTRIBUTE" and (

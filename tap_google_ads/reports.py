@@ -12,6 +12,16 @@ LOGGER = singer.get_logger()
 
 API_VERSION = "v9"
 
+CORE_STREAMS = [
+    "customer",
+    "ad_group",
+    "ad_group_ad",
+    "campaign",
+    "bidding_strategy",
+    "accessible_bidding_strategy",
+    "campaign_budget",
+]
+
 
 def flatten(obj):
     """Given an `obj` like
@@ -34,6 +44,41 @@ def flatten(obj):
     return new_obj
 
 
+def make_field_names(resource_name, fields):
+    transformed_fields = []
+    for field in fields:
+        pieces = field.split("_")
+        front = "_".join(pieces[:-1])
+        back = pieces[-1]
+
+        if '.' in field:
+            transformed_fields.append(f"{resource_name}.{field}")
+        elif front in CORE_STREAMS and field.endswith('_id'):
+            transformed_fields.append(f"{front}.{back}")
+        else:
+            transformed_fields.append(f"{resource_name}.{field}")
+    return transformed_fields
+
+
+def transform_keys(resource_name, flattened_obj):
+    transformed_obj = {}
+
+    for field, value in flattened_obj.items():
+        resource_matches = field.startswith(resource_name + ".")
+        is_id_field = field.endswith(".id")
+
+        if resource_matches:
+            new_field_name = ".".join(field.split(".")[1:])
+        elif is_id_field:
+            new_field_name = field.replace(".", "_")
+        else:
+            new_field_name = field
+
+        assert new_field_name not in transformed_obj
+        transformed_obj[new_field_name] = value
+
+    return transformed_obj
+
 class BaseStream:
     def sync(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -49,8 +94,8 @@ class BaseStream:
             ):
                 selected_fields.append(mdata["breadcrumb"][1])
 
-        query = f"SELECT {','.join(selected_fields)} FROM {resource_name}"
-
+        google_field_names = make_field_names(resource_name, selected_fields)
+        query = f"SELECT {','.join(google_field_names)} FROM {resource_name}"
         response = gas.search(query=query, customer_id=customer["customerId"])
         with Transformer() as transformer:
             json_response = [
@@ -59,7 +104,8 @@ class BaseStream:
             ]
             for obj in json_response:
                 flattened_obj = flatten(obj)
-                record = transformer.transform(flattened_obj, stream["schema"])
+                transformed_obj = transform_keys(resource_name, flattened_obj)
+                record = transformer.transform(transformed_obj, stream["schema"])
                 singer.write_record(stream_name, record)
 
     def add_extra_fields(self, resource_schema):

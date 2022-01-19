@@ -213,43 +213,43 @@ class PlaceholderFeedItemReport(BaseStream):
 
 def initialize_core_streams(resource_schema):
     return {
-        "Accounts": BaseStream(
+        "accounts": BaseStream(
             report_definitions.ACCOUNT_FIELDS,
             ["customer"],
             resource_schema,
             ["customer.id"],
         ),
-        "Ad_Groups": BaseStream(
+        "ad_groups": BaseStream(
             report_definitions.AD_GROUP_FIELDS,
             ["ad_group"],
             resource_schema,
             ["ad_group.id"],
         ),
-        "Ads": BaseStream(
+        "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
             ["ad_group_ad"],
             resource_schema,
             ["ad_group_ad.ad.id"],
         ),
-        "Campaigns": BaseStream(
+        "campaigns": BaseStream(
             report_definitions.CAMPAIGN_FIELDS,
             ["campaign"],
             resource_schema,
             ["campaign.id"],
         ),
-        "Bidding_Strategy": BaseStream(
+        "bidding_strategy": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
             ["bidding_strategy"],
             resource_schema,
             ["bidding_strategy.id"],
         ),
-        "Accessible_Bidding_Strategy": BaseStream(
+        "accessible_bidding_strategy": BaseStream(
             report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
             ["accessible_bidding_strategy"],
             resource_schema,
             ["accessible_bidding_strategy.id"],
         ),
-        "Campaign_Budget": BaseStream(
+        "campaign_budget": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
             ["campaign_budget"],
             resource_schema,
@@ -260,140 +260,140 @@ def initialize_core_streams(resource_schema):
 
 def initialize_reports(resource_schema):
     return {
-        "Account_Performance_Report": BaseStream(
+        "account_performance_report": BaseStream(
             report_definitions.ACCOUNT_PERFORMANCE_REPORT_FIELDS,
             ["customer"],
             resource_schema,
             ["customer.id"],
         ),
         # TODO: This needs to link with ad_group_ad_label
-        "Adgroup_Performance_Report": AdGroupPerformanceReport(
+        "adgroup_performance_report": AdGroupPerformanceReport(
             report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
             ["ad_group"],
             resource_schema,
             ["ad_group.id"],
         ),
-        "Ad_Performance_Report": AdPerformanceReport(
+        "ad_performance_report": AdPerformanceReport(
             report_definitions.AD_PERFORMANCE_REPORT_FIELDS,
             ["ad_group_ad"],
             resource_schema,
             ["ad_group_ad.ad.id"],
         ),
-        "Age_Range_Performance_Report": BaseStream(
+        "age_range_performance_report": BaseStream(
             report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS,
             ["age_range_view"],
             resource_schema,
             ["ad_group_criterion.criterion_id"],
         ),
-        "Audience_Performance_Report": AudiencePerformanceReport(
+        "audience_performance_report": AudiencePerformanceReport(
             report_definitions.AUDIENCE_PERFORMANCE_REPORT_FIELDS,
             ["campaign_audience_view", "ad_group_audience_view"],
             resource_schema,
             ["ad_group_criterion.criterion_id"],
         ),
-        "Call_Metrics_Call_Details_Report": BaseStream(
+        "call_metrics_call_details_report": BaseStream(
             report_definitions.CALL_METRICS_CALL_DETAILS_REPORT_FIELDS,
             ["call_view"],
             resource_schema,
             [""],
         ),
-        "Campaign_Performance_Report": CampaignPerformanceReport(
+        "campaign_performance_report": CampaignPerformanceReport(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
             resource_schema,
             [""],
         ),
-        "Click_Performance_Report": BaseStream(
+        "click_performance_report": BaseStream(
             report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS,
             ["click_view"],
             resource_schema,
             [""],
         ),
-        "Display_Keyword_Performance_Report": DisplayKeywordPerformanceReport(
+        "display_keyword_performance_report": DisplayKeywordPerformanceReport(
             report_definitions.DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
             ["display_keyword_view"],
             resource_schema,
             ["ad_group_criterion.criterion_id"],
         ),
-        "Display_Topics_Performance_Report": DisplayKeywordPerformanceReport(
+        "display_topics_performance_report": DisplayKeywordPerformanceReport(
             report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS,
             ["topic_view"],
             resource_schema,
             [""],
         ),
-        "Gender_Performance_Report": BaseStream(
+        "gender_performance_report": BaseStream(
             report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
             ["gender_view"],
             resource_schema,
             [""],
         ),
-        "Geo_Performance_Report": GeoPerformanceReport(
+        "geo_performance_report": GeoPerformanceReport(
             report_definitions.GEO_PERFORMANCE_REPORT_FIELDS,
             ["geographic_view", "user_location_view"],
             resource_schema,
             [""],
         ),
-        "Keywordless_Query_Report": BaseStream(
+        "keywordless_query_report": BaseStream(
             report_definitions.KEYWORDLESS_QUERY_REPORT_FIELDS,
             ["dynamic_search_ads_search_term_view"],
             resource_schema,
             [""],
         ),
-        "Keywords_Performance_Report": KeywordsPerformanceReport(
+        "keywords_performance_report": KeywordsPerformanceReport(
             report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS,
             ["keyword_view"],
             resource_schema,
             [""],
         ),
-        "Placeholder_Feed_Item_Report": PlaceholderFeedItemReport(
+        "placeholder_feed_item_report": PlaceholderFeedItemReport(
             report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
             ["feed_item", "feed_item_target"],
             resource_schema,
             [""],
         ),
-        "Placeholder_Report": BaseStream(
+        "placeholder_report": BaseStream(
             report_definitions.PLACEHOLDER_REPORT_FIELDS,
             ["feed_placeholder_view"],
             resource_schema,
             [""],
         ),
-        "Placement_Performance_Report": BaseStream(
+        "placement_performance_report": BaseStream(
             report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS,
             ["managed_placement_view"],
             resource_schema,
             [""],
         ),
-        "Search_Query_Performance_Report": BaseStream(
+        "search_query_performance_report": BaseStream(
             report_definitions.SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS,
             ["search_term_view"],
             resource_schema,
             [""],
         ),
-        "Shopping_Performance_Report": BaseStream(
+        "shopping_performance_report": BaseStream(
             report_definitions.SHOPPING_PERFORMANCE_REPORT_FIELDS,
             ["shopping_performance_view"],
             resource_schema,
             [""],
         ),
-        "Video_Performance_Report": BaseStream(
+        "video_performance_report": BaseStream(
             report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS,
             ["video"],
             resource_schema,
             [""],
         ),
-        # "AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT": BaseStream(report_definitions.AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
-        # "BID_GOAL_PERFORMANCE_REPORT": BaseStream(report_definitions.BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
-        # "BUDGET_PERFORMANCE_REPORT": BaseStream(report_definitions.BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
-        # "CAMPAIGN_AD_SCHEDULE_TARGET_REPORT": BaseStream(report_definitions.CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
-        # "CAMPAIGN_CRITERIA_REPORT": BaseStream(report_definitions.CAMPAIGN_CRITERIA_REPORT_FIELDS, ["campaign_criterion"], resource_schema),
-        # "CAMPAIGN_LOCATION_TARGET_REPORT": BaseStream(report_definitions.CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
-        # "CAMPAIGN_SHARED_SET_REPORT": BaseStream(report_definitions.CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
-        # "LABEL_REPORT": BaseStream(report_definitions.LABEL_REPORT_FIELDS, ["label"], resource_schema),
-        # "LANDING_PAGE_REPORT": BaseStream(report_definitions.LANDING_PAGE_REPORT_FIELDS, ["landing_page_view", "expanded_landing_page_view"], resource_schema),
-        # "PAID_ORGANIC_QUERY_REPORT": BaseStream(report_definitions.PAID_ORGANIC_QUERY_REPORT_FIELDS, ["paid_organic_search_term_view"], resource_schema),
-        # "PARENTAL_STATUS_PERFORMANCE_REPORT": BaseStream(report_definitions.PARENTAL_STATUS_PERFORMANCE_REPORT_FIELDS, ["parental_status_view"], resource_schema),
-        # "PRODUCT_PARTITION_REPORT": BaseStream(report_definitions.PRODUCT_PARTITION_REPORT_FIELDS, ["product_group_view"], resource_schema),
-        # "SHARED_SET_CRITERIA_REPORT": BaseStream(report_definitions.SHARED_SET_CRITERIA_REPORT_FIELDS, ["shared_criterion"], resource_schema),
-        # "URL_PERFORMANCE_REPORT": BaseStream(report_definitions.URL_PERFORMANCE_REPORT_FIELDS, ["detail_placement_view"], resource_schema),
-        # "USER_AD_DISTANCE_REPORT": BaseStream(report_definitions.USER_AD_DISTANCE_REPORT_FIELDS, ["distance_view"], resource_schema),
+        # "automatic_placements_performance_report": BaseStream(report_definitions.AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
+        # "bid_goal_performance_report": BaseStream(report_definitions.BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
+        # "budget_performance_report": BaseStream(report_definitions.BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
+        # "campaign_ad_schedule_target_report": BaseStream(report_definitions.CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
+        # "campaign_criteria_report": BaseStream(report_definitions.CAMPAIGN_CRITERIA_REPORT_FIELDS, ["campaign_criterion"], resource_schema),
+        # "campaign_location_target_report": BaseStream(report_definitions.CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
+        # "campaign_shared_set_report": BaseStream(report_definitions.CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
+        # "label_report": BaseStream(report_definitions.LABEL_REPORT_FIELDS, ["label"], resource_schema),
+        # "landing_page_report": BaseStream(report_definitions.LANDING_PAGE_REPORT_FIELDS, ["landing_page_view", "expanded_landing_page_view"], resource_schema),
+        # "paid_organic_query_report": BaseStream(report_definitions.PAID_ORGANIC_QUERY_REPORT_FIELDS, ["paid_organic_search_term_view"], resource_schema),
+        # "parental_status_performance_report": BaseStream(report_definitions.PARENTAL_STATUS_PERFORMANCE_REPORT_FIELDS, ["parental_status_view"], resource_schema),
+        # "product_partition_report": BaseStream(report_definitions.PRODUCT_PARTITION_REPORT_FIELDS, ["product_group_view"], resource_schema),
+        # "shared_set_criteria_report": BaseStream(report_definitions.SHARED_SET_CRITERIA_REPORT_FIELDS, ["shared_criterion"], resource_schema),
+        # "url_performance_report": BaseStream(report_definitions.URL_PERFORMANCE_REPORT_FIELDS, ["detail_placement_view"], resource_schema),
+        # "user_ad_distance_report": BaseStream(report_definitions.USER_AD_DISTANCE_REPORT_FIELDS, ["distance_view"], resource_schema),
     }

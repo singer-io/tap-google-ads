@@ -240,7 +240,17 @@ def do_discover_core_streams(resource_schema):
         }
 
         for field, props in fields.items():
-            if props["field_details"]["category"] == "ATTRIBUTE":
+            resource_matches = field.startswith(resource_object["name"])
+            is_id_field = field.endswith(".id")
+
+            if props["field_details"]["category"] == "ATTRIBUTE" and (
+                resource_matches or is_id_field
+            ):
+                if resource_matches:
+                    field = ".".join(field.split(".")[1:])
+                elif is_id_field:
+                    field = field.replace(".", "_")
+
                 the_schema = props["field_details"]["json_schema"]
                 report_schema[field] = the_schema
                 report_metadata[("properties", field)] = {
@@ -325,10 +335,10 @@ def do_sync(config, catalog, resource_schema):
                 primary_key = (
                     mdata_map[()].get("metadata", {}).get("table-key-properties", [])
                 )
-                singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
-                stream_obj.sync(
-                    sdk_client, customer, catalog_entry
+                singer.messages.write_schema(
+                    stream_name, catalog_entry["schema"], primary_key
                 )
+                stream_obj.sync(sdk_client, customer, catalog_entry)
 
 
 def do_discover(resource_schema):

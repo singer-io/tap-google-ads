@@ -237,19 +237,19 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["campaign.id"],
         ),
-        "bidding_strategy": BaseStream(
+        "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
             ["bidding_strategy"],
             resource_schema,
             ["bidding_strategy.id"],
         ),
-        "accessible_bidding_strategy": BaseStream(
+        "accessible_bidding_strategies": BaseStream(
             report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
             ["accessible_bidding_strategy"],
             resource_schema,
             ["accessible_bidding_strategy.id"],
         ),
-        "campaign_budget": BaseStream(
+        "campaign_budgets": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
             ["campaign_budget"],
             resource_schema,

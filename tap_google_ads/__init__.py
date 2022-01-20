@@ -38,13 +38,16 @@ CORE_ENDPOINT_MAPPINGS = {
 }
 
 REPORTS = [
+    "accessible_bidding_strategy",
     "ad_group",
     "ad_group_ad",
     "ad_group_audience_view",
     "age_range_view",
+    "bidding_strategy",
     "call_view",
     "campaign",
     "campaign_audience_view",
+    "campaign_budget",
     "click_view",
     "customer",
     "display_keyword_view",
@@ -98,20 +101,24 @@ def get_attributes(api_objects, resource):
 def get_segments(resource_schema, resource):
     resource_segments = []
 
-    if resource['category'] != "RESOURCE":
+    if resource["category"] != "RESOURCE":
         # Attributes, segments, and metrics do not have attributes
         return resource_segments
 
-    segments = resource['segments']
+    segments = resource["segments"]
     for segment in segments:
         if segment.startswith("segments."):
             resource_segments.append(segment)
         else:
             segment_schema = resource_schema[segment]
-            segment_attributes = [attribute for attribute in segment_schema['attributes']
-                                  if attribute.startswith(f"{segment}.")]
+            segment_attributes = [
+                attribute
+                for attribute in segment_schema["attributes"]
+                if attribute.startswith(f"{segment}.")
+            ]
             resource_segments.extend(segment_attributes)
     return resource_segments
+
 
 def create_resource_schema(config):
     client = GoogleAdsClient.load_from_dict(get_client_config(config))
@@ -159,10 +166,9 @@ def create_resource_schema(config):
 
         resource_schema[resource.name] = resource_metadata
 
-    for resource_name, resource in resource_schema.items():
-       updated_segments = get_segments(resource_schema, resource)
-
-       resource['segments'] = updated_segments
+    for resource in resource_schema.values():
+        updated_segments = get_segments(resource_schema, resource)
+        resource["segments"] = updated_segments
 
     for report in REPORTS:
         report_object = resource_schema[report]
@@ -173,8 +179,8 @@ def create_resource_schema(config):
         for field in attributes + metrics + segments:
             field_schema = dict(resource_schema[field])
 
-            if field_schema['name'] in segments:
-                field_schema['category'] = 'SEGMENT'
+            if field_schema["name"] in segments:
+                field_schema["category"] = "SEGMENT"
 
             fields[field_schema["name"]] = {
                 "field_details": field_schema,
@@ -183,20 +189,28 @@ def create_resource_schema(config):
 
         metrics_and_segments = set(metrics + segments)
         for field_name, field in fields.items():
+            if field["field_details"]["category"] == "ATTRIBUTE":
+                continue
             for compared_field in metrics_and_segments:
 
-                if not (field_name.startswith('segments.') or field_name.startswith('metrics.')):
-                    field_root_resource = field_name.split('.')[0]
+                if not (
+                    field_name.startswith("segments.")
+                    or field_name.startswith("metrics.")
+                ):
+                    field_root_resource = field_name.split(".")[0]
                 else:
                     field_root_resource = None
 
-                if (field_name != compared_field) and (compared_field.startswith("metrics.") or compared_field.startswith("segments.")):
-                    if field_root_resource:
-                        if field_root_resource not in resource_schema[compared_field]["selectable_with"]:
-                            field["incompatible_fields"].append(compared_field)
-                    else:
-                        if field_name not in resource_schema[compared_field]["selectable_with"]:
-                            field["incompatible_fields"].append(compared_field)
+                if (field_name != compared_field) and (
+                    compared_field.startswith("metrics.")
+                    or compared_field.startswith("segments.")
+                ):
+                    field_to_check = field_root_resource or field_name
+                    if (
+                        field_to_check
+                        not in resource_schema[compared_field]["selectable_with"]
+                    ):
+                        field["incompatible_fields"].append(compared_field)
 
         report_object["fields"] = fields
     return resource_schema
@@ -220,10 +234,25 @@ def do_discover_core_streams(resource_schema):
         resource_object = resource_schema[stream.google_ads_resources_name[0]]
         fields = resource_object["fields"]
         report_schema = {}
-        report_metadata = {tuple(): {"inclusion": "available", "table-key-properties": stream.primary_keys}}
+        report_metadata = {
+            tuple(): {
+                "inclusion": "available",
+                "table-key-properties": stream.primary_keys,
+            }
+        }
 
         for field, props in fields.items():
-            if props["field_details"]["category"] == "ATTRIBUTE":
+            resource_matches = field.startswith(resource_object["name"] + ".")
+            is_id_field = field.endswith(".id")
+
+            if props["field_details"]["category"] == "ATTRIBUTE" and (
+                resource_matches or is_id_field
+            ):
+                if resource_matches:
+                    field = ".".join(field.split(".")[1:])
+                elif is_id_field:
+                    field = field.replace(".", "_")
+
                 the_schema = props["field_details"]["json_schema"]
                 report_schema[field] = the_schema
                 report_metadata[("properties", field)] = {
@@ -239,7 +268,7 @@ def do_discover_core_streams(resource_schema):
                 report_metadata[("properties", field)]["inclusion"] = inclusion
 
         catalog_entry = {
-            "tap_stream_id": stream_name,
+            "tap_stream_id": stream.google_ads_resources_name[0],
             "stream": stream_name,
             "schema": {
                 "type": ["null", "object"],
@@ -268,44 +297,75 @@ def create_field_metadata(primary_key, schema):
     return mdata
 
 
-def get_abs_path(path):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
+def create_sdk_client(config, login_customer_id=None):
+    CONFIG = {
+        "use_proto_plus": False,
+        "developer_token": config["developer_token"],
+        "client_id": config["oauth_client_id"],
+        "client_secret": config["oauth_client_secret"],
+        "access_token": config["access_token"],
+        "refresh_token": config["refresh_token"],
+    }
+
+    if login_customer_id:
+        CONFIG["login_customer_id"] = login_customer_id
+
+    sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
+    return sdk_client
 
 
-def load_schema(entity):
-    return utils.load_json(get_abs_path(f"schemas/{entity}.json"))
+def do_sync(config, catalog, resource_schema):
+    customers = json.loads(config["login_customer_ids"])
+
+    selected_streams = [
+        stream
+        for stream in catalog["streams"]
+        if singer.metadata.to_map(stream["metadata"])[()].get("selected")
+    ]
+
+    core_streams = initialize_core_streams(resource_schema)
+
+    for customer in customers:
+        sdk_client = create_sdk_client(config, customer["loginCustomerId"])
+        for catalog_entry in selected_streams:
+            stream_name = catalog_entry["stream"]
+            if stream_name in core_streams:
+                stream_obj = core_streams[stream_name]
+
+                mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
+
+                primary_key = (
+                    mdata_map[()].get("metadata", {}).get("table-key-properties", [])
+                )
+                singer.messages.write_schema(
+                    stream_name, catalog_entry["schema"], primary_key
+                )
+                stream_obj.sync(sdk_client, customer, catalog_entry)
 
 
-def load_metadata(entity):
-    return utils.load_json(get_abs_path(f"metadata/{entity}.json"))
-
-
-def do_discover(config):
-    resource_schema = create_resource_schema(config)
+def do_discover(resource_schema):
     core_streams = do_discover_core_streams(resource_schema)
-    report_streams = do_discover_reports(resource_schema)
+    # report_streams = do_discover_reports(resource_schema)
     streams = []
     streams.extend(core_streams)
-    streams.extend(report_streams)
+    # streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 
 def do_discover_reports(resource_schema):
     ADWORDS_TO_GOOGLE_ADS = initialize_reports(resource_schema)
-    field_lengths = [field for report in ADWORDS_TO_GOOGLE_ADS.values() for field in report.fields if len(field) > 60]
 
     streams = []
     for adwords_report_name, report in ADWORDS_TO_GOOGLE_ADS.items():
-        report_schema = {}
         report_mdata = {tuple(): {"inclusion": "available"}}
         try:
             for report_field in report.fields:
                 # field  = resource_schema[report_field]
                 report_mdata[("properties", report_field)] = {
-                    #"fieldExclusions": report.field_exclusions.get(report_field, []),
-                    #"behavior": report.behavior.get(report_field, "ATTRIBUTE"),
+                    # "fieldExclusions": report.field_exclusions.get(report_field, []),
+                    # "behavior": report.behavior.get(report_field, "ATTRIBUTE"),
                     "fieldExclusions": report.field_exclusions[report_field],
-                    "behavior": report.behavior[report_field]
+                    "behavior": report.behavior[report_field],
                 }
 
                 if report.behavior[report_field]:
@@ -314,7 +374,7 @@ def do_discover_reports(resource_schema):
                     inclusion = "unsupported"
                 report_mdata[("properties", report_field)]["inclusion"] = inclusion
         except Exception as err:
-            print(f'Error in {adwords_report_name}')
+            print(f"Error in {adwords_report_name}")
             raise err
 
         catalog_entry = {
@@ -339,7 +399,7 @@ def get_client_config(config, login_customer_id=None):
         "client_id": config["oauth_client_id"],
         "client_secret": config["oauth_client_secret"],
         "refresh_token": config["refresh_token"],
-        #"access_token": config["access_token"],
+        # "access_token": config["access_token"],
     }
 
     if login_customer_id:
@@ -351,9 +411,15 @@ def get_client_config(config, login_customer_id=None):
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
+    resource_schema = create_resource_schema(args.config)
     if args.discover:
-        do_discover(args.config)
+        do_discover(resource_schema)
         LOGGER.info("Discovery complete")
+    elif args.catalog:
+        do_sync(args.config, args.catalog.to_dict(), resource_schema)
+        LOGGER.info("Sync Completed")
+    else:
+        LOGGER.info("No properties were selected")
 
 
 if __name__ == "__main__":

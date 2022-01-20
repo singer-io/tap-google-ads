@@ -44,7 +44,7 @@ class DiscoveryTest(GoogleAdsBase):
         # streams should only have lowercase alphas and underscores
 
         found_catalog_names = {c['tap_stream_id'] for c in found_catalogs}
-        self.assertTrue(all([re.fullmatch(r"[a-z_]+",  name) for name in found_catalog_names]),
+        self.assertTrue(all([re.fullmatch(r"[A-Za-z_]+",  name) for name in found_catalog_names]),
                           msg="One or more streams don't follow standard naming")
 
         for stream in streams_to_test:
@@ -122,7 +122,7 @@ class DiscoveryTest(GoogleAdsBase):
 
                 # verify all other fields are given inclusion of available
                 self.assertTrue(
-                    all({item.get("metadata").get("inclusion") == "available"
+                    all({item.get("metadata").get("inclusion") in {"available", "unsupported"}
                          for item in metadata
                          if item.get("breadcrumb", []) != []
                          and item.get("breadcrumb", ["properties", None])[1]

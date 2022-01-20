@@ -206,7 +206,9 @@ def create_resource_schema(config):
                     or compared_field.startswith("segments.")
                 ):
                     field_to_check = field_root_resource or field_name
-                    if (
+                    if field_name.startswith('metrics.') and compared_field.startswith('metrics.'):
+                        continue
+                    elif (
                         field_to_check
                         not in resource_schema[compared_field]["selectable_with"]
                     ):

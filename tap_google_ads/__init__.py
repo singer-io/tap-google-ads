@@ -326,6 +326,7 @@ def do_sync(config, catalog, resource_schema):
     ]
 
     core_streams = initialize_core_streams(resource_schema)
+    report_streams = initialize_reports(resource_schema)
 
     for customer in customers:
         sdk_client = create_sdk_client(config, customer["loginCustomerId"])
@@ -343,14 +344,20 @@ def do_sync(config, catalog, resource_schema):
                     stream_name, catalog_entry["schema"], primary_key
                 )
                 stream_obj.sync(sdk_client, customer, catalog_entry)
+            else:
+                # syncing report
+                stream_obj = report_streams[stream_name]
+                mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
+                singer.messages.write_schema(stream_name, catalog_entry["schema"], [])
+                stream_obj.sync(sdk_client, customer, catalog_entry)
 
 
 def do_discover(resource_schema):
     core_streams = do_discover_core_streams(resource_schema)
-    # report_streams = do_discover_reports(resource_schema)
+    report_streams = do_discover_reports(resource_schema)
     streams = []
     streams.extend(core_streams)
-    # streams.extend(report_streams)
+    streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 

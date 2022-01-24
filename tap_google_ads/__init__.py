@@ -361,30 +361,28 @@ def do_discover(resource_schema):
     json.dump({"streams": streams}, sys.stdout, indent=2)
 
 
+def strip_prefix(field_name):
+    return field_name.replace('segments.', '').replace('metrics.', '')
+
 def do_discover_reports(resource_schema):
     ADWORDS_TO_GOOGLE_ADS = initialize_reports(resource_schema)
 
     streams = []
     for adwords_report_name, report in ADWORDS_TO_GOOGLE_ADS.items():
         report_mdata = {tuple(): {"inclusion": "available"}}
-        try:
-            for report_field in report.fields:
-                # field  = resource_schema[report_field]
-                report_mdata[("properties", report_field)] = {
-                    # "fieldExclusions": report.field_exclusions.get(report_field, []),
-                    # "behavior": report.behavior.get(report_field, "ATTRIBUTE"),
-                    "fieldExclusions": report.field_exclusions[report_field],
-                    "behavior": report.behavior[report_field],
-                }
+        for report_field in report.fields:
+            transformed_field_name = strip_prefix(report_field)
+            report_mdata[("properties", transformed_field_name)] = {
+                "fieldExclusions": [strip_prefix(field_name)
+                                    for field_name in report.field_exclusions[report_field]],
+                "behavior": report.behavior[report_field],
+            }
 
-                if report.behavior[report_field]:
-                    inclusion = "available"
-                else:
-                    inclusion = "unsupported"
-                report_mdata[("properties", report_field)]["inclusion"] = inclusion
-        except Exception as err:
-            print(f"Error in {adwords_report_name}")
-            raise err
+            if report.behavior[report_field]:
+                inclusion = "available"
+            else:
+                inclusion = "unsupported"
+            report_mdata[("properties", transformed_field_name)]["inclusion"] = inclusion
 
         catalog_entry = {
             "tap_stream_id": adwords_report_name,
@@ -392,7 +390,8 @@ def do_discover_reports(resource_schema):
             "schema": {
                 "type": ["null", "object"],
                 "is_report": True,
-                "properties": report.schema,
+                "properties": {strip_prefix(field_name): schema
+                               for field_name, schema in report.schema.items()},
             },
             "metadata": singer.metadata.to_list(report_mdata),
         }

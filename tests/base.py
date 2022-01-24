@@ -4,6 +4,7 @@ Run discovery for as a prerequisite for most tests
 """
 import unittest
 import os
+import json
 from datetime import timedelta
 from datetime import datetime as dt
 
@@ -47,12 +48,12 @@ class GoogleAdsBase(unittest.TestCase):
             'customer_ids': '5548074409,2728292456',
             'login_customer_ids': [
                 {
-                    'customerId': '5548074409',
-                    'loginCustomerId': '2728292456',
+                    "customerId": "5548074409",
+                    "loginCustomerId": "2728292456",
                  },
                 {
-                    'customerId': '2728292456',
-                    'loginCustomerId': '2728292456',
+                    "customerId": "2728292456",
+                    "loginCustomerId": "2728292456",
                  },
             ],
         }
@@ -69,32 +70,53 @@ class GoogleAdsBase(unittest.TestCase):
         return {
             # Core Objects
             "accounts": {
-                self.PRIMARY_KEYS: {"customer_id"},
+                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: set(),
             },
             "campaigns": {
-                self.PRIMARY_KEYS: {"campaign_id"},
+                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    'accessible_bidding_strategy_id', 
+                    'bidding_strategy_id',
+                    'campaign_budget_id',
+                    'customer_id'
+                },
             },
             "ad_groups": {
-                self.PRIMARY_KEYS: {"ad_group_id"},
+                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    'accessible_bidding_strategy_id',
+                    'bidding_strategy_id',
+                    'campaign_id',
+                    'customer_id',
+                },
             },
             "ads": {
-                self.PRIMARY_KEYS: {"ad_group_ad_ad_id"}, # TODO should there be the ad_group_ad level in this name?
+                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    "campaign_id",
+                    "customer_id",
+                    "ad_group_id"
+                },
             },
             'campaign_budgets': {
-                self.PRIMARY_KEYS: {"campaign_budgets_id"},
+                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {"customer_id"},
             },
             'bidding_strategies': {
-                self.PRIMARY_KEYS: {"bidding_strategies_id"},
+                self.PRIMARY_KEYS:{"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {"customer_id"},
             },
             'accessible_bidding_strategies': {
-                self.PRIMARY_KEYS: {"accessible_bidding_strategies_id"},
+                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {"customer_id"},
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"
@@ -238,6 +260,15 @@ class GoogleAdsBase(unittest.TestCase):
     #     return {stream for stream, metadata in self.expected_metadata().items()
     #             if metadata.get(self.FOREIGN_KEYS)}
 
+    def expected_foreign_keys(self):
+        """
+        return a dictionary with key of table name
+        and value as a set of foreign key fields
+        """
+        return {table: properties.get(self.FOREIGN_KEYS, set())
+                for table, properties
+                in self.expected_metadata().items()}
+
     def expected_primary_keys(self):
         """
         return a dictionary with key of table name
@@ -347,11 +378,12 @@ class GoogleAdsBase(unittest.TestCase):
         """
 
         # Select all available fields or select no fields from all testable streams
-        self._select_streams_and_fields(
-            conn_id=conn_id, catalogs=test_catalogs,
-            select_default_fields=select_default_fields,
-            select_pagination_fields=select_pagination_fields
-        )
+        self.select_all_streams_and_fields(conn_id, test_catalogs, True)
+        # self._select_streams_and_fields(
+        #     conn_id=conn_id, catalogs=test_catalogs,
+        #     select_default_fields=select_default_fields,
+        #     select_pagination_fields=select_pagination_fields
+        # )
 
         catalogs = menagerie.get_catalogs(conn_id)
 
@@ -395,6 +427,21 @@ class GoogleAdsBase(unittest.TestCase):
             if is_field_metadata and inclusion_automatic_or_selected:
                 selected_fields.add(field['breadcrumb'][1])
         return selected_fields
+
+    @staticmethod
+    def select_all_streams_and_fields(conn_id, catalogs, select_all_fields: bool = True):
+        """Select all streams and all fields within streams"""
+        for catalog in catalogs:
+            schema = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
+
+            non_selected_properties = []
+            if not select_all_fields:
+                # get a list of all properties so that none are selected
+                non_selected_properties = schema.get('annotated-schema', {}).get(
+                    'properties', {}).keys()
+
+            connections.select_catalog_and_fields_via_metadata(
+                conn_id, catalog, schema, [], non_selected_properties)
 
     def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields, select_pagination_fields):
         """Select all streams and all fields within streams"""

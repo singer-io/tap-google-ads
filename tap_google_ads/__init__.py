@@ -318,7 +318,7 @@ def do_sync(config, catalog, resource_schema):
     # QA ADDED WORKAROUND [START]
     try:
         customers = json.loads(config["login_customer_ids"])
-    except TypeError as er:  # falling back to raw value
+    except TypeError:  # falling back to raw value
         customers = config["login_customer_ids"]
     # QA ADDED WORKAROUND [END]
 

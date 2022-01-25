@@ -303,7 +303,7 @@ def create_sdk_client(config, login_customer_id=None):
         "developer_token": config["developer_token"],
         "client_id": config["oauth_client_id"],
         "client_secret": config["oauth_client_secret"],
-        "access_token": config["access_token"],
+        # "access_token": config["access_token"],  # BUG? REMOVE ME!
         "refresh_token": config["refresh_token"],
     }
 
@@ -315,7 +315,12 @@ def create_sdk_client(config, login_customer_id=None):
 
 
 def do_sync(config, catalog, resource_schema):
-    customers = json.loads(config["login_customer_ids"])
+    # QA ADDED WORKAROUND [START]
+    try:
+        customers = json.loads(config["login_customer_ids"])
+    except TypeError as er:  # falling back to raw value
+        customers = config["login_customer_ids"]
+    # QA ADDED WORKAROUND [END]
 
     selected_streams = [
         stream
@@ -399,7 +404,7 @@ def get_client_config(config, login_customer_id=None):
         "client_id": config["oauth_client_id"],
         "client_secret": config["oauth_client_secret"],
         "refresh_token": config["refresh_token"],
-        # "access_token": config["access_token"],
+        # "access_token": config["access_token"], # BUG? REMOVE ME
     }
 
     if login_customer_id:

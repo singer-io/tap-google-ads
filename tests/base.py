@@ -353,7 +353,7 @@ class GoogleAdsBase(unittest.TestCase):
 
         # Verify actual rows were synced
         sync_record_count = runner.examine_target_output_file(
-            self, conn_id, self.expected_sync_streams(), self.expected_primary_keys())
+            self, conn_id, self.expected_streams(), self.expected_primary_keys())
         self.assertGreater(
             sum(sync_record_count.values()), 0,
             msg="failed to replicate any data: {}".format(sync_record_count)

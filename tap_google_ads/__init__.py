@@ -237,7 +237,7 @@ def do_discover_core_streams(resource_schema):
         fields = resource_object["fields"]
         report_schema = {}
         report_metadata = {
-            tuple(): {
+            (): {
                 "inclusion": "available",
                 "table-key-properties": stream.primary_keys,
             }

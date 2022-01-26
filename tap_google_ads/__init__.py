@@ -218,13 +218,13 @@ def create_resource_schema(config):
     return resource_schema
 
 
-def create_nested_resource_schema(resource_schema, report_obj):
+def create_nested_resource_schema(resource_schema, fields):
     new_schema = {
         "type": ["null", "object"],
         "properties": {}
     }
 
-    for field in report_obj['fields']:
+    for field in fields:
         walker = new_schema["properties"]
         paths = field.split(".")
         last_path = paths[-1]
@@ -258,7 +258,7 @@ def do_discover_core_streams(resource_schema):
         google_ads_name = stream.google_ads_resources_name[0]
         resource_object = resource_schema[google_ads_name]
         fields = resource_object["fields"]
-        full_schema = create_nested_resource_schema(resource_schema, resource_object)
+        full_schema = create_nested_resource_schema(resource_schema, fields)
         report_schema = full_schema["properties"][google_ads_name]
 
         # Add schema for each attributed resource's id
@@ -410,6 +410,9 @@ def do_discover_reports(resource_schema):
     streams = []
     for adwords_report_name, report in ADWORDS_TO_GOOGLE_ADS.items():
         report_mdata = {tuple(): {"inclusion": "available"}}
+
+        report_schema = create_nested_resource_schema(resource_schema, report.fields)
+
         for report_field in report.fields:
             transformed_field_name = strip_prefix(report_field)
             report_mdata[("properties", transformed_field_name)] = {

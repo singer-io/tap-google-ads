@@ -154,7 +154,7 @@ def create_resource_schema(config):
         resource_metadata = {
             "name": resource.name,
             "category": CATEGORY_MAP[resource.category],
-            "json_schema": data_type_map[resource.data_type],
+            "json_schema": dict(data_type_map[resource.data_type]),
             "selectable": resource.selectable,
             "filterable": resource.filterable,
             "sortable": resource.sortable,

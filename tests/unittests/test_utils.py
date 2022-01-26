@@ -46,7 +46,7 @@ resource_schema = {
 class TestCreateNestedResourceSchema(unittest.TestCase):
 
     def test_one(self):
-        actual = create_nested_resource_schema(resource_schema, {"fields": ["accessible_bidding_strategy.id"]})
+        actual = create_nested_resource_schema(resource_schema, ["accessible_bidding_strategy.id"])
         expected = {
             "type": [
                 "null",
@@ -69,7 +69,7 @@ class TestCreateNestedResourceSchema(unittest.TestCase):
         self.assertDictEqual(expected, actual)
 
     def test_two(self):
-        actual = create_nested_resource_schema(resource_schema, {"fields": ["accessible_bidding_strategy.strategy.id"]})
+        actual = create_nested_resource_schema(resource_schema, ["accessible_bidding_strategy.strategy.id"])
         expected = {
             "type": ["null", "object"],
             "properties": {
@@ -91,7 +91,7 @@ class TestCreateNestedResourceSchema(unittest.TestCase):
     def test_siblings(self):
         actual = create_nested_resource_schema(
             resource_schema,
-            {"fields": ["accessible_bidding_strategy.id", "accessible_bidding_strategy.strategy.id"]}
+            ["accessible_bidding_strategy.id", "accessible_bidding_strategy.strategy.id"]
         )
         expected = {
             "type": ["null", "object"],

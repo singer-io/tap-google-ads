@@ -218,6 +218,28 @@ def create_resource_schema(config):
     return resource_schema
 
 
+def create_nested_resource_schema(resource_schema, report_obj):
+    new_schema = {
+        "type": ["null", "object"],
+        "properties": {}
+    }
+
+    for field in report_obj['fields']:
+        walker = new_schema["properties"]
+        paths = field.split(".")
+        last_path = paths[-1]
+        for path in paths[:-1]:
+            if path not in walker:
+                walker[path] = {
+                    "type": ["null", "object"],
+                    "properties": {}
+                }
+            walker = walker[path]["properties"]
+        if last_path not in walker:
+            json_schema = resource_schema[field]["json_schema"]
+            walker[last_path] = json_schema
+    return new_schema
+
 def canonicalize_name(name):
     """Remove all dot and underscores and camel case the name."""
     tokens = re.split("\\.|_", name)
@@ -233,9 +255,17 @@ def do_discover_core_streams(resource_schema):
 
     catalog = []
     for stream_name, stream in adwords_to_google_ads.items():
-        resource_object = resource_schema[stream.google_ads_resources_name[0]]
+        google_ads_name = stream.google_ads_resources_name[0]
+        resource_object = resource_schema[google_ads_name]
         fields = resource_object["fields"]
-        report_schema = {}
+        full_schema = create_nested_resource_schema(resource_schema, resource_object)
+        report_schema = full_schema["properties"][google_ads_name]
+
+        # Add schema for each attributed resource's id
+        for attributed_resource, schema in full_schema['properties'].items():
+            if attributed_resource not in {"metrics", "segments", google_ads_name}:
+                report_schema["properties"][attributed_resource + "_id"] = schema["properties"]["id"]
+
         report_metadata = {
             (): {
                 "inclusion": "available",
@@ -251,33 +281,41 @@ def do_discover_core_streams(resource_schema):
             if props["field_details"]["category"] == "ATTRIBUTE" and (
                 resource_matches or is_id_field
             ):
+
+                # Transform the field name to match the schema
                 if resource_matches:
-                    field = ".".join(field.split(".")[1:])
+                    field = field.split(".")[1]
                 elif is_id_field:
                     field = field.replace(".", "_")
-
-                the_schema = props["field_details"]["json_schema"]
-                report_schema[field] = the_schema
-                report_metadata[("properties", field)] = {
-                    "fieldExclusions": props["incompatible_fields"],
-                    "behavior": props["field_details"]["category"],
-                }
-                if field in stream.primary_keys:
-                    inclusion = "automatic"
-                elif props["field_details"]["selectable"]:
-                    inclusion = "available"
-                else:
-                    inclusion = "unsupported"
-                report_metadata[("properties", field)]["inclusion"] = inclusion
                     report_metadata[()]["table-foreign-key-properties"].append(field)
+
+
+                if ("properties", field) not in report_metadata:
+                    # Base metadata for every field
+                    report_metadata[("properties", field)] = {
+                        "fieldExclusions": props["incompatible_fields"],
+                        "behavior": props["field_details"]["category"],
+                    }
+
+                    # Add inclusion metadata
+                    if field in stream.primary_keys:
+                        inclusion = "automatic"
+                    elif props["field_details"]["selectable"]:
+                        inclusion = "available"
+                    else:
+                        inclusion = "unsupported"
+                    report_metadata[("properties", field)]["inclusion"] = inclusion
+
+                # Save the full field name for sync code to use
+                full_name = props["field_details"]["name"]
+                if "fields_to_sync" not in report_metadata[("properties", field)]:
+                    report_metadata[("properties", field)]["fields_to_sync"] = []
+                report_metadata[("properties", field)]["fields_to_sync"].append(full_name)
 
         catalog_entry = {
             "tap_stream_id": stream.google_ads_resources_name[0],
             "stream": stream_name,
-            "schema": {
-                "type": ["null", "object"],
-                "properties": report_schema,
-            },
+            "schema": report_schema,
             "metadata": singer.metadata.to_list(report_metadata),
         }
         catalog.append(catalog_entry)

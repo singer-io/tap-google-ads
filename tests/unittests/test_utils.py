@@ -1,7 +1,7 @@
 import unittest
 from tap_google_ads.reports import flatten
 from tap_google_ads.reports import make_field_names
-
+from tap_google_ads import create_nested_resource_schema
 
 
 class TestFlatten(unittest.TestCase):
@@ -39,6 +39,78 @@ class TestMakeFieldNames(unittest.TestCase):
         expected = ["resource.owner_customer_id"]
         self.assertListEqual(expected, actual)
 
+resource_schema = {
+    "accessible_bidding_strategy.id": {"json_schema": {"type": ["null", "integer"]}},
+    "accessible_bidding_strategy.strategy.id": {"json_schema": {"type": ["null", "integer"]}}
+}
+class TestCreateNestedResourceSchema(unittest.TestCase):
+
+    def test_one(self):
+        actual = create_nested_resource_schema(resource_schema, {"fields": ["accessible_bidding_strategy.id"]})
+        expected = {
+            "type": [
+                "null",
+                "object"
+            ],
+            "properties": {
+                "accessible_bidding_strategy" : {
+                    "type": ["null", "object"],
+                    "properties": {
+                        "id": {
+                            "type": [
+                                "null",
+                                "integer"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+        self.assertDictEqual(expected, actual)
+
+    def test_two(self):
+        actual = create_nested_resource_schema(resource_schema, {"fields": ["accessible_bidding_strategy.strategy.id"]})
+        expected = {
+            "type": ["null", "object"],
+            "properties": {
+                "accessible_bidding_strategy": {
+                    "type": ["null", "object"],
+                    "properties": {
+                        "strategy": {
+                            "type": ["null", "object"],
+                            "properties": {
+                                "id": {"type": ["null", "integer"]}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.assertDictEqual(expected, actual)
+
+    def test_siblings(self):
+        actual = create_nested_resource_schema(
+            resource_schema,
+            {"fields": ["accessible_bidding_strategy.id", "accessible_bidding_strategy.strategy.id"]}
+        )
+        expected = {
+            "type": ["null", "object"],
+            "properties": {
+                "accessible_bidding_strategy": {
+                    "type": ["null", "object"],
+                    "properties": {
+                        "strategy": {
+                            "type": ["null", "object"],
+                            "properties": {
+                                "id": {"type": ["null", "integer"]}
+                            }
+                        },
+                        "id": {"type": ["null", "integer"]}
+                    }
+                }
+            }
+        }
+        self.assertDictEqual(expected, actual)
 
 if __name__ == '__main__':
     unittest.main()

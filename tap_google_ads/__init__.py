@@ -240,6 +240,7 @@ def do_discover_core_streams(resource_schema):
             (): {
                 "inclusion": "available",
                 "table-key-properties": stream.primary_keys,
+                "table-foreign-key-properties": [],
             }
         }
 
@@ -268,6 +269,7 @@ def do_discover_core_streams(resource_schema):
                 else:
                     inclusion = "unsupported"
                 report_metadata[("properties", field)]["inclusion"] = inclusion
+                    report_metadata[()]["table-foreign-key-properties"].append(field)
 
         catalog_entry = {
             "tap_stream_id": stream.google_ads_resources_name[0],

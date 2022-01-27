@@ -303,14 +303,17 @@ def do_discover_core_streams(resource_schema):
                     elif props["field_details"]["selectable"]:
                         inclusion = "available"
                     else:
-                        inclusion = "unsupported"
+                        # inclusion = "unsupported"
+                        continue
                     report_metadata[("properties", field)]["inclusion"] = inclusion
 
                 # Save the full field name for sync code to use
                 full_name = props["field_details"]["name"]
                 if "fields_to_sync" not in report_metadata[("properties", field)]:
                     report_metadata[("properties", field)]["fields_to_sync"] = []
-                report_metadata[("properties", field)]["fields_to_sync"].append(full_name)
+
+                if props['field_details']['selectable']:
+                    report_metadata[("properties", field)]["fields_to_sync"].append(full_name)
 
         catalog_entry = {
             "tap_stream_id": stream.google_ads_resources_name[0],

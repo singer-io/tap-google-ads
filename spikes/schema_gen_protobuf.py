@@ -1,3 +1,4 @@
+import inspect
 import importlib
 import json
 import os
@@ -37,6 +38,18 @@ type_lookup = {"google.ads.googleads.v9.common.FinalAppUrl": "google.ads.googlea
                "google.ads.googleads.v9.common.TargetRestrictionOperation": "google.ads.googleads.v9.common.types.targeting_setting.TargetRestrictionOperation",
                }
 
+# TODO: For some reason this isn't getting all of them...
+def get_all_enums():
+    from google.ads.googleads.v9.enums import types as enum_types
+    lookup = set()
+    for prop in dir(enum_types):
+        realized_prop = getattr(enum_types, prop)
+        for subprop in dir(realized_prop):
+            if inspect.isclass(getattr(realized_prop, subprop)) and not subprop.startswith("__"):
+                lookup.add(subprop)
+    return lookup
+enum_lookup = get_all_enums()
+
 # From: https://stackoverflow.com/questions/19053707/converting-snake-case-to-lower-camel-case-lowercamelcase
 def to_camel_case(snake_str):
     components = snake_str.split('_')
@@ -67,6 +80,7 @@ def handle_scalar_container(acc, prop_val, prop_camel):
         if re_result:
             actual_types = re_result.groups()[0].split(',')
             actual_types = [t.strip() for t in actual_types]
+            # TODO: This is usually generating integer/integer or bytes/string
             acc[prop_camel] = {"type": ["null", "array"],
                                "items": {"anyOf": [type_to_json_schema(t) for t in actual_types]}}
         else:
@@ -89,7 +103,6 @@ def handle_composite_container(acc, prop_val, prop_camel):
         if not actual_type:
             print(f"Unknown composite type: {shown_type}")
         else:
-            # TODO: Should we just build the objects based on the type name and insert them as a definition and $ref to save space?
             mod = importlib.import_module('.'.join(actual_type.split('.')[:-1]))
             if shown_type == "google.ads.googleads.v9.common.PolicyTopicConstraint.CountryConstraint":
                 obj = getattr(mod, actual_type.split('.')[-1]).CountryConstraint()
@@ -102,18 +115,21 @@ def handle_composite_container(acc, prop_val, prop_camel):
                 ref_schema_lookup[type_name] = get_schema({},obj._pb)
 
 def get_schema(acc, current):
+    # TODO: Should we take start_date and end_date and just do the format for them hard-coded?
     for prop in filter(lambda p: re.search(r"^[a-z]", p), dir(current)):
         try:
             prop_val = getattr(current, prop)
             prop_camel = to_camel_case(prop)
+            # TODO: Translate enum types to just string schema, not integer
             if isinstance(prop_val.__class__, GeneratedProtocolMessageType):
-                # TODO: Should we just build the objects based on the type name and insert them as a definition and $ref to save space?
                 new_acc_obj = {}
                 type_name = type(prop_val).__qualname__
                 acc[prop_camel] = {"$ref": f"#/definitions/{type_name}"}
                 if type_name not in ref_schema_lookup:
-                    ref_schema_lookup[type_name] = {"type": ["null", "object"],
-                                                     "properties": get_schema(new_acc_obj, prop_val)}
+                    obj_props = get_schema(new_acc_obj, prop_val)
+                    ref_schema_lookup[type_name] = {"type": ["null", "object"]}
+                    if obj_props:
+                        ref_schema_lookup[type_name]["properties"] = obj_props
             elif isinstance(prop_val, bool):
                 acc[prop_camel] = {"type": ["null", "boolean"]}
             elif isinstance(prop_val, str):
@@ -149,11 +165,11 @@ def root_get_schema(obj, pb):
     return schema
     
 with open("auto_campaign.json", "w") as f:
-    json.dump(root_get_schema({}, campaign.Campaign()._pb), f)
+    json.dump(root_get_schema({}, campaign.Campaign()._pb), f, indent=2)
 with open("auto_ad.json", "w") as f:
-    json.dump(root_get_schema({}, ad.Ad()._pb), f)
+    json.dump(root_get_schema({}, ad.Ad()._pb), f, indent=2)
 with open("auto_ad_group.json", "w") as f:
-    json.dump(root_get_schema({}, ad_group.AdGroup()._pb), f)
+    json.dump(root_get_schema({}, ad_group.AdGroup()._pb), f, indent=2)
 with open("auto_account.json", "w") as f:
-    json.dump(root_get_schema({}, customer.Customer()._pb), f)
+    json.dump(root_get_schema({}, customer.Customer()._pb), f, indent=2)
 print("Wrote schemas to local directory under auto_*.json, please review and manually set datetime formats on datetime fields and change Enum field types to 'string' schema.")

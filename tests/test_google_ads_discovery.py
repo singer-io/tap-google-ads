@@ -359,9 +359,10 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify there are no duplicate metadata entries
                 #self.assertEqual(len(actual_fields), len(set(actual_fields)), msg = f"duplicates in the fields retrieved")
 
-                # BUG_3 | primary keys have '.' for all core streams
+                # BUG_TDL_17533
+                # [tap-google-ads] Primary keys have incorrect name for core objects
                 # verify primary key(s)
-                # self.assertSetEqual(expected_primary_keys, actual_primary_keys)  # TODO POST IN SLACK
+                # self.assertSetEqual(expected_primary_keys, actual_primary_keys)  # BUG_TDL_17533
 
                 # BUG_1' | all core streams are missing this metadata TODO does this thing even get used ANYWHERE?
                 # verify replication method

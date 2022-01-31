@@ -13,14 +13,14 @@ class DiscoveryTest(GoogleAdsBase):
         """The expected streams and metadata about the streams"""
         # TODO verify accounts, ads, ad_groups, campaigns contain foreign keys for
         #                  'campaign_budgets', 'bidding_strategies', 'accessible_bidding_strategies'
-        #      and only foreign keys BUT CHECK DOCS 
+        #      and only foreign keys BUT CHECK DOCS
 
         return {
             # Core Objects
             "accounts": {  # TODO check with Brian on changes
                 # OLD FIELDS (with mapping)
                 "currency_code",
-                "id", # "customer_id", 
+                "id", # "customer_id",
                 "manager", # "can_manage_clients",
                 "resource_name", # name -- unclear if this actually the mapping
                 "test_account",
@@ -262,7 +262,7 @@ class DiscoveryTest(GoogleAdsBase):
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = self.expected_streams() - {
-            # BUG_2 | missing 
+            # BUG_2 | missing
             'landing_page_report',
             'expanded_landing_page_report',
             'display_topics_performance_report',
@@ -359,9 +359,14 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify there are no duplicate metadata entries
                 #self.assertEqual(len(actual_fields), len(set(actual_fields)), msg = f"duplicates in the fields retrieved")
 
-                # BUG_3 | primary keys have '.' for all core streams
+                # TODO BUG (unclear on significance in saas tap ?)
+                # verify the tap_stream_id and stream_name are consistent (only applies to SaaS taps)
+                # self.assertEqual(stream_properties[0]['stream_name'], stream_properties[0]['tap_stream_id'])
+
+                # BUG_TDL_17533
+                # [tap-google-ads] Primary keys have incorrect name for core objects
                 # verify primary key(s)
-                # self.assertSetEqual(expected_primary_keys, actual_primary_keys)  # TODO POST IN SLACK
+                # self.assertSetEqual(expected_primary_keys, actual_primary_keys)  # BUG_TDL_17533
 
                 # BUG_1' | all core streams are missing this metadata TODO does this thing even get used ANYWHERE?
                 # verify replication method

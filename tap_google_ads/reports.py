@@ -152,6 +152,30 @@ class BaseStream:
         self.extract_field_information(resource_schema)
 
 
+class ReportStream(BaseStream):
+    def transform_keys(self, obj):
+        transformed_obj = {}
+
+        for value in obj.values():
+            transformed_obj.update(value)
+
+        return transformed_obj
+
+
+    def create_query(self, resource_name, stream_mdata):
+        selected_fields = set()
+        for mdata in stream_mdata:
+            if (
+                mdata["breadcrumb"]
+                and mdata["metadata"].get("selected")
+                and mdata["metadata"].get("inclusion") == "available"
+            ):
+                selected_fields.update(mdata['metadata']["fields_to_sync"])
+
+
+        return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '2020-01-01' AND '2022-01-25'"
+
+
 class AdGroupPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
@@ -162,7 +186,7 @@ class AdGroupPerformanceReport(BaseStream):
         self.behavior[field_name] = "ATTRIBUTE"
 
 
-class AdPerformanceReport(BaseStream):
+class AdPerformanceReport(ReportStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
         for field_name in ["label.resource_name", "label.name"]:
@@ -198,7 +222,7 @@ class AudiencePerformanceReport(BaseStream):
     # 'user_list.name' is a "Segmenting resource"
     # `select user_list.name from `
 
-class CampaignPerformanceReport(BaseStream):
+class CampaignPerformanceReport(ReportStream):
     # TODO: The sync needs to select from campaign_criterion if campaign_criterion.device.type is selected
     # TODO: The sync needs to select from campaign_label if label.resource_name
     def add_extra_fields(self, resource_schema):
@@ -211,7 +235,7 @@ class CampaignPerformanceReport(BaseStream):
             self.behavior[field_name] = "ATTRIBUTE"
 
 
-class DisplayKeywordPerformanceReport(BaseStream):
+class DisplayKeywordPerformanceReport(ReportStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
         for field_name in [
@@ -271,13 +295,13 @@ def initialize_core_streams(resource_schema):
             report_definitions.ACCOUNT_FIELDS,
             ["customer"],
             resource_schema,
-            ["customer.id"],
+            ["id"],
         ),
         "ad_groups": BaseStream(
             report_definitions.AD_GROUP_FIELDS,
             ["ad_group"],
             resource_schema,
-            ["ad_group.id"],
+            ["id"],
         ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
@@ -289,32 +313,32 @@ def initialize_core_streams(resource_schema):
             report_definitions.CAMPAIGN_FIELDS,
             ["campaign"],
             resource_schema,
-            ["campaign.id"],
+            ["id"],
         ),
         "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
             ["bidding_strategy"],
             resource_schema,
-            ["bidding_strategy.id"],
+            ["id"],
         ),
         "accessible_bidding_strategies": BaseStream(
             report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
             ["accessible_bidding_strategy"],
             resource_schema,
-            ["accessible_bidding_strategy.id"],
+            ["id"],
         ),
         "campaign_budgets": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
             ["campaign_budget"],
             resource_schema,
-            ["campaign_budget.id"],
+            ["id"],
         ),
     }
 
 
 def initialize_reports(resource_schema):
     return {
-        "account_performance_report": BaseStream(
+        "account_performance_report": ReportStream(
             report_definitions.ACCOUNT_PERFORMANCE_REPORT_FIELDS,
             ["customer"],
             resource_schema,

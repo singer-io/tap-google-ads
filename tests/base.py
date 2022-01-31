@@ -41,8 +41,9 @@ class GoogleAdsBase(unittest.TestCase):
         """the expected url route ending"""
         return "platform.google-ads"
 
-    def get_properties(self):
-        return {
+    def get_properties(self, original: bool = True):
+        """Configurable properties, with a switch to override the 'start_date' property"""
+        return_value = {
             'start_date':   '2020-12-01T00:00:00Z',
             'user_id':      'not used?',
             'customer_ids': '5548074409,2728292456',
@@ -57,6 +58,12 @@ class GoogleAdsBase(unittest.TestCase):
                  },
             ],
         }
+
+        if original:
+            return return_value
+
+        return_value["start_date"] = self.start_date
+        return return_value
 
     def get_credentials(self):
         return {'developer_token': os.getenv('TAP_GOOGLE_ADS_DEVELOPER_TOKEN'),
@@ -491,6 +498,7 @@ class GoogleAdsBase(unittest.TestCase):
         raise NotImplementedError("Tests do not account for dates of this format: {}".format(date_value))
 
     def timedelta_formatted(self, dtime, days=0):
+        """Convert a string formatted datetime to a new string formatted datetime with a timedelta applied."""
         try:
             date_stripped = dt.strptime(dtime, self.START_DATE_FORMAT)
             return_date = date_stripped + timedelta(days=days)
@@ -510,6 +518,9 @@ class GoogleAdsBase(unittest.TestCase):
     ##########################################################################
     ### Tap Specific Methods
     ##########################################################################
+
+    def is_report(self, stream):
+        return stream.endswith('_report')
 
     # TODO exclusion rules
 

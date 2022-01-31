@@ -110,8 +110,6 @@ class BaseStream:
             ]
 
             for obj in json_response:
-                #flattened_obj = flatten(obj)
-                #transformed_obj = transform_keys(resource_name, flattened_obj)
                 transformed_obj = self.transform_keys(obj)
                 record = transformer.transform(transformed_obj, stream["schema"])
                 singer.write_record(stream_name, record)

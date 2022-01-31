@@ -388,8 +388,9 @@ def do_sync(config, catalog, resource_schema):
                 mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
 
                 primary_key = (
-                    mdata_map[()].get("metadata", {}).get("table-key-properties", [])
+                    mdata_map[()].get("table-key-properties", [])
                 )
+
                 singer.messages.write_schema(
                     stream_name, catalog_entry["schema"], primary_key
                 )

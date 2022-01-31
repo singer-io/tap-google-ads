@@ -88,7 +88,9 @@ class BaseStream:
             if (
                     mdata["breadcrumb"]
                     and mdata["metadata"].get("selected")
-                    and mdata["metadata"].get("inclusion") == "available"
+                    and (
+                        mdata["metadata"].get("inclusion") == "available"
+                        or mdata["metadata"].get("inclusion") == "automatic")
             ):
                 selected_fields.update(mdata['metadata']["fields_to_sync"])
 

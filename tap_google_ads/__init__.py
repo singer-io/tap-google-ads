@@ -467,6 +467,8 @@ def do_discover_reports(resource_schema):
             # Add inclusion metadata
             if report.behavior[report_field]:
                 inclusion = "available"
+                if report_field == "segments.date":
+                    inclusion = "automatic"
             else:
                 inclusion = "unsupported"
             report_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion

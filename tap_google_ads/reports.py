@@ -74,6 +74,10 @@ class BaseStream:
             else:
                 transformed_obj[f"{resource_name}_id"] = value["id"]
 
+            if resource_name == "ad_group_ad":
+                transformed_obj.update(value["ad"])
+                transformed_obj.pop('ad')
+
         if 'type_' in transformed_obj:
             LOGGER.info("Google sent us 'type_' when we asked for 'type', transforming this now")
             transformed_obj["type"] = transformed_obj.pop("type_")
@@ -88,7 +92,9 @@ class BaseStream:
             if (
                     mdata["breadcrumb"]
                     and mdata["metadata"].get("selected")
-                    and mdata["metadata"].get("inclusion") == "available"
+                    and (
+                        mdata["metadata"].get("inclusion") == "available"
+                        or mdata["metadata"].get("inclusion") == "automatic")
             ):
                 selected_fields.update(mdata['metadata']["fields_to_sync"])
 
@@ -305,7 +311,7 @@ def initialize_core_streams(resource_schema):
             report_definitions.AD_GROUP_AD_FIELDS,
             ["ad_group_ad"],
             resource_schema,
-            ["ad_group_ad.ad.id"],
+            ["id"],
         ),
         "campaigns": BaseStream(
             report_definitions.CAMPAIGN_FIELDS,

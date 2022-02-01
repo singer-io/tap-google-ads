@@ -268,8 +268,13 @@ def do_discover_core_streams(resource_schema):
         full_schema = create_nested_resource_schema(resource_schema, fields)
         report_schema = full_schema["properties"][google_ads_name]
 
-        # Add schema for each attributed resource's id
         for attributed_resource, schema in full_schema['properties'].items():
+            # ads stream is special since all of the ad fields are nested under ad_group_ad.ad
+            # we need to bump the fields up a level so they are selectable
+            if attributed_resource == 'ad_group_ad':
+                for ad_field_name, ad_field_schema in full_schema['properties']['ad_group_ad']['properties']['ad']['properties'].items():
+                    report_schema['properties'][ad_field_name] = ad_field_schema
+                report_schema['properties'].pop('ad')
             if attributed_resource not in {"metrics", "segments", google_ads_name}:
                 report_schema["properties"][attributed_resource + "_id"] = schema["properties"]["id"]
 
@@ -284,17 +289,20 @@ def do_discover_core_streams(resource_schema):
         for field, props in fields.items():
             resource_matches = field.startswith(resource_object["name"] + ".")
             is_id_field = field.endswith(".id")
-
             if props["field_details"]["category"] == "ATTRIBUTE" and (
                 resource_matches or is_id_field
             ):
-
                 # Transform the field name to match the schema
-                if resource_matches:
-                    field = field.split(".")[1]
-                elif is_id_field:
-                    field = field.replace(".", "_")
-                    report_metadata[()]["table-foreign-key-properties"].append(field)
+                # Special case for ads since they are nested under ad_group_ad
+                # we have to bump them up a level
+                if field.startswith("ad_group_ad.ad."):
+                    field = field.split(".")[2]
+                else:
+                    if resource_matches:
+                        field = field.split(".")[1]
+                    elif is_id_field:
+                        field = field.replace(".", "_")
+                        report_metadata[()]["table-foreign-key-properties"].append(field)
 
 
                 if ("properties", field) not in report_metadata:
@@ -393,8 +401,9 @@ def do_sync(config, catalog, resource_schema):
                 mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
 
                 primary_key = (
-                    mdata_map[()].get("metadata", {}).get("table-key-properties", [])
+                    mdata_map[()].get("table-key-properties", [])
                 )
+
                 singer.messages.write_schema(
                     stream_name, catalog_entry["schema"], primary_key
                 )
@@ -471,6 +480,8 @@ def do_discover_reports(resource_schema):
             # Add inclusion metadata
             if report.behavior[report_field]:
                 inclusion = "available"
+                if report_field == "segments.date":
+                    inclusion = "automatic"
             else:
                 inclusion = "unsupported"
             report_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion

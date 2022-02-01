@@ -444,6 +444,10 @@ def do_discover_reports(resource_schema):
                 is_metric_or_segment = key.startswith("metrics.") or key.startswith("segments.")
                 if resource_name not in {"metrics", "segments"} and resource_name not in report.google_ads_resources_name:
                     report_schema['properties'][f"{resource_name}_{key}"] = val
+                # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
+                elif resource_name == 'ad_group_ad' and key == 'ad':
+                    for ad_field_name, ad_field_schema in val['properties'].items():
+                        report_schema['properties'][ad_field_name] = ad_field_schema
                 else:
                     report_schema['properties'][key] = val
 
@@ -452,6 +456,9 @@ def do_discover_reports(resource_schema):
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
             if not is_metric_or_segment and report_field.split(".")[0] not in report.google_ads_resources_name:
                 transformed_field_name = "_".join(report_field.split(".")[:2])
+            # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
+            elif report_field.startswith('ad_group_ad.ad.'):
+                transformed_field_name = report_field.split(".")[2]
             else:
                 transformed_field_name = report_field.split(".")[1]
 

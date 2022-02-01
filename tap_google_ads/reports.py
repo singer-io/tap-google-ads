@@ -160,8 +160,15 @@ class ReportStream(BaseStream):
     def transform_keys(self, obj):
         transformed_obj = {}
 
-        for value in obj.values():
-            transformed_obj.update(value)
+        for resource_name, value in obj.items():
+            if resource_name == "ad_group_ad":
+                transformed_obj.update(value["ad"])
+            else:
+                transformed_obj.update(value)
+
+        if 'type_' in transformed_obj:
+            LOGGER.info("Google sent us 'type_' when we asked for 'type', transforming this now")
+            transformed_obj["type"] = transformed_obj.pop("type_")
 
         return transformed_obj
 

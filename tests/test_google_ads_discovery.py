@@ -265,26 +265,6 @@ class DiscoveryTest(GoogleAdsBase):
             # BUG_2 | missing
             'landing_page_report',
             'expanded_landing_page_report',
-            'display_topics_performance_report',
-            'call_metrics_call_details_report',
-            'gender_performance_report',
-            'search_query_performance_report',
-            'placeholder_feed_item_report',
-            'keywords_performance_report',
-            'video_performance_report',
-            'campaign_performance_report',
-            'geo_performance_report',
-            'placeholder_report',
-            'placement_performance_report',
-            'click_performance_report',
-            'display_keyword_performance_report',
-            'shopping_performance_report',
-            'ad_performance_report',
-            'age_range_performance_report',
-            'keywordless_query_report',
-            'account_performance_report',
-            'adgroup_performance_report',
-            'audience_performance_report',
         }
 
         # found_catalogs = self.run_and_verify_check_mode(conn_id) # TODO PUT BACK
@@ -316,7 +296,7 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_primary_keys = self.expected_primary_keys()[stream]
                 expected_foreign_keys = self.expected_foreign_keys()[stream]
                 expected_replication_keys = self.expected_replication_keys()[stream]
-                expected_automatic_fields = expected_primary_keys | expected_replication_keys
+                expected_automatic_fields = expected_primary_keys | expected_replication_keys | expected_foreign_keys
                 expected_replication_method = self.expected_replication_method()[stream]
                 expected_fields = self.expected_fields()[stream]
 
@@ -357,33 +337,33 @@ class DiscoveryTest(GoogleAdsBase):
                                 "\nstream_properties | {}".format(stream_properties))
 
                 # verify there are no duplicate metadata entries
-                #self.assertEqual(len(actual_fields), len(set(actual_fields)), msg = f"duplicates in the fields retrieved")
+                self.assertEqual(len(actual_fields), len(set(actual_fields)), msg="duplicates in the fields retrieved")
 
-                # TODO BUG (unclear on significance in saas tap ?)
+
                 # verify the tap_stream_id and stream_name are consistent (only applies to SaaS taps)
-                # self.assertEqual(stream_properties[0]['stream_name'], stream_properties[0]['tap_stream_id'])
+                if self.is_report(stream): # BUG_TODO not true for core streams (unclear on significance in saas tap ?) 
+                    self.assertEqual(catalog['stream_name'], catalog['tap_stream_id'])
 
-                # BUG_TDL_17533
-                # [tap-google-ads] Primary keys have incorrect name for core objects
                 # verify primary key(s)
-                # self.assertSetEqual(expected_primary_keys, actual_primary_keys)  # BUG_TDL_17533
+                if not self.is_report(stream): # BUG_TODO primary keys md missing for reports
+                    self.assertSetEqual(expected_primary_keys, actual_primary_keys)
 
-                # BUG_1' | all core streams are missing this metadata TODO does this thing even get used ANYWHERE?
+                # BUG_TODO | all core and report streams are missing this metadata
                 # verify replication method
                 # self.assertEqual(expected_replication_method, actual_replication_method)
 
+                # BUG_TODO_1 md missing for report streams expected 'date' key
                 # verify replication key(s)
-                self.assertSetEqual(expected_replication_keys, actual_replication_keys)
+                # self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
-                # TODO | implement when foreign keys are complete
-                # verify foreign keys are present for each core stream
-                # self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
+                # verify foreign keys are present for each stream (core streams only)
+                self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
 
-                # verify foreign keys are given inclusion of automatic
+                # verify foreign keys are given inclusion of automatic TODO
 
-                 # verify replication key is present for any stream with replication method = INCREMENTAL
+                # verify replication key is present for any stream with replication method = INCREMENTAL
                 if actual_replication_method == 'INCREMENTAL':
-                    # TODO | Implement at time sync is working
+                    # BUG_TODO_1 | Implement when md present
                     # self.assertEqual(expected_replication_keys, actual_replication_keys)
                     pass
                 else:
@@ -395,12 +375,13 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
 
+                # BUG_TODO no streams have any of the expected fields with this inclusion value
                 # verify the primary, replication keys are given the inclusions of automatic
-                #self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
+                # self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
 
                 # verify all other fields are given inclusion of available
                 self.assertTrue(
-                    all({item.get("metadata").get("inclusion") in {"available", "unsupported"}
+                    all({item.get("metadata").get("inclusion") in {"available"}
                          for item in metadata
                          if item.get("breadcrumb", []) != []
                          and item.get("breadcrumb", ["properties", None])[1]

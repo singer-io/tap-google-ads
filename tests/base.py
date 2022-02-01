@@ -182,7 +182,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_KEYS: {"date"},
             },
             #  TODO Do the land page reports have a different name in UI from the resource?
-            #  TODO should they follow the _report naming convention
             "landing_page_report": {
                 self.PRIMARY_KEYS: {"TODO"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,

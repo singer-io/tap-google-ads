@@ -2,8 +2,9 @@ from collections import defaultdict
 import json
 
 import singer
-from singer import Transformer
-
+from singer import Transformer, utils
+from datetime import datetime as dt
+from datetime import timedelta
 from google.protobuf.json_format import MessageToJson
 
 from . import report_definitions
@@ -101,7 +102,7 @@ class BaseStream:
         return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
 
 
-    def sync(self, sdk_client, customer, stream):
+    def sync(self, sdk_client, customer, stream, state):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
@@ -149,12 +150,12 @@ class BaseStream:
             self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
 
-    def __init__(self, fields, google_ads_resource_name, resource_schema, primary_keys):
+    def __init__(self, fields, google_ads_resource_name, resource_schema, primary_keys, state={}):
         self.fields = fields
         self.google_ads_resources_name = google_ads_resource_name
         self.primary_keys = primary_keys
         self.extract_field_information(resource_schema)
-
+        self.state = state
 
 class ReportStream(BaseStream):
     def transform_keys(self, obj):
@@ -173,7 +174,7 @@ class ReportStream(BaseStream):
         return transformed_obj
 
 
-    def create_query(self, resource_name, stream_mdata):
+    def create_query(self, resource_name, stream_mdata, query_start_date, query_end_date):
         selected_fields = set()
         for mdata in stream_mdata:
             if (
@@ -183,9 +184,47 @@ class ReportStream(BaseStream):
             ):
                 selected_fields.update(mdata['metadata']["fields_to_sync"])
 
+        format_str = '%Y-%m-%d'
+        query_start_date = utils.strftime(query_start_date, format_str=format_str)
+        query_end_date = utils.strftime(query_end_date, format_str=format_str)
+        return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
 
-        return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '2020-01-01' AND '2022-01-25'"
+    def sync(self, sdk_client, customer, stream, config, state):
+        gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
+        resource_name = self.google_ads_resources_name[0]
+        stream_name = stream["stream"]
+        stream_mdata = stream["metadata"]
+        replication_key = 'date'
+        self.state = singer.set_currently_syncing(state, stream_name)
+        singer.write_state(self.state)
 
+        start_date = utils.strptime_to_utc(singer.bookmarks.get_bookmark(self.state, stream_name, replication_key, default=config['start_date']))
+        end_date = utils.now()
+        query_range = timedelta(days=7)
+        while start_date < end_date:
+            query_end_date = start_date + query_range
+            if query_end_date > end_date:
+                query_end_date = end_date
+
+            query = self.create_query(resource_name, stream_mdata, start_date, query_end_date)
+            response = gas.search(query=query, customer_id=customer["customerId"])
+            with Transformer() as transformer:
+                json_response = [
+                    json.loads(MessageToJson(x, preserving_proto_field_name=True))
+                    for x in response
+                ]
+
+                for obj in json_response:
+                    transformed_obj = self.transform_keys(obj)
+                    record = transformer.transform(transformed_obj, stream["schema"])
+                    singer.write_record(stream_name, record)
+                    singer.write_bookmark(self.state,
+                                          stream_name,
+                                          replication_key,
+                                          utils.strftime(query_end_date))
+                    singer.write_state(self.state)
+            start_date = query_end_date + timedelta(days=1)
+        singer.write_state(self.state)
 
 class AdGroupPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):

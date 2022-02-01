@@ -374,7 +374,7 @@ def create_sdk_client(config, login_customer_id=None):
     return sdk_client
 
 
-def do_sync(config, catalog, resource_schema):
+def do_sync(config, catalog, state, resource_schema):
     customers = json.loads(config["login_customer_ids"])
 
     selected_streams = [
@@ -402,13 +402,13 @@ def do_sync(config, catalog, resource_schema):
                 singer.messages.write_schema(
                     stream_name, catalog_entry["schema"], primary_key
                 )
-                stream_obj.sync(sdk_client, customer, catalog_entry)
+                stream_obj.sync(sdk_client, customer, catalog_entry, state)
             else:
                 # syncing report
                 stream_obj = report_streams[stream_name]
                 mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
                 singer.messages.write_schema(stream_name, catalog_entry["schema"], [])
-                stream_obj.sync(sdk_client, customer, catalog_entry)
+                stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
 
 
 def do_discover(resource_schema):
@@ -529,7 +529,7 @@ def main():
         do_discover(resource_schema)
         LOGGER.info("Discovery complete")
     elif args.catalog:
-        do_sync(args.config, args.catalog.to_dict(), resource_schema)
+        do_sync(args.config, args.catalog.to_dict(), args.state, resource_schema)
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")

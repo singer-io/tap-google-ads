@@ -85,7 +85,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    'accessible_bidding_strategy_id', 
+                    'accessible_bidding_strategy_id',
                     'bidding_strategy_id',
                     'campaign_budget_id',
                     'customer_id'
@@ -449,7 +449,7 @@ class GoogleAdsBase(unittest.TestCase):
             connections.select_catalog_and_fields_via_metadata(
                 conn_id, catalog, schema, [], non_selected_properties)
 
-    def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields, select_pagination_fields):
+    def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields):
         """Select all streams and all fields within streams"""
 
         for catalog in catalogs:
@@ -464,10 +464,6 @@ class GoogleAdsBase(unittest.TestCase):
             if select_default_fields:
                 non_selected_properties = properties.difference(
                     self.expected_default_fields()[catalog['stream_name']]
-                )
-            elif select_pagination_fields:
-                non_selected_properties = properties.difference(
-                    self.expected_pagination_fields()[catalog['stream_name']]
                 )
             else:
                 non_selected_properties = properties
@@ -523,4 +519,5 @@ class GoogleAdsBase(unittest.TestCase):
 
     # TODO exclusion rules
 
-    # TODO core objects vs reports
+    def expected_default_fields(self, stream):
+        pass # TODO

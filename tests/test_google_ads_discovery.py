@@ -341,7 +341,7 @@ class DiscoveryTest(GoogleAdsBase):
 
 
                 # verify the tap_stream_id and stream_name are consistent (only applies to SaaS taps)
-                if self.is_report(stream): # BUG_TODO not true for core streams (unclear on significance in saas tap ?) 
+                if self.is_report(stream): # BUG_TODO not true for core streams (unclear on significance in saas tap ?)
                     self.assertEqual(catalog['stream_name'], catalog['tap_stream_id'])
 
                 # verify primary key(s)
@@ -388,5 +388,9 @@ class DiscoveryTest(GoogleAdsBase):
                          not in actual_automatic_fields}),
                     msg="Not all non key properties are set to available in metadata")
 
-                # verify field exclusions for each strema match our expectations
-                # TODO further tests may be needed, including attempted syncs with invalid field combos
+                # TODO implement the following assertions
+
+                # verify 'behavior' falls into {'METRIC', 'SEGMENT', 'ATTRIBUTE'} for report streams
+
+                # verify each field in a report stream has a 'fieldExclusions' entry and that the fields listed
+                # in that set are present in elsewhere in the stream's catalog

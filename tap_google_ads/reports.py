@@ -268,7 +268,7 @@ class AdPerformanceReport(ReportStream):
             self.behavior[field_name] = "ATTRIBUTE"
 
 
-class AudiencePerformanceReport(BaseStream):
+class AudiencePerformanceReport(ReportStream):
     "hi"
     # COMMENT FROM GOOGLE
     #'bidding_strategy.name must be selected withy the resources  bidding_strategy or campaign.',
@@ -314,7 +314,7 @@ class DisplayKeywordPerformanceReport(ReportStream):
             self.behavior[field_name] = "SEGMENT"
 
 
-class GeoPerformanceReport(BaseStream):
+class GeoPerformanceReport(ReportStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
         for resource_name in self.google_ads_resources_name:
@@ -332,7 +332,7 @@ class GeoPerformanceReport(BaseStream):
                 self.behavior[full_field_name] = "ATTRIBUTE"
 
 
-class KeywordsPerformanceReport(BaseStream):
+class KeywordsPerformanceReport(ReportStream):
     # TODO: The sync needs to select from ad_group_label if label.name is selected
     # TODO: The sync needs to select from ad_group_label if label.resource_name is selected
     def add_extra_fields(self, resource_schema):
@@ -345,7 +345,7 @@ class KeywordsPerformanceReport(BaseStream):
             self.behavior[field_name] = "ATTRIBUTE"
 
 
-class PlaceholderFeedItemReport(BaseStream):
+class PlaceholderFeedItemReport(ReportStream):
     # TODO: The sync needs to select from feed_item_target if feed_item_target.device is selected
     # TODO: The sync needs to select from feed_item if feed_item.policy_infos is selected
     def add_extra_fields(self, resource_schema):
@@ -423,7 +423,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "age_range_performance_report": BaseStream(
+        "age_range_performance_report": ReportStream(
             report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS,
             ["age_range_view"],
             resource_schema,
@@ -435,7 +435,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "call_metrics_call_details_report": BaseStream(
+        "call_metrics_call_details_report": ReportStream(
             report_definitions.CALL_METRICS_CALL_DETAILS_REPORT_FIELDS,
             ["call_view"],
             resource_schema,
@@ -447,7 +447,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "click_performance_report": BaseStream(
+        "click_performance_report": ReportStream(
             report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS,
             ["click_view"],
             resource_schema,
@@ -465,7 +465,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "gender_performance_report": BaseStream(
+        "gender_performance_report": ReportStream(
             report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
             ["gender_view"],
             resource_schema,
@@ -477,7 +477,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "keywordless_query_report": BaseStream(
+        "keywordless_query_report": ReportStream(
             report_definitions.KEYWORDLESS_QUERY_REPORT_FIELDS,
             ["dynamic_search_ads_search_term_view"],
             resource_schema,
@@ -495,31 +495,31 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "placeholder_report": BaseStream(
+        "placeholder_report": ReportStream(
             report_definitions.PLACEHOLDER_REPORT_FIELDS,
             ["feed_placeholder_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "placement_performance_report": BaseStream(
+        "placement_performance_report": ReportStream(
             report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS,
             ["managed_placement_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "search_query_performance_report": BaseStream(
+        "search_query_performance_report": ReportStream(
             report_definitions.SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS,
             ["search_term_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "shopping_performance_report": BaseStream(
+        "shopping_performance_report": ReportStream(
             report_definitions.SHOPPING_PERFORMANCE_REPORT_FIELDS,
             ["shopping_performance_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "video_performance_report": BaseStream(
+        "video_performance_report": ReportStream(
             report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS,
             ["video"],
             resource_schema,

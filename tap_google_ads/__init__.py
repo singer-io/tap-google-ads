@@ -397,6 +397,7 @@ def do_sync(config, catalog, resource_schema):
                 mdata_map[()].get("table-key-properties", [])
             )
             singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
+
             if stream_name in core_streams:
                 stream_obj = core_streams[stream_name]
                 stream_obj.sync(sdk_client, customer, catalog_entry)

@@ -188,15 +188,9 @@ class DiscoveryTest(GoogleAdsBase):
         # select 'default' fields for report streams
         for report in self.expected_default_fields().keys():
 
-            # BUG_TODO_2 REQUESTED_METRICS_FOR_MANAGER
-            if report in {'ad_performance_report',
-                          'audience_performance_report',
-                          'campaign_performance_report'}:
-                continue
-
             # BUG_TODO_2 keyerror on 'id'
-            if report in {'adgroup_performance_report'}:
-                continue
+            # if report in {'adgroup_performance_report'}:
+            #     continue
 
             catalog = [catalog for catalog in found_catalogs
                        if catalog['stream_name'] == report][0]
@@ -240,4 +234,4 @@ class DiscoveryTest(GoogleAdsBase):
             with self.subTest(stream=stream):
                 record_count = len(synced_records.get(stream, {'messages': []})['messages'])
                 self.assertGreater(record_count, 0)
-                print(f"{stream} canary survived.")
+                print(f"Canary survived. {record_count} {stream} record(s) replicated.")

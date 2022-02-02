@@ -47,16 +47,7 @@ class GoogleAdsBase(unittest.TestCase):
             'start_date':   '2020-12-01T00:00:00Z',
             'user_id':      'not used?',
             'customer_ids': '5548074409,2728292456',
-            'login_customer_ids': [
-                {
-                    "customerId": "5548074409",
-                    "loginCustomerId": "2728292456",
-                 },
-                {
-                    "customerId": "2728292456",
-                    "loginCustomerId": "2728292456",
-                 },
-            ],
+            'login_customer_ids': [{"customerId": "5548074409", "loginCustomerId": "2728292456",}],
         }
 
         if original:

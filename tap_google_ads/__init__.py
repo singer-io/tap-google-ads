@@ -77,6 +77,7 @@ CATEGORY_MAP = {
     6: "METRIC",
 }
 
+STATE = {}
 
 def get_attributes(api_objects, resource):
     resource_attributes = []
@@ -395,25 +396,20 @@ def do_sync(config, catalog, resource_schema):
         sdk_client = create_sdk_client(config, customer["loginCustomerId"])
         for catalog_entry in selected_streams:
             stream_name = catalog_entry["stream"]
+            mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
+
+            primary_key = (
+                mdata_map[()].get("table-key-properties", [])
+            )
+            singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
+
             if stream_name in core_streams:
                 stream_obj = core_streams[stream_name]
-
-                mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
-
-                primary_key = (
-                    mdata_map[()].get("table-key-properties", [])
-                )
-
-                singer.messages.write_schema(
-                    stream_name, catalog_entry["schema"], primary_key
-                )
                 stream_obj.sync(sdk_client, customer, catalog_entry)
             else:
                 # syncing report
                 stream_obj = report_streams[stream_name]
-                mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
-                singer.messages.write_schema(stream_name, catalog_entry["schema"], [])
-                stream_obj.sync(sdk_client, customer, catalog_entry)
+                stream_obj.sync(sdk_client, customer, catalog_entry, config, STATE)
 
 
 def do_discover(resource_schema):
@@ -433,13 +429,18 @@ def do_discover_reports(resource_schema):
 
     streams = []
     for adwords_report_name, report in ADWORDS_TO_GOOGLE_ADS.items():
-        report_metadata = {tuple(): {"inclusion": "available"}}
+        report_metadata = {
+            (): {"inclusion": "available",
+                 "table-key-properties": ["_sdc_record_hash"]},
+            ("properties", "_sdc_record_hash"):
+                {"inclusion": "automatic"}
+        }
 
         full_schema = create_nested_resource_schema(resource_schema, report.fields)
         report_schema = {
             "type": ["null", "object"],
             "is_report": True,
-            "properties": {},
+            "properties": {"_sdc_record_hash": {"type": "string"}},
         }
 
         # TODO repeat this logic for report sync
@@ -449,6 +450,10 @@ def do_discover_reports(resource_schema):
                 is_metric_or_segment = key.startswith("metrics.") or key.startswith("segments.")
                 if resource_name not in {"metrics", "segments"} and resource_name not in report.google_ads_resources_name:
                     report_schema['properties'][f"{resource_name}_{key}"] = val
+                # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
+                elif resource_name == 'ad_group_ad' and key == 'ad':
+                    for ad_field_name, ad_field_schema in val['properties'].items():
+                        report_schema['properties'][ad_field_name] = ad_field_schema
                 else:
                     report_schema['properties'][key] = val
 
@@ -457,6 +462,9 @@ def do_discover_reports(resource_schema):
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
             if not is_metric_or_segment and report_field.split(".")[0] not in report.google_ads_resources_name:
                 transformed_field_name = "_".join(report_field.split(".")[:2])
+            # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
+            elif report_field.startswith('ad_group_ad.ad.'):
+                transformed_field_name = report_field.split(".")[2]
             else:
                 transformed_field_name = report_field.split(".")[1]
 
@@ -521,8 +529,9 @@ def get_client_config(config, login_customer_id=None):
 
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-
     resource_schema = create_resource_schema(args.config)
+    if args.state:
+        STATE = args.state
     if args.discover:
         do_discover(resource_schema)
         LOGGER.info("Discovery complete")

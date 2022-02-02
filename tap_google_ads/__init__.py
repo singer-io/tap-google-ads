@@ -77,6 +77,7 @@ CATEGORY_MAP = {
     6: "METRIC",
 }
 
+STATE = {}
 
 def get_attributes(api_objects, resource):
     resource_attributes = []
@@ -374,7 +375,7 @@ def create_sdk_client(config, login_customer_id=None):
     return sdk_client
 
 
-def do_sync(config, catalog, state, resource_schema):
+def do_sync(config, catalog, resource_schema):
     customers = json.loads(config["login_customer_ids"])
 
     selected_streams = [
@@ -408,7 +409,7 @@ def do_sync(config, catalog, state, resource_schema):
                 stream_obj = report_streams[stream_name]
                 mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
                 singer.messages.write_schema(stream_name, catalog_entry["schema"], [])
-                stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
+                stream_obj.sync(sdk_client, customer, catalog_entry, config, STATE)
 
 
 def do_discover(resource_schema):
@@ -523,13 +524,14 @@ def get_client_config(config, login_customer_id=None):
 
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-
     resource_schema = create_resource_schema(args.config)
+    if args.state:
+        STATE = args.state
     if args.discover:
         do_discover(resource_schema)
         LOGGER.info("Discovery complete")
     elif args.catalog:
-        do_sync(args.config, args.catalog.to_dict(), args.state, resource_schema)
+        do_sync(args.config, args.catalog.to_dict(), resource_schema)
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")

@@ -6,7 +6,6 @@ from singer import Transformer, utils
 from datetime import datetime as dt
 from datetime import timedelta
 from google.protobuf.json_format import MessageToJson
-
 from . import report_definitions
 
 LOGGER = singer.get_logger()
@@ -102,7 +101,7 @@ class BaseStream:
         return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
 
 
-    def sync(self, sdk_client, customer, stream, state):
+    def sync(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
@@ -189,16 +188,16 @@ class ReportStream(BaseStream):
         query_end_date = utils.strftime(query_end_date, format_str=format_str)
         return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
 
-    def sync(self, sdk_client, customer, stream, config, state):
+    def sync(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         replication_key = 'date'
-        self.state = singer.set_currently_syncing(state, stream_name)
-        singer.write_state(self.state)
+        STATE = singer.set_currently_syncing(STATE, stream_name)
+        singer.write_state(STATE)
 
-        start_date = utils.strptime_to_utc(singer.bookmarks.get_bookmark(self.state, stream_name, replication_key, default=config['start_date']))
+        start_date = utils.strptime_to_utc(singer.bookmarks.get_bookmark(STATE, stream_name, replication_key, default=config['start_date']))
         end_date = utils.now()
         query_range = timedelta(days=7)
         while start_date < end_date:
@@ -218,13 +217,13 @@ class ReportStream(BaseStream):
                     transformed_obj = self.transform_keys(obj)
                     record = transformer.transform(transformed_obj, stream["schema"])
                     singer.write_record(stream_name, record)
-                    singer.write_bookmark(self.state,
+                    singer.write_bookmark(STATE,
                                           stream_name,
                                           replication_key,
                                           utils.strftime(query_end_date))
-                    singer.write_state(self.state)
+                    singer.write_state(STATE)
             start_date = query_end_date + timedelta(days=1)
-        singer.write_state(self.state)
+        singer.write_state(STATE)
 
 class AdGroupPerformanceReport(BaseStream):
     def add_extra_fields(self, resource_schema):

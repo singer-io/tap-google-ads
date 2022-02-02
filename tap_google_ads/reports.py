@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+import hashlib
 
 import singer
 from singer import Transformer, utils
@@ -179,7 +180,9 @@ class ReportStream(BaseStream):
             if (
                 mdata["breadcrumb"]
                 and mdata["metadata"].get("selected")
-                and mdata["metadata"].get("inclusion") == "available"
+                and (
+                    mdata["metadata"].get("inclusion") == "available"
+                    or mdata["metadata"].get("inclusion") == "automatic")
             ):
                 selected_fields.update(mdata['metadata']["fields_to_sync"])
 
@@ -187,6 +190,18 @@ class ReportStream(BaseStream):
         query_start_date = utils.strftime(query_start_date, format_str=format_str)
         query_end_date = utils.strftime(query_end_date, format_str=format_str)
         return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
+
+
+    def generate_hash(self, record, metadata):
+        metadata = singer.metadata.to_map(metadata)
+        fields_to_hash = {}
+        for key, val in record.items():
+            if metadata[('properties', key)]['behavior'] != "METRIC":
+                fields_to_hash[key] = val
+        hash_source_data = sorted(fields_to_hash)
+        hash_bytes = json.dumps(fields_to_hash).encode('utf-8')
+        return hashlib.sha256(hash_bytes).hexdigest()
+
 
     def sync(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -216,6 +231,8 @@ class ReportStream(BaseStream):
                 for obj in json_response:
                     transformed_obj = self.transform_keys(obj)
                     record = transformer.transform(transformed_obj, stream["schema"])
+                    _sdc_record_hash = self.generate_hash(record, stream_mdata)
+                    record["_sdc_record_hash"] = _sdc_record_hash
                     singer.write_record(stream_name, record)
                     singer.write_bookmark(STATE,
                                           stream_name,
@@ -391,122 +408,122 @@ def initialize_reports(resource_schema):
             report_definitions.ACCOUNT_PERFORMANCE_REPORT_FIELDS,
             ["customer"],
             resource_schema,
-            ["customer.id"],
+            ["_sdc_record_hash"],
         ),
         # TODO: This needs to link with ad_group_ad_label
         "adgroup_performance_report": AdGroupPerformanceReport(
             report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
             ["ad_group"],
             resource_schema,
-            ["ad_group.id"],
+            ["_sdc_record_hash"],
         ),
         "ad_performance_report": AdPerformanceReport(
             report_definitions.AD_PERFORMANCE_REPORT_FIELDS,
             ["ad_group_ad"],
             resource_schema,
-            ["ad_group_ad.ad.id"],
+            ["_sdc_record_hash"],
         ),
         "age_range_performance_report": BaseStream(
             report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS,
             ["age_range_view"],
             resource_schema,
-            ["ad_group_criterion.criterion_id"],
+            ["_sdc_record_hash"],
         ),
         "audience_performance_report": AudiencePerformanceReport(
             report_definitions.AUDIENCE_PERFORMANCE_REPORT_FIELDS,
             ["campaign_audience_view", "ad_group_audience_view"],
             resource_schema,
-            ["ad_group_criterion.criterion_id"],
+            ["_sdc_record_hash"],
         ),
         "call_metrics_call_details_report": BaseStream(
             report_definitions.CALL_METRICS_CALL_DETAILS_REPORT_FIELDS,
             ["call_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "campaign_performance_report": CampaignPerformanceReport(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "click_performance_report": BaseStream(
             report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS,
             ["click_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "display_keyword_performance_report": DisplayKeywordPerformanceReport(
             report_definitions.DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
             ["display_keyword_view"],
             resource_schema,
-            ["ad_group_criterion.criterion_id"],
+            ["_sdc_record_hash"],
         ),
         "display_topics_performance_report": DisplayKeywordPerformanceReport(
             report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS,
             ["topic_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "gender_performance_report": BaseStream(
             report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
             ["gender_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "geo_performance_report": GeoPerformanceReport(
             report_definitions.GEO_PERFORMANCE_REPORT_FIELDS,
             ["geographic_view", "user_location_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "keywordless_query_report": BaseStream(
             report_definitions.KEYWORDLESS_QUERY_REPORT_FIELDS,
             ["dynamic_search_ads_search_term_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "keywords_performance_report": KeywordsPerformanceReport(
             report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS,
             ["keyword_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "placeholder_feed_item_report": PlaceholderFeedItemReport(
             report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
             ["feed_item", "feed_item_target"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "placeholder_report": BaseStream(
             report_definitions.PLACEHOLDER_REPORT_FIELDS,
             ["feed_placeholder_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "placement_performance_report": BaseStream(
             report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS,
             ["managed_placement_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "search_query_performance_report": BaseStream(
             report_definitions.SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS,
             ["search_term_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "shopping_performance_report": BaseStream(
             report_definitions.SHOPPING_PERFORMANCE_REPORT_FIELDS,
             ["shopping_performance_view"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         "video_performance_report": BaseStream(
             report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS,
             ["video"],
             resource_schema,
-            [""],
+            ["_sdc_record_hash"],
         ),
         # "automatic_placements_performance_report": BaseStream(report_definitions.AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
         # "bid_goal_performance_report": BaseStream(report_definitions.BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),

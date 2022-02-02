@@ -238,11 +238,11 @@ class ReportStream(BaseStream):
                                           stream_name,
                                           replication_key,
                                           utils.strftime(query_end_date))
-                    singer.write_state(STATE)
+                singer.write_state(STATE)
             start_date = query_end_date + timedelta(days=1)
         singer.write_state(STATE)
 
-class AdGroupPerformanceReport(BaseStream):
+class AdGroupPerformanceReport(ReportStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
         field_name = "label.resource_name"

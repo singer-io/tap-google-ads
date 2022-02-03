@@ -283,7 +283,6 @@ def do_discover_core_streams(resource_schema):
             (): {
                 "inclusion": "available",
                 "table-key-properties": stream.primary_keys,
-                "table-foreign-key-properties": [],
             }
         }
 
@@ -303,8 +302,6 @@ def do_discover_core_streams(resource_schema):
                         field = field.split(".")[1]
                     elif is_id_field:
                         field = field.replace(".", "_")
-                        report_metadata[()]["table-foreign-key-properties"].append(field)
-
 
                 if ("properties", field) not in report_metadata:
                     # Base metadata for every field
@@ -325,11 +322,11 @@ def do_discover_core_streams(resource_schema):
 
                 # Save the full field name for sync code to use
                 full_name = props["field_details"]["name"]
-                if "fields_to_sync" not in report_metadata[("properties", field)]:
-                    report_metadata[("properties", field)]["fields_to_sync"] = []
+                if "tap-google-ads.api-field-names" not in report_metadata[("properties", field)]:
+                    report_metadata[("properties", field)]["tap-google-ads.api-field-names"] = []
 
                 if props['field_details']['selectable']:
-                    report_metadata[("properties", field)]["fields_to_sync"].append(full_name)
+                    report_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
 
         catalog_entry = {
             "tap_stream_id": stream.google_ads_resources_name[0],
@@ -490,10 +487,10 @@ def do_discover_reports(resource_schema):
             report_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion
 
             # Save the full field name for sync code to use
-            if "fields_to_sync" not in report_metadata[("properties", transformed_field_name)]:
-                report_metadata[("properties", transformed_field_name)]["fields_to_sync"] = []
+            if "tap-google-ads.api-field-names" not in report_metadata[("properties", transformed_field_name)]:
+                report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"] = []
 
-            report_metadata[("properties", transformed_field_name)]["fields_to_sync"].append(report_field)
+            report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
 
         catalog_entry = {
             "tap_stream_id": adwords_report_name,

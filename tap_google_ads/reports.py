@@ -1,11 +1,9 @@
 from collections import defaultdict
 import json
 import hashlib
-
+from datetime import timedelta
 import singer
 from singer import Transformer, utils
-from datetime import datetime as dt
-from datetime import timedelta
 from google.protobuf.json_format import MessageToJson
 from . import report_definitions
 
@@ -61,7 +59,49 @@ def make_field_names(resource_name, fields):
     return transformed_fields
 
 
-# TODO Create report stream class
+def create_core_stream_query(resource_name, stream_mdata):
+    selected_fields = set()
+    for mdata in stream_mdata:
+        if (
+            mdata["breadcrumb"]
+            and mdata["metadata"].get("selected")
+            and (
+                mdata["metadata"].get("inclusion") == "available"
+                or mdata["metadata"].get("inclusion") == "automatic")
+        ):
+            selected_fields.update(mdata['metadata']["fields_to_sync"])
+
+    return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
+
+
+def create_report_query(resource_name, stream_mdata, query_start_date, query_end_date):
+    selected_fields = set()
+    for mdata in stream_mdata:
+        if (
+            mdata["breadcrumb"]
+            and mdata["metadata"].get("selected")
+            and (
+                mdata["metadata"].get("inclusion") == "available"
+                or mdata["metadata"].get("inclusion") == "automatic")
+        ):
+            selected_fields.update(mdata['metadata']["fields_to_sync"])
+
+    format_str = '%Y-%m-%d'
+    query_start_date = utils.strftime(query_start_date, format_str=format_str)
+    query_end_date = utils.strftime(query_end_date, format_str=format_str)
+    return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
+
+def generate_hash(record, metadata):
+    metadata = singer.metadata.to_map(metadata)
+    fields_to_hash = {}
+    for key, val in record.items():
+        if metadata[('properties', key)]['behavior'] != "METRIC":
+            fields_to_hash[key] = val
+    hash_source_data = sorted(fields_to_hash)
+    hash_bytes = json.dumps(hash_source_data).encode('utf-8')
+    return hashlib.sha256(hash_bytes).hexdigest()
+
+# Todo Create report stream class
 class BaseStream:
     def transform_keys(self, obj):
         target_resource_name = self.google_ads_resources_name[0]
@@ -86,29 +126,13 @@ class BaseStream:
         return transformed_obj
 
 
-    def create_query(self, resource_name, stream_mdata):
-        selected_fields = set()
-        for mdata in stream_mdata:
-
-            if (
-                    mdata["breadcrumb"]
-                    and mdata["metadata"].get("selected")
-                    and (
-                        mdata["metadata"].get("inclusion") == "available"
-                        or mdata["metadata"].get("inclusion") == "automatic")
-            ):
-                selected_fields.update(mdata['metadata']["fields_to_sync"])
-
-        return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
-
-
-    def sync(self, sdk_client, customer, stream):
+    def sync_core_streams(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
 
-        query = self.create_query(resource_name, stream_mdata)
+        query = create_core_stream_query(resource_name, stream_mdata)
         response = gas.search(query=query, customer_id=customer["customerId"])
         with Transformer() as transformer:
             json_response = [
@@ -150,12 +174,12 @@ class BaseStream:
             self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
 
-    def __init__(self, fields, google_ads_resource_name, resource_schema, primary_keys, state={}):
+    def __init__(self, fields, google_ads_resource_name, resource_schema, primary_keys):
         self.fields = fields
         self.google_ads_resources_name = google_ads_resource_name
         self.primary_keys = primary_keys
         self.extract_field_information(resource_schema)
-        self.state = state
+
 
 class ReportStream(BaseStream):
     def transform_keys(self, obj):
@@ -174,36 +198,7 @@ class ReportStream(BaseStream):
         return transformed_obj
 
 
-    def create_query(self, resource_name, stream_mdata, query_start_date, query_end_date):
-        selected_fields = set()
-        for mdata in stream_mdata:
-            if (
-                mdata["breadcrumb"]
-                and mdata["metadata"].get("selected")
-                and (
-                    mdata["metadata"].get("inclusion") == "available"
-                    or mdata["metadata"].get("inclusion") == "automatic")
-            ):
-                selected_fields.update(mdata['metadata']["fields_to_sync"])
-
-        format_str = '%Y-%m-%d'
-        query_start_date = utils.strftime(query_start_date, format_str=format_str)
-        query_end_date = utils.strftime(query_end_date, format_str=format_str)
-        return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
-
-
-    def generate_hash(self, record, metadata):
-        metadata = singer.metadata.to_map(metadata)
-        fields_to_hash = {}
-        for key, val in record.items():
-            if metadata[('properties', key)]['behavior'] != "METRIC":
-                fields_to_hash[key] = val
-        hash_source_data = sorted(fields_to_hash)
-        hash_bytes = json.dumps(fields_to_hash).encode('utf-8')
-        return hashlib.sha256(hash_bytes).hexdigest()
-
-
-    def sync(self, sdk_client, customer, stream, config, STATE):
+    def sync_report_streams(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
@@ -216,11 +211,9 @@ class ReportStream(BaseStream):
         end_date = utils.now()
         query_range = timedelta(days=7)
         while start_date < end_date:
-            query_end_date = start_date + query_range
-            if query_end_date > end_date:
-                query_end_date = end_date
+            query_end_date = min(start_date + query_range, end_date)
 
-            query = self.create_query(resource_name, stream_mdata, start_date, query_end_date)
+            query = create_report_query(resource_name, stream_mdata, start_date, query_end_date)
             response = gas.search(query=query, customer_id=customer["customerId"])
             with Transformer() as transformer:
                 json_response = [
@@ -231,7 +224,7 @@ class ReportStream(BaseStream):
                 for obj in json_response:
                     transformed_obj = self.transform_keys(obj)
                     record = transformer.transform(transformed_obj, stream["schema"])
-                    _sdc_record_hash = self.generate_hash(record, stream_mdata)
+                    _sdc_record_hash = generate_hash(record, stream_mdata)
                     record["_sdc_record_hash"] = _sdc_record_hash
                     singer.write_record(stream_name, record)
                     singer.write_bookmark(STATE,
@@ -241,6 +234,7 @@ class ReportStream(BaseStream):
                 singer.write_state(STATE)
             start_date = query_end_date + timedelta(days=1)
         singer.write_state(STATE)
+
 
 class AdGroupPerformanceReport(ReportStream):
     def add_extra_fields(self, resource_schema):

@@ -80,9 +80,11 @@ class DiscoveryTest(GoogleAdsBase):
                 'view_through_conversions',  # View-through conv.,
             },
             # "age_range_performance_report": set(),
+            # TODO figure out if there is a missing field that needs to be selected for the data to come through
+            # TODO figure out if there are any mappings that differ in name that we missed
             "audience_performance_report": {
                 # 'account_name', # Account name,
-                # 'ad_group',  # Ad group,
+                'ad_group_name', # 'ad_group',  # Ad group,
                 # 'ad_group_default_max_cpc',  # Ad group default max. CPC,
                 # 'audience_segment',  # Audience segment,
                 # 'audience_segment_bid_adjustments',  # Audience Segment Bid adj.,
@@ -117,7 +119,27 @@ class DiscoveryTest(GoogleAdsBase):
                 'view_through_conversions',  # View-through conv.,
             },
             # "click_performance_report": set(),
-            # "display_keyword_performance_report": set(),
+            "display_keyword_performance_report": {
+                # 'ad_group',  # Ad group,
+                # 'ad_group_bid_strategy_type',  # Ad group bid strategy type,
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM,
+                'average_cpv',  # Avg. CPV,
+                # 'campaign',  # Campaign,
+                # 'campaign_bid_strategy_type',  # Campaign bid strategy type,
+                # 'campaign_subtype',  # Campaign subtype,
+                'clicks',  # Clicks,
+                # 'conversion_rate',  # Conv. rate,
+                'conversions',  # Conversions,
+                # 'cost',  # Cost,
+                'cost_per_conversion',  # Cost / conv.,
+                # 'currency_code',  # Currency code,
+                # 'display_video_keyword',  # Display/video keyword,
+                'impressions',  # Impr.,
+                'interaction_rate',  # Interaction rate,
+                'interactions',  # Interactions,
+                'view_through_conversions',  # View-through conv.,
+            },
             # "display_topics_performance_report": set(),
             # "gender_performance_report": set(),
             # "geo_performance_report": set(),
@@ -127,27 +149,27 @@ class DiscoveryTest(GoogleAdsBase):
             # "shopping_performance_report": set(),
             # "video_performance_report": set(),
         }
-    def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields):
-        """Select all streams and all fields within streams"""
+    # def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields):
+    #     """Select all streams and all fields within streams"""
 
-        for catalog in catalogs:
+    #     for catalog in catalogs:
 
-            schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
-            metadata = schema_and_metadata['metadata']
+    #         schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
+    #         metadata = schema_and_metadata['metadata']
 
-            properties = set(md['breadcrumb'][-1] for md in metadata
-                             if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties')
+    #         properties = set(md['breadcrumb'][-1] for md in metadata
+    #                          if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties')
 
-            # get a list of all properties so that none are selected
-            if select_default_fields:
-                non_selected_properties = properties.difference(
-                    self.expected_default_fields()[catalog['stream_name']]
-                )
-            else:
-                non_selected_properties = properties
+    #         # get a list of all properties so that none are selected
+    #         if select_default_fields:
+    #             non_selected_properties = properties.difference(
+    #                 self.expected_default_fields()[catalog['stream_name']]
+    #             )
+    #         else:
+    #             non_selected_properties = properties
 
-            connections.select_catalog_and_fields_via_metadata(
-                conn_id, catalog, schema_and_metadata, [], non_selected_properties)
+    #         connections.select_catalog_and_fields_via_metadata(
+    #             conn_id, catalog, schema_and_metadata, [], non_selected_properties)
 
     @staticmethod
     def name():
@@ -157,7 +179,7 @@ class DiscoveryTest(GoogleAdsBase):
         """
         Testing that basic sync functions without Critical Errors
         """
-        print("Discovery Test for tap-google-ads")
+        print("Canary Sync Test for tap-google-ads")
 
         conn_id = connections.ensure_connection(self)
 
@@ -177,20 +199,15 @@ class DiscoveryTest(GoogleAdsBase):
         self.assertGreater(len(found_catalogs), 0)
         found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
         self.assertSetEqual(streams_to_test, found_catalog_names)
-
+        
         # Perform table and field selection...
         core_catalogs = [catalog for catalog in found_catalogs if not self.is_report(catalog['stream_name'])]
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id, core_catalogs, select_all_fields=True)
 
-
         # [WIP] Attempting field selection for a report
         # select 'default' fields for report streams
         for report in self.expected_default_fields().keys():
-
-            # BUG_TODO_2 keyerror on 'id'
-            # if report in {'adgroup_performance_report'}:
-            #     continue
 
             catalog = [catalog for catalog in found_catalogs
                        if catalog['stream_name'] == report][0]
@@ -224,14 +241,18 @@ class DiscoveryTest(GoogleAdsBase):
         # acquire records from target output
         synced_records = runner.get_records_from_target_output()
 
+        skipped_streams = []
+
         # Verify at least 1 record was replicated for each stream
         for stream in streams_to_test:
 
             if self.is_report(stream) and stream not in self.expected_default_fields().keys():
-                print(f"SKIPPING ASSERTIONS FOR {stream}.")
+                skipped_streams.append(stream)
                 continue # TODO remove when field selection for reports is figured out
 
             with self.subTest(stream=stream):
                 record_count = len(synced_records.get(stream, {'messages': []})['messages'])
                 self.assertGreater(record_count, 0)
                 print(f"Canary survived. {record_count} {stream} record(s) replicated.")
+
+        print(f"ASSERTIONS SKIPPED FOR: {skipped_streams}.")

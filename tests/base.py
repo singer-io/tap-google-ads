@@ -45,7 +45,8 @@ class GoogleAdsBase(unittest.TestCase):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
             'start_date':   '2020-12-01T00:00:00Z',
-            'user_id':      'not used?',
+            'user_id':      'not used?', # TODO
+            # TODO does this need to be two separate fields
             'customer_ids': '5548074409,2728292456',
             'login_customer_ids': [{"customerId": "5548074409", "loginCustomerId": "2728292456",}],
         }
@@ -118,114 +119,114 @@ class GoogleAdsBase(unittest.TestCase):
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "audience_performance_report": {  # "campaign_audience_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "campaign_performance_report": {  # "campaign_audience_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "call_metrics_call_details_report": {  # "call_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "click_performance_report": { #  "click_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "display_keyword_performance_report": {  # "display_keyword_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "display_topics_performance_report": {  # "topic_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "gender_performance_report": {  # "gender_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "geo_performance_report": {  # "geographic_view", "user_location_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "keywordless_query_report": {  # "dynamic_search_ads_search_term_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "keywords_performance_report": {  # "keyword_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             #  TODO Do the land page reports have a different name in UI from the resource?
             "landing_page_report": {
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "expanded_landing_page_report": {
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "placeholder_feed_item_report": {  # "feed_item", "feed_item_target"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "placeholder_report": { # "feed_placeholder_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "placement_performance_report": {  # "managed_placement_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "search_query_performance_report": {  # "search_term_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "shopping_performance_report": {  # "shopping_performance_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "video_performance_report": {  # "video"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             # MISSING V1 reports
             "account_performance_report": { # accounts
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "adgroup_performance_report": {  # ad_group
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "ad_performance_report": {  # ads
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
@@ -287,7 +288,8 @@ class GoogleAdsBase(unittest.TestCase):
     def expected_automatic_fields(self):
         auto_fields = {}
         for k, v in self.expected_metadata().items():
-            auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set())
+            auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set()) \
+                | v.get(self.FOREIGN_KEYS, set())
 
         return auto_fields
 

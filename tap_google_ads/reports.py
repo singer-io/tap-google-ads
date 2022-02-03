@@ -91,15 +91,18 @@ def create_report_query(resource_name, stream_mdata, query_start_date, query_end
     query_end_date = utils.strftime(query_end_date, format_str=format_str)
     return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
 
+
 def generate_hash(record, metadata):
     metadata = singer.metadata.to_map(metadata)
     fields_to_hash = {}
     for key, val in record.items():
         if metadata[('properties', key)]['behavior'] != "METRIC":
             fields_to_hash[key] = val
-    hash_source_data = sorted(fields_to_hash)
+
+    hash_source_data = {key: fields_to_hash[key] for key in sorted(fields_to_hash)}
     hash_bytes = json.dumps(hash_source_data).encode('utf-8')
     return hashlib.sha256(hash_bytes).hexdigest()
+
 
 # Todo Create report stream class
 class BaseStream:

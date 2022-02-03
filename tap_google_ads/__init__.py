@@ -311,7 +311,8 @@ def do_discover_core_streams(resource_schema):
                     }
 
                     # Add inclusion metadata
-                    if field in stream.primary_keys:
+                    # Foreign keys are automatically included and they are all id fields
+                    if field in stream.primary_keys or is_id_field:
                         inclusion = "automatic"
                     elif props["field_details"]["selectable"]:
                         inclusion = "available"

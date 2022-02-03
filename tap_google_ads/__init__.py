@@ -122,6 +122,18 @@ def get_segments(resource_schema, resource):
 
 
 def create_resource_schema(config):
+    """
+    The resource schema is necessary to create a 'source of truth' with regards to the fields
+    Google Ads can return to us. It allows for the discovery of field exclusions and other fun
+    things like data types.
+
+    It includes every field Google Ads can return and the possible fields that each resource
+    can return.
+
+    This schema is based off of the Google Ads blog posts for the creation of their query builder:
+    https://ads-developers.googleblog.com/2021/04/the-query-builder-blog-series-part-3.html
+    """
+
     client = GoogleAdsClient.load_from_dict(get_client_config(config))
     gaf_service = client.get_service("GoogleAdsFieldService")
 

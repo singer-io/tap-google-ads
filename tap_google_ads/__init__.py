@@ -216,7 +216,7 @@ def create_resource_schema(config):
 
                     if field_name.startswith('metrics.') and compared_field.startswith('metrics.'):
                         continue
-                    elif (
+                    if (
                         field_to_check
                         not in resource_schema[compared_field_to_check]["selectable_with"]
                     ):
@@ -400,11 +400,11 @@ def do_sync(config, catalog, resource_schema):
 
             if stream_name in core_streams:
                 stream_obj = core_streams[stream_name]
-                stream_obj.sync(sdk_client, customer, catalog_entry)
+                stream_obj.sync_core_streams(sdk_client, customer, catalog_entry)
             else:
                 # syncing report
                 stream_obj = report_streams[stream_name]
-                stream_obj.sync(sdk_client, customer, catalog_entry, config, STATE)
+                stream_obj.sync_report_streams(sdk_client, customer, catalog_entry, config, STATE)
 
 
 def do_discover(resource_schema):
@@ -526,7 +526,7 @@ def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
     if args.state:
-        STATE = args.state
+        STATE.update(args.state)
     if args.discover:
         do_discover(resource_schema)
         LOGGER.info("Discovery complete")

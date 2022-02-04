@@ -69,7 +69,7 @@ def create_core_stream_query(resource_name, stream_mdata):
                 mdata["metadata"].get("inclusion") == "available"
                 or mdata["metadata"].get("inclusion") == "automatic")
         ):
-            selected_fields.update(mdata['metadata']["fields_to_sync"])
+            selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
 
     return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
 
@@ -83,13 +83,15 @@ def create_report_query(resource_name, stream_mdata, query_start_date, query_end
             and (
                 mdata["metadata"].get("inclusion") == "available"
                 or mdata["metadata"].get("inclusion") == "automatic")
+            and mdata["breadcrumb"][1] != "_sdc_record_hash"
         ):
-            selected_fields.update(mdata['metadata']["fields_to_sync"])
+            selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
 
     format_str = '%Y-%m-%d'
     query_start_date = utils.strftime(query_start_date, format_str=format_str)
     query_end_date = utils.strftime(query_end_date, format_str=format_str)
     return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
+
 
 def generate_hash(record, metadata):
     metadata = singer.metadata.to_map(metadata)
@@ -97,9 +99,11 @@ def generate_hash(record, metadata):
     for key, val in record.items():
         if metadata[('properties', key)]['behavior'] != "METRIC":
             fields_to_hash[key] = val
-    hash_source_data = sorted(fields_to_hash)
+
+    hash_source_data = {key: fields_to_hash[key] for key in sorted(fields_to_hash)}
     hash_bytes = json.dumps(hash_source_data).encode('utf-8')
     return hashlib.sha256(hash_bytes).hexdigest()
+
 
 # Todo Create report stream class
 class BaseStream:

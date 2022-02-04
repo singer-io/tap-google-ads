@@ -283,7 +283,7 @@ class DiscoveryTest(GoogleAdsBase):
                                      if catalog["stream_name"] == stream]))
                 self.assertIsNotNone(catalog)
 
-                # collecting expected values
+                # collecting expected values from base.py
                 expected_primary_keys = self.expected_primary_keys()[stream]
                 expected_foreign_keys = self.expected_foreign_keys()[stream]
                 expected_replication_keys = self.expected_replication_keys()[stream]
@@ -291,8 +291,9 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_method = self.expected_replication_method()[stream]
                 expected_fields = self.expected_fields()[stream]
                 is_report = self.is_report(stream)
+                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE',}
 
-                # collecting actual values
+                # collecting actual values from the catalog
                 schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
                 metadata = schema_and_metadata["metadata"]
                 stream_properties = [item for item in metadata if item.get("breadcrumb") == []]
@@ -312,12 +313,17 @@ class DiscoveryTest(GoogleAdsBase):
                     "metadata", {self.REPLICATION_METHOD: None}).get(self.REPLICATION_METHOD)
                 actual_automatic_fields = set(
                     item.get("breadcrumb", ["properties", None])[1] for item in metadata
- if item.get("metadata").get("inclusion") == "automatic"
+                    if item.get("metadata").get("inclusion") == "automatic"
                 )
                 actual_fields = []
                 for md_entry in metadata:
                     if md_entry['breadcrumb'] != []:
                         actual_fields.append(md_entry['breadcrumb'][1])
+                fields_to_behaviors = {item['breadcrumb'][-1]: item['metadata']['behavior']
+                                       for item in metadata
+                                       if item.get("breadcrumb", []) != []
+                                       and item.get("metadata").get("behavior")}
+                fields_with_behavior = set(fields_to_behaviors.keys())
 
                 ##########################################################################
                 ### metadata assertions
@@ -334,7 +340,7 @@ class DiscoveryTest(GoogleAdsBase):
 
                 # verify the tap_stream_id and stream_name are consistent (only applies to SaaS taps)
                 # BUG_TODO | not true for core streams (unclear on significance in saas tap ?)
-                #           DISCREPANCIES
+                #           DISCREPANCIES (7)
                 #           error: 'ad_groups' != 'ad_group'
                 #           error: 'bidding_strategies' != 'bidding_strategy'
                 #           error: 'campaigns' != 'campaign'
@@ -349,20 +355,23 @@ class DiscoveryTest(GoogleAdsBase):
                 self.assertSetEqual(expected_primary_keys, actual_primary_keys)
 
                 # BUG_TODO | all core and report streams are missing this metadata
+                #            DISCREPANCIES (27)
                 # verify replication method
                 # self.assertEqual(expected_replication_method, actual_replication_method)
 
-                # BUG_TODO_1 md missing for report streams expected 'date' key
+                # BUG_TODO| md missing for report streams expected 'date' key
+                #           DISCREPANCIES (27)
                 # verify replication key(s)
                 # self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
-                # BUG_TODO
+                # BUG_TODO | missing fks on core streams, see expected_metadata in base.py
+                #           DISCREPANCIES (6)
                 # verify foreign keys are present for each stream (core streams only)
                 # self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
 
                 # verify replication key is present for any stream with replication method = INCREMENTAL
                 if actual_replication_method == 'INCREMENTAL':
-                    # BUG_TODO_1 | Implement when md present
+                    # BUG_TODO | Implement when md present for keys and method
                     # self.assertEqual(expected_replication_keys, actual_replication_keys)
                     pass
                 else:
@@ -374,40 +383,15 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
 
-                # BUG_TODO no streams have any of the expected fields with this inclusion value
+                # BUG_TODO | Expected 'date' to be automatic but is not for 'call_metrics_call_details_report'
+                #            The call resource is not returning a 'date' field. So it isn't even present in the catalog
+                #            DISCREPANCIES
+                #            stream='call_metrics_call_details_report'
+                #                AssertionError: Items in the first set but not the second:
+                #                 'date'
                 # verify the primary, replication keys are given the inclusions of automatic
-                # DISCREPANCIES ##############################
-                # stream='ads'
-                #    AssertionError: Items in the first set but not the second:
-                #    'ad_group_id'
-                #    'customer_id'
-                #    'campaign_id'
-                # stream='bidding_strategies'
-                #    AssertionError: Items in the first set but not the second:
-                #    'customer_id'
-                # stream='ad_groups'
-                #    AssertionError: Items in the first set but not the second:
-                #    'accessible_bidding_strategy_id'
-                #    'campaign_id'
-                #    'customer_id'
-                #    'bidding_strategy_id'
-                # stream='call_metrics_call_details_report'
-                #    AssertionError: Items in the first set but not the second:
-                #    'date'
-                # stream='campaigns'
-                #    AssertionError: Items in the first set but not the second:
-                #    'accessible_bidding_strategy_id'
-                #    'campaign_budget_id'
-                #    'customer_id'
-                #    'bidding_strategy_id'
-                # stream='accessible_bidding_strategies'
-                #   AssertionError: Items in the first set but not the second:
-                #   'customer_id'
-                # stream='campaign_budgets'
-                #   AssertionError: Items in the first set but not the second:
-                #   'customer_id'
-                # ############################################
-                # self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
+                if stream != 'call_metrics_call_details_report':
+                    self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
 
                 # verify all other fields are given inclusion of available
                 self.assertTrue(
@@ -418,22 +402,12 @@ class DiscoveryTest(GoogleAdsBase):
                          not in actual_automatic_fields}),
                     msg="Not all non key properties are set to available in metadata")
 
-
-                # verify 'behavior' is present in metadata for all report streams
-                fields_with_behavior = {item["breadcrumb"][-1]
-                                        for item in metadata
-                                        if item.get("breadcrumb", []) != []
-                                        and item.get("metadata").get("behavior")}
+                # verify 'behavior' is present in metadata for all streams
                 if is_report:
                     actual_fields.remove('_sdc_record_hash')
                 self.assertEqual(fields_with_behavior, set(actual_fields))
 
-                # verify 'behavior' falls into expected set of behaviors
-                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE',}
-                fields_to_behaviors = {md['breadcrumb'][-1]: md['metadata']['behavior']
-                                       for md in metadata
-                                       if md['breadcrumb'] != [] and
-                                       md['metadata'].get('behavior')}
+                # verify 'behavior' falls into expected set of behaviors (based on stream type)
                 for field, behavior in fields_to_behaviors.items():
                     with self.subTest(field=field):
                         self.assertIn(behavior, expected_behaviors)

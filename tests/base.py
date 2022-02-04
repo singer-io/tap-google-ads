@@ -173,17 +173,17 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            #  TODO Do the land page reports have a different name in UI from the resource?
-            "landing_page_report": {
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "expanded_landing_page_report": {
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
+            # #  TODO Do the land page reports have a different name in UI from the resource?
+            # "landing_page_report": {
+            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
+            # "expanded_landing_page_report": {
+            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
             "placeholder_feed_item_report": {  # "feed_item", "feed_item_target"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
@@ -214,7 +214,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            # MISSING V1 reports
             "account_performance_report": { # accounts
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,

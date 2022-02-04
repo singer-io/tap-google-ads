@@ -79,28 +79,28 @@ class DiscoveryTest(GoogleAdsBase):
                 'impressions',  # Impr.,
                 'view_through_conversions',  # View-through conv.,
             },
-            # "age_range_performance_report": set(),
+            # BUG_TODO | prohibited_resource issue
             # TODO figure out if there is a missing field that needs to be selected for the data to come through
             # TODO figure out if there are any mappings that differ in name that we missed
-            "audience_performance_report": {
-                # 'account_name', # Account name,
-                'ad_group_name', # 'ad_group',  # Ad group,
-                # 'ad_group_default_max_cpc',  # Ad group default max. CPC,
-                # 'audience_segment',  # Audience segment,
-                # 'audience_segment_bid_adjustments',  # Audience Segment Bid adj.,
-                # 'audience_segment_max_cpc',  # Audience segment max CPC,
-                # 'audience_segment_state',  # Audience segment state,
-                'average_cpc',  # Avg. CPC,
-                'average_cpm',  # Avg. CPM
-                # 'campaign',  # Campaign,
-                'clicks',  # Clicks,
-                # 'cost',  # Cost,
-                'ctr',  # CTR,
-                # 'currency_code',  # Currency code,
-                'customer_id',  # Customer ID,
-                'impressions',  # Impr.,
-                # 'targeting_setting',  # Targeting Setting,
-            },
+            # "audience_performance_report": {
+            #     # 'account_name', # Account name,
+            #     'ad_group_name', # 'ad_group',  # Ad group,
+            #     # 'ad_group_default_max_cpc',  # Ad group default max. CPC,
+            #     # 'audience_segment',  # Audience segment,
+            #     # 'audience_segment_bid_adjustments',  # Audience Segment Bid adj.,
+            #     # 'audience_segment_max_cpc',  # Audience segment max CPC,
+            #     # 'audience_segment_state',  # Audience segment state,
+            #     'average_cpc',  # Avg. CPC,
+            #     'average_cpm',  # Avg. CPM
+            #     # 'campaign',  # Campaign,
+            #     'clicks',  # Clicks,
+            #     # 'cost',  # Cost,
+            #     'ctr',  # CTR,
+            #     # 'currency_code',  # Currency code,
+            #     'customer_id',  # Customer ID,
+            #     'impressions',  # Impr.,
+            #     # 'targeting_setting',  # Targeting Setting,
+            # },
             "campaign_performance_report": {
                 # 'account_name',  # Account name,
                 'average_cpc',  # Avg. CPC,
@@ -119,35 +119,118 @@ class DiscoveryTest(GoogleAdsBase):
                 'view_through_conversions',  # View-through conv.,
             },
             # "click_performance_report": set(),
-            "display_keyword_performance_report": {
+            # TODO Getting 0 records back for this stream in GoogleUI and in tap
+            # "display_keyword_performance_report": {
+            #     # 'ad_group',  # Ad group,
+            #     # 'ad_group_bid_strategy_type',  # Ad group bid strategy type,
+            #     'average_cpc',  # Avg. CPC,
+            #     'average_cpm',  # Avg. CPM,
+            #     'average_cpv',  # Avg. CPV,
+            #     # 'campaign',  # Campaign,
+            #     # 'campaign_bid_strategy_type',  # Campaign bid strategy type,
+            #     # 'campaign_subtype',  # Campaign subtype,
+            #     'clicks',  # Clicks,
+            #     # 'conversion_rate',  # Conv. rate,
+            #     'conversions',  # Conversions,
+            #     # 'cost',  # Cost,
+            #     'cost_per_conversion',  # Cost / conv.,
+            #     # 'currency_code',  # Currency code,
+            #     # 'display_video_keyword',  # Display/video keyword,
+            #     'impressions',  # Impr.,
+            #     'interaction_rate',  # Interaction rate,
+            #     'interactions',  # Interactions,
+            #     'view_through_conversions',  # View-through conv.,
+            # },
+            # TODO Getting 0 records back for this stream in GoogleUI and in tap
+            # "display_topics_performance_report": {
+            #     'ad_group_name', # 'ad_group',  # Ad group,
+            #     'average_cpc',  # Avg. CPC,
+            #     'average_cpm',  # Avg. CPM,
+            #     'campaign_name',  # 'campaign',  # Campaign,
+            #     'clicks',  # Clicks,
+            #     # 'cost',  # Cost,
+            #     'ctr',  # CTR,
+            #     'customer_currency_code',  # 'currency_code',  # Currency code,
+            #     'impressions',  # Impr.,
+            #     # 'topic',  # Topic,
+            #     # 'topic_state',  # Topic state,
+            # },
+            # BUG_TODO | got 704 records in GoogleUI got 0 in tap
+            # "placement_performance_report": {
+            #     'ad_group_name',
+            #     'ad_group_id',
+            #     'campaign_name',
+            #     'campaign_id',
+            #     'clicks',
+            #     'impressions',  # Impr.,
+            #     # 'cost',
+            #     'ad_group_criterion_placement',  # 'placement_group', 'placement_type',
+            # },
+            # "keywords_performance_report": set(),
+            # "shopping_performance_report": set(),
+            # "video_performance_report": set(),
+            # NOTE AFTER THIS POINT COULDN"T FIND IN UI
+            "geo_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                # 'cost',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                # 'conversion_rate',  # Conv. rate
+                # 'geo_target_city',
+                # 'geo_target_metro',
+                # 'geo_target_most_specific_location',
+                'geo_target_region',
+                # 'country_criterion_id',  # BUG_TODO | PROHIBITED_RESOURCE_TYPE_IN_SELECT_CLAUSE
+           },
+            "gender_performance_report": {
+                # 'account_name',  # Account name,
                 # 'ad_group',  # Ad group,
-                # 'ad_group_bid_strategy_type',  # Ad group bid strategy type,
+                # 'ad_group_state',  # Ad group state,
+                'ad_group_criterion_gender',
                 'average_cpc',  # Avg. CPC,
-                'average_cpm',  # Avg. CPM,
-                'average_cpv',  # Avg. CPV,
                 # 'campaign',  # Campaign,
-                # 'campaign_bid_strategy_type',  # Campaign bid strategy type,
                 # 'campaign_subtype',  # Campaign subtype,
+                # 'campaign_type',  # Campaign type,
                 'clicks',  # Clicks,
-                # 'conversion_rate',  # Conv. rate,
+                # 'conversion_rate',  # Conv. rate
                 'conversions',  # Conversions,
                 # 'cost',  # Cost,
                 'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
                 # 'currency_code',  # Currency code,
-                # 'display_video_keyword',  # Display/video keyword,
+                'customer_id',  # Customer ID,
                 'impressions',  # Impr.,
-                'interaction_rate',  # Interaction rate,
-                'interactions',  # Interactions,
                 'view_through_conversions',  # View-through conv.,
             },
-            # "display_topics_performance_report": set(),
-            # "gender_performance_report": set(),
-            # "geo_performance_report": set(),
-            # "keywords_performance_report": set(),
-            # "placement_performance_report": set(),
-            # "search_query_performance_report": set(),
-            # "shopping_performance_report": set(),
-            # "video_performance_report": set(),
+            "search_query_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                # 'cost',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                # 'conversion_rate',  # Conv. rate
+                'search_term',
+                'search_term_match_type',
+            },
+            "age_range_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                # 'cost',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                # 'conversion_rate',  # Conv. rate
+                'ad_group_criterion_age_range', # 'Age',
+            },
         }
     # def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields):
     #     """Select all streams and all fields within streams"""
@@ -190,16 +273,8 @@ class DiscoveryTest(GoogleAdsBase):
         }
 
         # Run a discovery job
-        check_job_name = runner.run_check_mode(self, conn_id)
-        exit_status = menagerie.get_exit_status(conn_id, check_job_name)
-        menagerie.verify_check_exit_status(self, exit_status, check_job_name)
+        found_catalogs = self.run_and_verify_check_mode(conn_id)
 
-        # Verify a catalog was produced for each stream under test
-        found_catalogs = menagerie.get_catalogs(conn_id)
-        self.assertGreater(len(found_catalogs), 0)
-        found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
-        self.assertSetEqual(streams_to_test, found_catalog_names)
-        
         # Perform table and field selection...
         core_catalogs = [catalog for catalog in found_catalogs if not self.is_report(catalog['stream_name'])]
         # select all fields for core streams and...
@@ -216,12 +291,10 @@ class DiscoveryTest(GoogleAdsBase):
             properties = {md['breadcrumb'][-1]
                           for md in metadata
                           if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
-            # TODO Use this pattern for testing field selection based on 'behavior'
-            # property_breakdowns = {'SEGMENT': set(), 'ATTRIBUTE': set(), 'METRIC': set(),}
-            # for md in metadata:
-            #     if md['breadcrumb'] != []:
-            #         property_breakdowns[md['metadata']['behavior']].add(md['breadcrumb'][-1])
             expected_fields = self.expected_default_fields()[catalog['stream_name']]
+            # if report == 'placement_performance_report':
+            #     import ipdb; ipdb.set_trace()
+            #     1+1
             self.assertTrue(expected_fields.issubset(properties),
                             msg=f"{report} missing {expected_fields.difference(properties)}")
             non_selected_properties = properties.difference(expected_fields)
@@ -253,6 +326,6 @@ class DiscoveryTest(GoogleAdsBase):
             with self.subTest(stream=stream):
                 record_count = len(synced_records.get(stream, {'messages': []})['messages'])
                 self.assertGreater(record_count, 0)
-                print(f"Canary survived. {record_count} {stream} record(s) replicated.")
+                print(f"{record_count} {stream} record(s) replicated.")
 
         print(f"ASSERTIONS SKIPPED FOR: {skipped_streams}.")

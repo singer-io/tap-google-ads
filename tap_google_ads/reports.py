@@ -69,7 +69,7 @@ def create_core_stream_query(resource_name, stream_mdata):
                 mdata["metadata"].get("inclusion") == "available"
                 or mdata["metadata"].get("inclusion") == "automatic")
         ):
-            selected_fields.update(mdata['metadata']["fields_to_sync"])
+            selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
 
     return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
 
@@ -83,8 +83,9 @@ def create_report_query(resource_name, stream_mdata, query_start_date, query_end
             and (
                 mdata["metadata"].get("inclusion") == "available"
                 or mdata["metadata"].get("inclusion") == "automatic")
+            and mdata["breadcrumb"][1] != "_sdc_record_hash"
         ):
-            selected_fields.update(mdata['metadata']["fields_to_sync"])
+            selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
 
     format_str = '%Y-%m-%d'
     query_start_date = utils.strftime(query_start_date, format_str=format_str)

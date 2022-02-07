@@ -21,6 +21,9 @@ CORE_STREAMS = [
     "campaign_budget",
 ]
 
+DEFAULT_CONVERSION_WINDOW = 30
+NUM_DAYS_TO_QUERY = 7
+
 
 def flatten(obj):
     """Given an `obj` like
@@ -209,36 +212,39 @@ class ReportStream(BaseStream):
         stream_mdata = stream["metadata"]
         replication_key = 'date'
         STATE = singer.set_currently_syncing(STATE, stream_name)
+        conversion_window = timedelta(days=int(config.get('conversion_window_days') or DEFAULT_CONVERSION_WINDOW))
+        start_date = min(utils.strptime_to_utc(singer.get_bookmark(STATE, stream_name, replication_key, default=config['start_date'])),
+                         utils.now() - conversion_window)
+        end_date = utils.now()
+        query_range = timedelta(days=NUM_DAYS_TO_QUERY)
+
         singer.write_state(STATE)
 
-        start_date = utils.strptime_to_utc(singer.bookmarks.get_bookmark(STATE, stream_name, replication_key, default=config['start_date']))
-        end_date = utils.now()
-        query_range = timedelta(days=7)
         while start_date < end_date:
             query_end_date = min(start_date + query_range, end_date)
-
             query = create_report_query(resource_name, stream_mdata, start_date, query_end_date)
             response = gas.search(query=query, customer_id=customer["customerId"])
             with Transformer() as transformer:
-                json_response = [
-                    json.loads(MessageToJson(x, preserving_proto_field_name=True))
-                    for x in response
-                ]
-
-                for obj in json_response:
-                    transformed_obj = self.transform_keys(obj)
+                # Pages are fetched automatically while iterating through the response
+                for message in response:
+                    json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
+                    transformed_obj = self.transform_keys(json_message)
                     record = transformer.transform(transformed_obj, stream["schema"])
                     _sdc_record_hash = generate_hash(record, stream_mdata)
                     record["_sdc_record_hash"] = _sdc_record_hash
-                    singer.write_record(stream_name, record)
-                    singer.write_bookmark(STATE,
-                                          stream_name,
-                                          replication_key,
-                                          utils.strftime(query_end_date))
-                singer.write_state(STATE)
-            start_date = query_end_date + timedelta(days=1)
-        singer.write_state(STATE)
 
+                    singer.write_record(stream_name, record)
+
+            singer.write_bookmark(STATE,
+                                  stream_name,
+                                  replication_key,
+                                  utils.strftime(query_end_date))
+
+            singer.write_state(STATE)
+
+            start_date = query_end_date + timedelta(days=1)
+
+        singer.write_state(STATE)
 
 class AdGroupPerformanceReport(ReportStream):
     def add_extra_fields(self, resource_schema):

@@ -445,6 +445,11 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
+        "campaign_criteria_report": ReportStream(
+            report_definitions.CAMPAIGN_CRITERIA_REPORT_FIELDS,
+            ["campaign_criterion"],
+            resource_schema,
+            ["_sdc_record_hash"]),
         "campaign_performance_report": CampaignPerformanceReport(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
@@ -533,7 +538,6 @@ def initialize_reports(resource_schema):
         # "bid_goal_performance_report": BaseStream(report_definitions.BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
         # "budget_performance_report": BaseStream(report_definitions.BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
         # "campaign_ad_schedule_target_report": BaseStream(report_definitions.CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
-        # "campaign_criteria_report": BaseStream(report_definitions.CAMPAIGN_CRITERIA_REPORT_FIELDS, ["campaign_criterion"], resource_schema),
         # "campaign_location_target_report": BaseStream(report_definitions.CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
         # "campaign_shared_set_report": BaseStream(report_definitions.CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
         # "label_report": BaseStream(report_definitions.LABEL_REPORT_FIELDS, ["label"], resource_schema),

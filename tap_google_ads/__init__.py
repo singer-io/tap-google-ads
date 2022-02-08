@@ -48,6 +48,7 @@ REPORTS = [
     "campaign",
     "campaign_audience_view",
     "campaign_budget",
+    "campaign_criterion",
     "click_view",
     "customer",
     "display_keyword_view",

@@ -229,9 +229,15 @@ def create_resource_schema(config):
 
                     if field_name.startswith('metrics.') and compared_field.startswith('metrics.'):
                         continue
+
+                    # If a resource is selectable with another resource they should be in
+                    # each other's 'selectable_with' list, but Google is missing some of
+                    # these so we have to check both ways
                     if (
                         field_to_check
                         not in resource_schema[compared_field_to_check]["selectable_with"]
+                        and compared_field_to_check
+                        not in resource_schema[field_to_check]["selectable_with"]
                     ):
                         field["incompatible_fields"].append(compared_field)
 

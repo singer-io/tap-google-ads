@@ -48,6 +48,7 @@ REPORTS = [
     "campaign",
     "campaign_audience_view",
     "campaign_budget",
+    "campaign_criterion",
     "click_view",
     "customer",
     "display_keyword_view",
@@ -228,9 +229,15 @@ def create_resource_schema(config):
 
                     if field_name.startswith('metrics.') and compared_field.startswith('metrics.'):
                         continue
+
+                    # If a resource is selectable with another resource they should be in
+                    # each other's 'selectable_with' list, but Google is missing some of
+                    # these so we have to check both ways
                     if (
                         field_to_check
                         not in resource_schema[compared_field_to_check]["selectable_with"]
+                        and compared_field_to_check
+                        not in resource_schema[field_to_check]["selectable_with"]
                     ):
                         field["incompatible_fields"].append(compared_field)
 
@@ -403,6 +410,7 @@ def do_sync(config, catalog, resource_schema):
     report_streams = initialize_reports(resource_schema)
 
     for customer in customers:
+        LOGGER.info(f"Syncing customer Id {customer['customerId']} ...")
         sdk_client = create_sdk_client(config, customer["loginCustomerId"])
         for catalog_entry in selected_streams:
             stream_name = catalog_entry["stream"]
@@ -413,6 +421,7 @@ def do_sync(config, catalog, resource_schema):
             )
             singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
 
+            LOGGER.info(f"Syncing {stream_name} for customer Id {customer['customerId']}.")
             if stream_name in core_streams:
                 stream_obj = core_streams[stream_name]
                 stream_obj.sync_core_streams(sdk_client, customer, catalog_entry)
@@ -540,6 +549,7 @@ def get_client_config(config, login_customer_id=None):
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
+
     if args.state:
         STATE.update(args.state)
     if args.discover:

@@ -21,8 +21,11 @@ CORE_STREAMS = [
     "campaign_budget",
 ]
 
+REPORTS_WITH_90_DAY_MAX = frozenset([
+    'click_performance_report',
+])
+
 DEFAULT_CONVERSION_WINDOW = 30
-NUM_DAYS_TO_QUERY = 7
 
 
 def flatten(obj):
@@ -62,22 +65,7 @@ def make_field_names(resource_name, fields):
     return transformed_fields
 
 
-def create_core_stream_query(resource_name, stream_mdata):
-    selected_fields = set()
-    for mdata in stream_mdata:
-        if (
-            mdata["breadcrumb"]
-            and mdata["metadata"].get("selected")
-            and (
-                mdata["metadata"].get("inclusion") == "available"
-                or mdata["metadata"].get("inclusion") == "automatic")
-        ):
-            selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
-
-    return f"SELECT {','.join(selected_fields)} FROM {resource_name}"
-
-
-def create_report_query(resource_name, stream_mdata, query_start_date, query_end_date):
+def get_selected_fields(resource_name, stream_mdata):
     selected_fields = set()
     for mdata in stream_mdata:
         if (
@@ -90,11 +78,19 @@ def create_report_query(resource_name, stream_mdata, query_start_date, query_end
         ):
             selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
 
-    format_str = '%Y-%m-%d'
-    query_start_date = utils.strftime(query_start_date, format_str=format_str)
-    query_end_date = utils.strftime(query_end_date, format_str=format_str)
-    return f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date BETWEEN '{query_start_date}' AND '{query_end_date}'"
+    return selected_fields
 
+def create_core_stream_query(resource_name, selected_fields):
+    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name}"
+    return core_query
+
+def create_report_query(resource_name, selected_fields, query_date):
+
+    format_str = '%Y-%m-%d'
+    query_date = utils.strftime(query_date, format_str=format_str)
+    report_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date = '{query_date}'"
+
+    return report_query
 
 def generate_hash(record, metadata):
     metadata = singer.metadata.to_map(metadata)
@@ -138,8 +134,10 @@ class BaseStream:
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
+        selected_fields = get_selected_fields(resource_name, stream_mdata)
+        LOGGER.info(f'Selected fields for stream {stream_name}: {selected_fields}')
 
-        query = create_core_stream_query(resource_name, stream_mdata)
+        query = create_core_stream_query(resource_name, selected_fields)
         response = gas.search(query=query, customer_id=customer["customerId"])
         with Transformer() as transformer:
             # Pages are fetched automatically while iterating through the response
@@ -202,47 +200,55 @@ class ReportStream(BaseStream):
 
         return transformed_obj
 
-
     def sync_report_streams(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resources_name[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
+        selected_fields = get_selected_fields(resource_name, stream_mdata)
         replication_key = 'date'
         STATE = singer.set_currently_syncing(STATE, stream_name)
         conversion_window = timedelta(days=int(config.get('conversion_window_days') or DEFAULT_CONVERSION_WINDOW))
-        start_date = min(utils.strptime_to_utc(singer.get_bookmark(STATE, stream_name, replication_key, default=config['start_date'])),
+
+        query_date = min(utils.strptime_to_utc(singer.get_bookmark(STATE, stream_name, replication_key, default=config['start_date'])),
                          utils.now() - conversion_window)
         end_date = utils.now()
-        query_range = timedelta(days=NUM_DAYS_TO_QUERY)
 
+        if stream_name in REPORTS_WITH_90_DAY_MAX:
+            cutoff = end_date - timedelta(days=90)
+            query_date = max(query_date, cutoff)
+            if query_date == cutoff:
+                LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
+
+        LOGGER.info(f'Selected fields for stream {stream_name}: {selected_fields}')
         singer.write_state(STATE)
 
-        while start_date < end_date:
-            query_end_date = min(start_date + query_range, end_date)
-            query = create_report_query(resource_name, stream_mdata, start_date, query_end_date)
+        while query_date < end_date:
+            query = create_report_query(resource_name, selected_fields, query_date)
+            LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
             response = gas.search(query=query, customer_id=customer["customerId"])
+
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response
                 for message in response:
                     json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
                     transformed_obj = self.transform_keys(json_message)
                     record = transformer.transform(transformed_obj, stream["schema"])
-                    _sdc_record_hash = generate_hash(record, stream_mdata)
-                    record["_sdc_record_hash"] = _sdc_record_hash
+                    record["_sdc_record_hash"] = generate_hash(record, stream_mdata)
 
                     singer.write_record(stream_name, record)
 
             singer.write_bookmark(STATE,
                                   stream_name,
                                   replication_key,
-                                  utils.strftime(query_end_date))
+                                  utils.strftime(query_date))
 
             singer.write_state(STATE)
 
-            start_date = query_end_date + timedelta(days=1)
+            query_date += timedelta(days=1)
 
         singer.write_state(STATE)
+
 
 class AdGroupPerformanceReport(ReportStream):
     def add_extra_fields(self, resource_schema):

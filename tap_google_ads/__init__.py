@@ -410,6 +410,7 @@ def do_sync(config, catalog, resource_schema):
     report_streams = initialize_reports(resource_schema)
 
     for customer in customers:
+        LOGGER.info(f"Syncing customer Id {customer['customerId']} ...")
         sdk_client = create_sdk_client(config, customer["loginCustomerId"])
         for catalog_entry in selected_streams:
             stream_name = catalog_entry["stream"]
@@ -420,6 +421,7 @@ def do_sync(config, catalog, resource_schema):
             )
             singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
 
+            LOGGER.info(f"Syncing {stream_name} for customer Id {customer['customerId']}.")
             if stream_name in core_streams:
                 stream_obj = core_streams[stream_name]
                 stream_obj.sync_core_streams(sdk_client, customer, catalog_entry)
@@ -547,6 +549,7 @@ def get_client_config(config, login_customer_id=None):
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
+
     if args.state:
         STATE.update(args.state)
     if args.discover:

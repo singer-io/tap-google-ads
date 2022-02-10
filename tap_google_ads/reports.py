@@ -142,15 +142,13 @@ class BaseStream:
         query = create_core_stream_query(resource_name, stream_mdata)
         response = gas.search(query=query, customer_id=customer["customerId"])
         with Transformer() as transformer:
-            json_response = [
-                json.loads(MessageToJson(x, preserving_proto_field_name=True))
-                for x in response
-            ]
-
-            for obj in json_response:
-                transformed_obj = self.transform_keys(obj)
+            # Pages are fetched automatically while iterating through the response
+            for message in response:
+                json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
+                transformed_obj = self.transform_keys(json_message)
                 record = transformer.transform(transformed_obj, stream["schema"])
                 singer.write_record(stream_name, record)
+
 
     def add_extra_fields(self, resource_schema):
         """This function should add fields to `field_exclusions`, `schema`, and

@@ -415,13 +415,25 @@ def initialize_reports(resource_schema):
             ["_sdc_record_hash"],
         ),
         # TODO: This needs to link with ad_group_ad_label
-        "adgroup_performance_report": AdGroupPerformanceReport(
+        # "adgroup_performance_report": AdGroupPerformanceReport(
+        #     report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
+        #     ["ad_group"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "adgroup_performance_report": ReportStream(
             report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
             ["ad_group"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "ad_performance_report": AdPerformanceReport(
+        # "ad_performance_report": AdPerformanceReport(
+        #     report_definitions.AD_PERFORMANCE_REPORT_FIELDS,
+        #     ["ad_group_ad"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "ad_performance_report": ReportStream(
             report_definitions.AD_PERFORMANCE_REPORT_FIELDS,
             ["ad_group_ad"],
             resource_schema,
@@ -433,24 +445,19 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "audience_performance_report": AudiencePerformanceReport(
-            report_definitions.AUDIENCE_PERFORMANCE_REPORT_FIELDS,
-            ["campaign_audience_view", "ad_group_audience_view"],
+        # "audience_performance_report": AudiencePerformanceReport(
+        #     report_definitions.AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+        #     ["campaign_audience_view", "ad_group_audience_view"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "audience_performance_report": ReportStream(
+            report_definitions.AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+            ["ad_group_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "call_metrics_call_details_report": ReportStream(
-            report_definitions.CALL_METRICS_CALL_DETAILS_REPORT_FIELDS,
-            ["call_view"],
-            resource_schema,
-            ["_sdc_record_hash"],
-        ),
-        "campaign_criteria_report": ReportStream(
-            report_definitions.CAMPAIGN_CRITERIA_REPORT_FIELDS,
-            ["campaign_criterion"],
-            resource_schema,
-            ["_sdc_record_hash"]),
-        "campaign_performance_report": CampaignPerformanceReport(
+        "campaign_performance_report": ReportStream(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
             resource_schema,
@@ -462,17 +469,35 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "display_keyword_performance_report": DisplayKeywordPerformanceReport(
+        # "display_keyword_performance_report": DisplayKeywordPerformanceReport(
+        #     report_definitions.DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
+        #     ["display_keyword_view"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "display_keyword_performance_report": ReportStream(
             report_definitions.DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
             ["display_keyword_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "display_topics_performance_report": DisplayKeywordPerformanceReport(
+        # "display_topics_performance_report": DisplayKeywordPerformanceReport(
+        #     report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS,
+        #     ["topic_view"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "display_topics_performance_report": ReportStream(
             report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS,
             ["topic_view"],
             resource_schema,
             ["_sdc_record_hash"],
+        ),
+        "expanded_landing_page_report": ReportStream(
+            report_definitions.EXPANDED_LANDING_PAGE_REPORT_FIELDS,
+            ["expanded_landing_page_view"],
+            resource_schema,
+            ["_sdc_record_hash"]
         ),
         "gender_performance_report": ReportStream(
             report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
@@ -480,9 +505,15 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "geo_performance_report": GeoPerformanceReport(
+        # "geo_performance_report": GeoPerformanceReport(
+        #     report_definitions.GEO_PERFORMANCE_REPORT_FIELDS,
+        #     ["geographic_view", "user_location_view"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "geo_performance_report": ReportStream(
             report_definitions.GEO_PERFORMANCE_REPORT_FIELDS,
-            ["geographic_view", "user_location_view"],
+            ["geographic_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
@@ -492,15 +523,33 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "keywords_performance_report": KeywordsPerformanceReport(
+        # "keywords_performance_report": KeywordsPerformanceReport(
+        #     report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS,
+        #     ["keyword_view"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "keywords_performance_report": ReportStream(
             report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS,
             ["keyword_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "placeholder_feed_item_report": PlaceholderFeedItemReport(
+        "landing_page_report": ReportStream(
+            report_definitions.LANDING_PAGE_REPORT_FIELDS,
+            ["landing_page_view"],
+            resource_schema,
+            ["_sdc_record_hash"]
+        ),
+        # "placeholder_feed_item_report": PlaceholderFeedItemReport(
+        #     report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
+        #     ["feed_item", "feed_item_target"],
+        #     resource_schema,
+        #     ["_sdc_record_hash"],
+        # ),
+        "placeholder_feed_item_report": ReportStream(
             report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
-            ["feed_item", "feed_item_target"],
+            ["feed_item"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
@@ -534,18 +583,4 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        # "automatic_placements_performance_report": BaseStream(report_definitions.AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT_FIELDS, ["group_placement_view"], resource_schema),
-        # "bid_goal_performance_report": BaseStream(report_definitions.BID_GOAL_PERFORMANCE_REPORT_FIELDS, ["bidding_strategy"], resource_schema),
-        # "budget_performance_report": BaseStream(report_definitions.BUDGET_PERFORMANCE_REPORT_FIELDS, ["campaign_budget"], resource_schema),
-        # "campaign_ad_schedule_target_report": BaseStream(report_definitions.CAMPAIGN_AD_SCHEDULE_TARGET_REPORT_FIELDS, ["ad_schedule_view"], resource_schema),
-        # "campaign_location_target_report": BaseStream(report_definitions.CAMPAIGN_LOCATION_TARGET_REPORT_FIELDS, ["location_view"], resource_schema),
-        # "campaign_shared_set_report": BaseStream(report_definitions.CAMPAIGN_SHARED_SET_REPORT_FIELDS, ["campaign_shared_set"], resource_schema),
-        # "label_report": BaseStream(report_definitions.LABEL_REPORT_FIELDS, ["label"], resource_schema),
-        # "landing_page_report": BaseStream(report_definitions.LANDING_PAGE_REPORT_FIELDS, ["landing_page_view", "expanded_landing_page_view"], resource_schema),
-        # "paid_organic_query_report": BaseStream(report_definitions.PAID_ORGANIC_QUERY_REPORT_FIELDS, ["paid_organic_search_term_view"], resource_schema),
-        # "parental_status_performance_report": BaseStream(report_definitions.PARENTAL_STATUS_PERFORMANCE_REPORT_FIELDS, ["parental_status_view"], resource_schema),
-        # "product_partition_report": BaseStream(report_definitions.PRODUCT_PARTITION_REPORT_FIELDS, ["product_group_view"], resource_schema),
-        # "shared_set_criteria_report": BaseStream(report_definitions.SHARED_SET_CRITERIA_REPORT_FIELDS, ["shared_criterion"], resource_schema),
-        # "url_performance_report": BaseStream(report_definitions.URL_PERFORMANCE_REPORT_FIELDS, ["detail_placement_view"], resource_schema),
-        # "user_ad_distance_report": BaseStream(report_definitions.USER_AD_DISTANCE_REPORT_FIELDS, ["distance_view"], resource_schema),
     }

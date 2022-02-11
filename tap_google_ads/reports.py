@@ -11,58 +11,11 @@ LOGGER = singer.get_logger()
 
 API_VERSION = "v9"
 
-CORE_STREAMS = [
-    "customer",
-    "ad_group",
-    "ad_group_ad",
-    "campaign",
-    "bidding_strategy",
-    "accessible_bidding_strategy",
-    "campaign_budget",
-]
-
 REPORTS_WITH_90_DAY_MAX = frozenset([
     'click_performance_report',
 ])
 
 DEFAULT_CONVERSION_WINDOW = 30
-
-
-def flatten(obj):
-    """Given an `obj` like
-
-    {"a" : {"b" : "c"},
-     "d": "e"}
-
-    return
-
-    {"a.b": "c",
-     "d": "e"}
-    """
-    new_obj = {}
-    for key, value in obj.items():
-        if isinstance(value, dict):
-            for sub_key, sub_value in flatten(value).items():
-                new_obj[f"{key}.{sub_key}"] = sub_value
-        else:
-            new_obj[key] = value
-    return new_obj
-
-
-def make_field_names(resource_name, fields):
-    transformed_fields = []
-    for field in fields:
-        pieces = field.split("_")
-        front = "_".join(pieces[:-1])
-        back = pieces[-1]
-
-        if '.' in field:
-            transformed_fields.append(f"{resource_name}.{field}")
-        elif front in CORE_STREAMS and field.endswith('_id'):
-            transformed_fields.append(f"{front}.{back}")
-        else:
-            transformed_fields.append(f"{resource_name}.{field}")
-    return transformed_fields
 
 
 def get_selected_fields(resource_name, stream_mdata):

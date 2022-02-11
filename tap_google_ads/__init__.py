@@ -15,7 +15,7 @@ def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
     state = {}
-    
+
     if args.state:
         state.update(args.state)
     if args.discover:

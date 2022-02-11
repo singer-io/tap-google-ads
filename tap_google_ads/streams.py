@@ -60,7 +60,7 @@ def generate_hash(record, metadata):
 # Todo Create report stream class
 class BaseStream:
     def transform_keys(self, obj):
-        target_resource_name = self.google_ads_resources_name[0]
+        target_resource_name = self.google_ads_resource_names[0]
         transformed_obj = {}
 
         for resource_name, value in obj.items():
@@ -84,7 +84,7 @@ class BaseStream:
 
     def sync_core_streams(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
-        resource_name = self.google_ads_resources_name[0]
+        resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(resource_name, stream_mdata)
@@ -112,7 +112,7 @@ class BaseStream:
         self.behavior = {}
         self.selectable = {}
 
-        for resource_name in self.google_ads_resources_name:
+        for resource_name in self.google_ads_resource_names:
 
             # field_exclusions step
             fields = resource_schema[resource_name]["fields"]
@@ -130,9 +130,9 @@ class BaseStream:
             self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
 
-    def __init__(self, fields, google_ads_resource_name, resource_schema, primary_keys):
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
         self.fields = fields
-        self.google_ads_resources_name = google_ads_resource_name
+        self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
         self.extract_field_information(resource_schema)
 
@@ -155,7 +155,7 @@ class ReportStream(BaseStream):
 
     def sync_report_streams(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
-        resource_name = self.google_ads_resources_name[0]
+        resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(resource_name, stream_mdata)
@@ -269,7 +269,7 @@ class DisplayKeywordPerformanceReport(ReportStream):
             "bidding_strategy.name",
         ]:
             self.field_exclusions[field_name] = resource_schema[
-                self.google_ads_resources_name[0]
+                self.google_ads_resource_names[0]
             ]["fields"][field_name]["incompatible_fields"]
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "SEGMENT"
@@ -278,7 +278,7 @@ class DisplayKeywordPerformanceReport(ReportStream):
 class GeoPerformanceReport(ReportStream):
     # TODO: The sync needs to select from bidding_strategy and/or campaign if bidding_strategy.name is selected
     def add_extra_fields(self, resource_schema):
-        for resource_name in self.google_ads_resources_name:
+        for resource_name in self.google_ads_resource_names:
             for field_name in [
                 "country_criterion_id",
             ]:

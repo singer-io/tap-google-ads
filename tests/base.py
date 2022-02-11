@@ -44,7 +44,7 @@ class GoogleAdsBase(unittest.TestCase):
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
-            'start_date':   '2020-12-01T00:00:00Z',
+            'start_date':   '2021-12-01T00:00:00Z',
             'user_id':      'not used?', # TODO
             # TODO does this need to be two separate fields
             'customer_ids': '5548074409,2728292456',
@@ -133,11 +133,12 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "call_metrics_call_details_report": {  # "call_view"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
+            # TODO Post Alpha
+            # "call_metrics_call_details_report": {  # "call_view"
+            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
             "click_performance_report": { #  "click_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
@@ -173,17 +174,16 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            # #  TODO Do the land page reports have a different name in UI from the resource?
-            # "landing_page_report": {
-            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
-            #     self.REPLICATION_METHOD: self.INCREMENTAL,
-            #     self.REPLICATION_KEYS: {"date"},
-            # },
-            # "expanded_landing_page_report": {
-            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
-            #     self.REPLICATION_METHOD: self.INCREMENTAL,
-            #     self.REPLICATION_KEYS: {"date"},
-            # },
+            "landing_page_report": {
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+            },
+            "expanded_landing_page_report": {
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+            },
             "placeholder_feed_item_report": {  # "feed_item", "feed_item_target"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,

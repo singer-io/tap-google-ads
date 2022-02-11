@@ -17,7 +17,7 @@ class StartDateTest(GoogleAdsBase):
     def test_run(self):
         """Instantiate start date according to the desired data set and run the test"""
 
-        self.start_date_1 = self.get_properties().get('start_date') # '2020-12-01T00:00:00Z',
+        self.start_date_1 = self.get_properties().get('start_date') # '2021-12-01T00:00:00Z',
         self.start_date_2 = self.timedelta_formatted(self.start_date_1, days=15)
 
         self.start_date = self.start_date_1
@@ -56,27 +56,19 @@ class StartDateTest(GoogleAdsBase):
         conn_id_1 = connections.ensure_connection(self)
 
         # run check mode
-        check_job_name_1 = runner.run_check_mode(self, conn_id_1)  # TODO REMOVE START
-        exit_status_1 = menagerie.get_exit_status(conn_id_1, check_job_name_1)
-        menagerie.verify_check_exit_status(self, exit_status_1, check_job_name_1)
-        found_catalogs_1 = menagerie.get_catalogs(conn_id_1)  # TODO REMOVE END
-        # found_catalogs_1 = self.run_and_verify_check_mode(conn_id_1)  # TODO PUT BACK
+        found_catalogs_1 = self.run_and_verify_check_mode(conn_id_1)
 
         # table and field selection
         test_catalogs_1 = [catalog for catalog in found_catalogs_1
                            if catalog.get('stream_name') in streams_to_test]
-        self.select_all_streams_and_fields(conn_id_1, test_catalogs_1, select_all_fields=True) # TODO REMOVE
-        # self.perform_and_verify_table_and_field_selection(conn_id_1, test_catalogs_1, select_all_fields=True) # TODO PUT BACK
+        core_catalogs_1 = [catalog for catalog in test_catalogs_1 if not self.is_report(catalog['stream_name'])]
+        self.select_all_streams_and_fields(conn_id_1, core_catalogs_1, select_all_fields=True)
+
+        # TODO move this bug to Done/Reject
+        # BUG_TDL-17535 [tap-google-ads] Primary keys do not persist to target
 
         # run initial sync
-        sync_job_name_1 = runner.run_sync_mode(self, conn_id_1)  # TODO REMOVE START
-        exit_status_1 = menagerie.get_exit_status(conn_id_1, sync_job_name_1)
-        menagerie.verify_sync_exit_status(self, exit_status_1, sync_job_name_1)
-        # BUG_TDL-17535 [tap-google-ads] Primary keys do not persist to target
-        # record_count_by_stream_1 = runner.examine_target_output_file(
-        #     self, conn_id_1, streams_to_test, self.expected_primary_keys()) # BUG_TDL-17535
-        # TODO REMOVE END
-        # record_count_by_stream_1 = self.run_and_verify_sync(conn_id_1)  # TODO PUT BACK
+        record_count_by_stream_1 = self.run_and_verify_sync(conn_id_1)
         synced_records_1 = runner.get_records_from_target_output()
 
         ##########################################################################
@@ -94,52 +86,40 @@ class StartDateTest(GoogleAdsBase):
         conn_id_2 = connections.ensure_connection(self, original_properties=False)
 
         # run check mode
-        check_job_name_2 = runner.run_check_mode(self, conn_id_2)  # TODO REMOVE START
-        exit_status_2 = menagerie.get_exit_status(conn_id_2, check_job_name_2)
-        menagerie.verify_check_exit_status(self, exit_status_2, check_job_name_2)
-        found_catalogs_2 = menagerie.get_catalogs(conn_id_2)  # TODO REMOVE END
-        # found_catalogs_2 = self.run_and_verify_check_mode(conn_id_2)  # TODO PUT BACK
-
+        found_catalogs_2 = self.run_and_verify_check_mode(conn_id_2)
 
         # table and field selection
         test_catalogs_2 = [catalog for catalog in found_catalogs_2
                            if catalog.get('stream_name') in streams_to_test]
-        self.select_all_streams_and_fields(conn_id_2, test_catalogs_2, select_all_fields=True) # TODO REMOVE
-        # self.perform_and_verify_table_and_field_selection(conn_id_2, test_catalogs_2, select_all_fields=True) # TODO PUT BACK
-
+        core_catalogs_2 = [catalog for catalog in test_catalogs_2 if not self.is_report(catalog['stream_name'])]
+        self.select_all_streams_and_fields(conn_id_2, core_catalogs_2, select_all_fields=True)
 
         # run sync
-        sync_job_name_2 = runner.run_sync_mode(self, conn_id_2)  # TODO REMOVE START
-        exit_status_2 = menagerie.get_exit_status(conn_id_2, sync_job_name_2)
-        menagerie.verify_sync_exit_status(self, exit_status_2, sync_job_name_2)
-        # BUG_TDL-17535 [tap-google-ads] Primary keys do not persist to target
-        # record_count_by_stream_2 = runner.examine_target_output_file(
-        #     self, conn_id_2, streams_to_test, self.expected_primary_keys())  # BUG_TDL-17535
-        # TODO REMOVE END
-        # record_count_by_stream_2 = self.run_and_verify_sync(conn_id_2)  # TODO PUT BACK
+        record_count_by_stream_2 = self.run_and_verify_sync(conn_id_2)
         synced_records_2 = runner.get_records_from_target_output()
 
         for stream in streams_to_test:
             with self.subTest(stream=stream):
 
-                # expected values
-                # expected_primary_keys = self.expected_primary_keys()[stream] # BUG_TDL_17533
-                expected_primary_keys = {f'{stream}.id'} # BUG_TDL_17533
+                # TODO move bug to Done if not already there
+                # BUG_TDL_17533
 
+                # expected values
+                expected_primary_keys = self.expected_primary_keys()[stream]
                 # TODO update this with the lookback window DOES IT APPLY TO START DATE?
                 # expected_conversion_window = -1 * int(self.get_properties()['conversion_window'])
                 expected_start_date_1 = self.timedelta_formatted(self.start_date_1, days=0) # expected_conversion_window)
                 expected_start_date_2 = self.timedelta_formatted(self.start_date_2, days=0) # expected_conversion_window)
 
                 # collect information for assertions from syncs 1 & 2 base on expected values
-                # record_count_sync_1 = record_count_by_stream_1.get(stream, 0) # BUG_TDL-17535
-                # record_count_sync_2 = record_count_by_stream_2.get(stream, 0) # BUG_TDL-17535
-                primary_keys_list_1 = [tuple(message.get('data').get(expected_pk) for expected_pk in expected_primary_keys)
-                                       for message in synced_records_1.get(stream).get('messages')
-                                       if message.get('action') == 'upsert']
-                primary_keys_list_2 = [tuple(message.get('data').get(expected_pk) for expected_pk in expected_primary_keys)
-                                       for message in synced_records_2.get(stream).get('messages')
-                                       if message.get('action') == 'upsert']
+                record_count_sync_1 = record_count_by_stream_1.get(stream, 0) # BUG_TDL-17535
+                record_count_sync_2 = record_count_by_stream_2.get(stream, 0) # BUG_TDL-17535
+                primary_keys_list_1 = [tuple(message['data'][expected_pk] for expected_pk in expected_primary_keys)
+                                       for message in synced_records_1[stream]['messages']
+                                       if message['action'] == 'upsert']
+                primary_keys_list_2 = [tuple(message['data'][expected_pk] for expected_pk in expected_primary_keys)
+                                       for message in synced_records_2[stream]['messages']
+                                       if message['action'] == 'upsert']
                 primary_keys_sync_1 = set(primary_keys_list_1)
                 primary_keys_sync_2 = set(primary_keys_list_2)
 
@@ -183,7 +163,7 @@ class StartDateTest(GoogleAdsBase):
 
                     # Verify that the 2nd sync with a later start date (more recent) replicates
                     # the same number of records as the 1st sync.
-                    # self.assertEqual(record_count_sync_2, record_count_sync_1)  # BUG_TDL-17535
+                    self.assertEqual(record_count_sync_2, record_count_sync_1)  # BUG_TDL-17535
 
                     # Verify by primary key the same records are replicated in the 1st and 2nd syncs
                     self.assertSetEqual(primary_keys_sync_1, primary_keys_sync_2)

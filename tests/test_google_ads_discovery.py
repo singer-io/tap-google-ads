@@ -259,13 +259,9 @@ class DiscoveryTest(GoogleAdsBase):
         """
         print("Discovery Test for tap-google-ads")
 
-        conn_id = connections.ensure_connection(self)
+        streams_to_test = self.expected_streams()
 
-        streams_to_test = self.expected_streams() - {
-            # BUG_2 | missing ?
-            'landing_page_report',
-            'expanded_landing_page_report',
-        }
+        conn_id = connections.ensure_connection(self)
 
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
@@ -289,7 +285,7 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_keys = self.expected_replication_keys()[stream]
                 expected_automatic_fields = expected_primary_keys | expected_replication_keys | expected_foreign_keys
                 expected_replication_method = self.expected_replication_method()[stream]
-                expected_fields = self.expected_fields()[stream]
+                # expected_fields = self.expected_fields()[stream] # TODO
                 is_report = self.is_report(stream)
                 expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE',}
 
@@ -355,12 +351,12 @@ class DiscoveryTest(GoogleAdsBase):
                 self.assertSetEqual(expected_primary_keys, actual_primary_keys)
 
                 # BUG_TODO | all core and report streams are missing this metadata
-                #            DISCREPANCIES (27)
+                #            DISCREPANCIES (28)
                 # verify replication method
                 # self.assertEqual(expected_replication_method, actual_replication_method)
 
                 # BUG_TODO| md missing for report streams expected 'date' key
-                #           DISCREPANCIES (27)
+                #           DISCREPANCIES (28)
                 # verify replication key(s)
                 # self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
@@ -369,7 +365,7 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify foreign keys are present for each stream (core streams only)
                 # self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
 
-                # verify replication key is present for any stream with replication method = INCREMENTAL
+                # verify replication key is present for any stream with replication method is INCREMENTAL
                 if actual_replication_method == 'INCREMENTAL':
                     # BUG_TODO | Implement when md present for keys and method
                     # self.assertEqual(expected_replication_keys, actual_replication_keys)
@@ -383,15 +379,8 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
 
-                # BUG_TODO | Expected 'date' to be automatic but is not for 'call_metrics_call_details_report'
-                #            The call resource is not returning a 'date' field. So it isn't even present in the catalog
-                #            DISCREPANCIES
-                #            stream='call_metrics_call_details_report'
-                #                AssertionError: Items in the first set but not the second:
-                #                 'date'
-                # verify the primary, replication keys are given the inclusions of automatic
-                if stream != 'call_metrics_call_details_report':
-                    self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
+                # verify the primary, replication keys and foreign keys are given the inclusions of automatic
+                self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
 
                 # verify all other fields are given inclusion of available
                 self.assertTrue(
@@ -411,7 +400,6 @@ class DiscoveryTest(GoogleAdsBase):
                 for field, behavior in fields_to_behaviors.items():
                     with self.subTest(field=field):
                         self.assertIn(behavior, expected_behaviors)
-
 
                 # NB | The following assertion is left commented with the assumption that this will be a valid
                 #      expectation by the time the tap moves to Beta. If this is not valid at that time it should

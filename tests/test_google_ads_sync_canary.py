@@ -78,26 +78,26 @@ class DiscoveryTest(GoogleAdsBase):
                 'impressions',  # Impr.,
                 'view_through_conversions',  # View-through conv.,
             },
-            # BUG_TODO | records not replicated, but present in GoogleUI
-            # "audience_performance_report": {
-            #     # 'account_name', # Account name,
-            #     # 'ad_group_name', # 'ad_group',  # Ad group,
-            #     # 'ad_group_default_max_cpc',  # Ad group default max. CPC,
-            #     # 'audience_segment',  # Audience segment,
-            #     # 'audience_segment_bid_adjustments',  # Audience Segment Bid adj.,
-            #     # 'audience_segment_max_cpc',  # Audience segment max CPC,
-            #     # 'audience_segment_state',  # Audience segment state,
-            #     'average_cpc',  # Avg. CPC,
-            #     'average_cpm',  # Avg. CPM
-            #     # 'campaign',  # Campaign,
-            #     'clicks',  # Clicks,
-            #     # 'cost',  # Cost,
-            #     'ctr',  # CTR,
-            #     # 'currency_code',  # Currency code,
-            #     'customer_id',  # Customer ID,
-            #     'impressions',  # Impr.,
-            #     # 'targeting_setting',  # Targeting Setting,
-            # },
+            # BUG_TODO | missing audience fields
+            "audience_performance_report": {
+                # 'account_name', # Account name,
+                # 'ad_group_name', # 'ad_group',  # Ad group,
+                # 'ad_group_default_max_cpc',  # Ad group default max. CPC,
+                # 'audience_segment',  # Audience segment,
+                # 'audience_segment_bid_adjustments',  # Audience Segment Bid adj.,
+                # 'audience_segment_max_cpc',  # Audience segment max CPC,
+                # 'audience_segment_state',  # Audience segment state,
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM
+                # 'campaign',  # Campaign,
+                'clicks',  # Clicks,
+                # 'cost',  # Cost,
+                'ctr',  # CTR,
+                # 'currency_code',  # Currency code,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'ad_group_targeting_setting',  # Targeting Setting,
+            },
             "campaign_performance_report": {
                 # 'account_name',  # Account name,
                 'average_cpc',  # Avg. CPC,
@@ -115,27 +115,26 @@ class DiscoveryTest(GoogleAdsBase):
                 'impressions',  # Impr.,
                 'view_through_conversions',  # View-through conv.,
             },
-            # BUG_TODO | click_view limit results with filter to one day
-            # "click_performance_report": {
-            #     'ad_group_ad',
-            #     'ad_group_id',
-            #     'ad_group_name',
-            #     'ad_group_status',
-            #     'ad_network_type',
-            #     'area_of_interest',
-            #     'campaign_location_target',
-            #     'click_type',
-            #     'clicks',
-            #     'customer_descriptive_name',
-            #     'customer_id',
-            #     'device',
-            #     'gclid',
-            #     'location_of_presence',
-            #     'month_of_year',
-            #     'page_number',
-            #     'slot',
-            #     'user_list',
-            # },
+            "click_performance_report": {
+                'ad_group_ad',
+                'ad_group_id',
+                'ad_group_name',
+                'ad_group_status',
+                'ad_network_type',
+                'area_of_interest',
+                'campaign_location_target',
+                'click_type',
+                'clicks',
+                'customer_descriptive_name',
+                'customer_id',
+                'device',
+                'gclid',
+                'location_of_presence',
+                'month_of_year',
+                'page_number',
+                'slot',
+                'user_list',
+            },
             "display_keyword_performance_report": { # TODO NO DATA AVAILABLE
                 # 'ad_group',  # Ad group,
                 # 'ad_group_bid_strategy_type',  # Ad group bid strategy type,
@@ -170,17 +169,16 @@ class DiscoveryTest(GoogleAdsBase):
                 # 'topic',  # Topic,
                 # 'topic_state',  # Topic state,
             },
-            # BUG_TODO | got 704 records in GoogleUI got 0 in tap
-            # "placement_performance_report": {
-            #     'ad_group_name',
-            #     'ad_group_id',
-            #     'campaign_name',
-            #     'campaign_id',
-            #     'clicks',
-            #     'impressions',  # Impr.,
-            #     # 'cost',
-            #     'ad_group_criterion_placement',  # 'placement_group', 'placement_type',
-            # },
+            "placement_performance_report": { # TODO NO DATA AVAILABLE
+                # 'ad_group_name',
+                # 'ad_group_id',
+                # 'campaign_name',
+                # 'campaign_id',
+                'clicks',
+                'impressions',  # Impr.,
+                # 'cost',
+                'ad_group_criterion_placement',  # 'placement_group', 'placement_type',
+            },
             # "keywords_performance_report": set(),
             # "shopping_performance_report": set(),
             # BUG
@@ -278,65 +276,25 @@ class DiscoveryTest(GoogleAdsBase):
                 # 'conversion_rate',  # Conv. rate
                 'ad_group_criterion_age_range', # 'Age',
             },
-            # BUG TODO | PROHIBITED_RESOURCE_TYPE_IN_SELECT_CLAUSE
-            # 'placeholder_feed_item_report': {
-            #     'ad_group',
-            #     'ad_group_id',
-            #     'ad_group_name',
-            #     'ad_group_status',
-            #     'ad_network_type',
-            #     'ad_schedule',
-            #     'attribute_values',
-            #     'average_cpc',
-            #     'campaign',
-            #     'click_type',
-            #     'clicks',
-            #     'customer_id',
-            #     'date',
-            #     'feed',
-            #     'feed_item_target_id',
-            #     'geo_targeting_restriction',
-            #     'id',
-            #     'impressions',
-            #     'keyword',
-            #     'placeholder_type',
-            # },
+            'placeholder_feed_item_report': {
+                'clicks',
+                'impressions',
+                'placeholder_type',
+            },
             'placeholder_report': {
-                'ad_group_id',
-                'ad_group_name',
-                'average_cpc',
-                'click_type',
+                # 'ad_group_id',
+                # 'ad_group_name',
+                # 'average_cpc',
+                # 'click_type',
                 'clicks',
                 'cost_micros',
-                'customer_descriptive_name',
-                'customer_id',
-                'date',
+                # 'customer_descriptive_name',
+                # 'customer_id',
                 'interactions',
                 'placeholder_type',
             },
-            # BUG_TODO | PROHIBITED_SEGMENT_IN_SELECT_OR_WHERE_CLAUSE cannot
-            #    message: "Cannot select or filter on the following segments: \'segments.date\'(could not support requested resources: \'CALL_VIEW\'),
-            #    since segment is incompatible with the resource in the FROM clause or other selected segmenting resources."
-            # 'call_metrics_call_details_report': {
-            #     'ad_group_id',
-            #     'ad_group_name',
-            #     'ad_group_status',
-            #     'call_duration_seconds',
-            #     'call_status',
-            #     'call_tracking_display_location',
-            #     'caller_area_code',
-            #     'caller_country_code',
-            #     'campaign_id',
-            #     'campaign_name',
-            #     'campaign_status',
-            #     'customer_currency_code',
-            #     'customer_descriptive_name',
-            #     'customer_id',
-            #     'customer_time_zone',
-            #     'end_call_date_time',
-            #     'start_call_date_time',
-            #     'type',
-            # },
+            # 'landing_page_report': set(), # TODO
+            # 'expanded_landing_page_report': set(), # TODO
         }
 
     @staticmethod
@@ -354,32 +312,30 @@ class DiscoveryTest(GoogleAdsBase):
         streams_to_test = self.expected_streams() - {
             'display_keyword_performance_report', # no test data available
             'display_topics_performance_report',  # no test data available
-            'placeholder_report',  # no test data available
             'audience_performance_report',  # BUG see above
-            'click_performance_report',  # BUG see above
-            'placement_performance_report',  # BUG see above
-            'placeholder_feed_item_report',  # BUG see above
-            'call_metrics_call_details_report',  # BUG see above
+            'placement_performance_report',  # no test data available
             "keywords_performance_report",  # no test data available
             "keywordless_query_report",  # no test data available
             "shopping_performance_report",  # TODO find this in GoogleUI
             "video_performance_report",  # no test data available
             # TODO the following are not yet implemented
-            # 'landing_page_report',
-            # 'expanded_landing_page_report',
+            'landing_page_report',
+            'expanded_landing_page_report',
         }
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
         # Perform table and field selection...
-        core_catalogs = [catalog for catalog in found_catalogs if not self.is_report(catalog['stream_name'])]
+        core_catalogs = [catalog for catalog in found_catalogs
+                         if not self.is_report(catalog['stream_name'])
+                         and catalog['stream_name'] in streams_to_test]
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id, core_catalogs, select_all_fields=True)
-
-        # [WIP] Attempting field selection for a report
         # select 'default' fields for report streams
         for report in self.expected_default_fields().keys():
+            if report not in streams_to_test:
+                continue
             catalog = [catalog for catalog in found_catalogs
                        if catalog['stream_name'] == report][0]
             schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
@@ -388,17 +344,13 @@ class DiscoveryTest(GoogleAdsBase):
                           for md in metadata
                           if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
             expected_fields = self.expected_default_fields()[catalog['stream_name']]
-            # if report == 'video_performance_report':
-            #     import ipdb; ipdb.set_trace()
             self.assertTrue(expected_fields.issubset(properties),
                             msg=f"{report} missing {expected_fields.difference(properties)}")
             non_selected_properties = properties.difference(expected_fields)
             connections.select_catalog_and_fields_via_metadata(
                 conn_id, catalog, schema_and_metadata, [], non_selected_properties
             )
-        # [WIP] END
-        # import ipdb; ipdb.set_trace()
-        # 1+1
+
         # Run a sync
         sync_job_name = runner.run_sync_mode(self, conn_id)
 

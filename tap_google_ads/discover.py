@@ -294,16 +294,16 @@ def do_discover_core_streams(resource_schema):
 
 
         # TODO refactor
-        # for resource_name, schema in full_schema['properties'].items():
-        #     # ads stream is special since all of the ad fields are nested under ad_group_ad.ad
-        #     # we need to bump the fields up a level so they are selectable
-        #     if resource_name == 'ad_group_ad':
-        #         for ad_field_name, ad_field_schema in full_schema['properties']['ad_group_ad']['properties']['ad']['properties'].items():
-        #             report_schema['properties'][ad_field_name] = ad_field_schema
-        #         report_schema['properties'].pop('ad')
-        #     if resource_name not in {"metrics", "segments", google_ads_name}:
-        #         report_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
-        format_field_names(full_schema, stream_schema, google_ads_name)
+        for resource_name, schema in full_schema["properties"].items():
+            # ads stream is special since all of the ad fields are nested under ad_group_ad.ad
+            # we need to bump the fields up a level so they are selectable
+            if resource_name == "ad_group_ad":
+                for ad_field_name, ad_field_schema in full_schema["properties"]["ad_group_ad"]["properties"]["ad"]["properties"].items():
+                    report_schema["properties"][ad_field_name] = ad_field_schema
+                report_schema["properties"].pop("ad")
+            if resource_name not in {"metrics", "segments", google_ads_name}:
+                report_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
+        #format_field_names(full_schema, stream_schema, google_ads_name)
 
         # TODO refactor
         for field, props in fields.items():
@@ -403,19 +403,19 @@ def do_discover_reports(resource_schema):
         }
 
         # TODO refactor
-        # for resource_name, schema in full_schema['properties'].items():
-        #     for field_name, data_type in schema['properties'].items():
-        #         # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
-        #         if resource_name not in {"metrics", "segments"} and resource_name not in stream.google_ads_resource_names:
-        #             report_schema['properties'][f"{resource_name}_{field_name}"] = data_type
-        #         # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
-        #         elif resource_name == 'ad_group_ad' and field_name == 'ad':
-        #             for ad_field_name, ad_field_schema in data_type['properties'].items():
-        #                 report_schema['properties'][ad_field_name] = ad_field_schema
-        #         else:
-        #             report_schema['properties'][field_name] = data_type
+        for resource_name, schema in full_schema["properties"].items():
+            for field_name, data_type in schema["properties"].items():
+                # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
+                if resource_name not in {"metrics", "segments"} and resource_name not in stream.google_ads_resource_names:
+                    report_schema["properties"][f"{resource_name}_{field_name}"] = data_type
+                # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
+                elif resource_name == "ad_group_ad" and field_name == "ad":
+                    for ad_field_name, ad_field_schema in data_type["properties"].items():
+                        report_schema["properties"][ad_field_name] = ad_field_schema
+                else:
+                     report_schema["properties"][field_name] = data_type
         stream_resource_names = stream.google_ads_resource_names[0]
-        format_field_names(full_schema, report_schema, stream_resource_names)
+        #format_field_names(full_schema, report_schema, stream_resource_names)
 
         # TODO refactor
         for report_field in stream.fields:

@@ -309,9 +309,7 @@ def do_discover_core_streams(resource_schema):
         for field, props in fields.items():
             resource_matches = field.startswith(resource_object["name"] + ".")
             is_id_field = field.endswith(".id")
-            if props["field_details"]["category"] == "ATTRIBUTE" and (
-                resource_matches or is_id_field
-            ):
+            if is_id_field or (props["field_details"]["category"] == "ATTRIBUTE" and resource_matches):
                 # Transform the field name to match the schema
                 # Special case for ads since they are nested under ad_group_ad
                 # we have to bump them up a level

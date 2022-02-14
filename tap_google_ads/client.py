@@ -1,17 +1,6 @@
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 
-
-REQUIRED_CONFIG_KEYS = [
-    "start_date",
-    "oauth_client_id",
-    "oauth_client_secret",
-    "refresh_token",
-    "customer_ids",
-    "developer_token",
-]
-
-
 def create_sdk_client(config, login_customer_id=None):
     CONFIG = {
         "use_proto_plus": False,

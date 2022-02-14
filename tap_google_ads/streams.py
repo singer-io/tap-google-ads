@@ -138,6 +138,32 @@ class BaseStream:
 
 
 class ReportStream(BaseStream):
+
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
+        super().__init__(fields, google_ads_resource_names, resource_schema, primary_keys)
+        self.report_schema = {
+            "type": ["null", "object"],
+            "is_report": True,
+            "properties": {"_sdc_record_hash": {"type": "string"}},
+        }
+
+    def format_field_names(self, full_schema):
+        """This function does two things right now:
+        1. Appends a `resource_name` to a field name if the field is in an attributed resource
+        2. Lifts subfields of `ad_group_ad.ad` into `ad_group_ad`
+        """
+        for resource_name, schema in full_schema["properties"].items():
+            for field_name, data_type in schema["properties"].items():
+                # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
+                if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
+                    self.report_schema["properties"][f"{resource_name}_{field_name}"] = data_type
+                # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
+                elif resource_name == "ad_group_ad" and field_name == "ad":
+                    for ad_field_name, ad_field_schema in data_type["properties"].items():
+                        self.report_schema["properties"][ad_field_name] = ad_field_schema
+                else:
+                    self.report_schema["properties"][field_name] = data_type
+
     def transform_keys(self, obj):
         transformed_obj = {}
 

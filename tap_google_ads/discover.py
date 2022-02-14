@@ -303,7 +303,7 @@ def do_discover_core_streams(resource_schema):
                 report_schema["properties"].pop("ad")
             if resource_name not in {"metrics", "segments", google_ads_name}:
                 report_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
-        #format_field_names(full_schema, stream_schema, google_ads_name)
+
 
         # TODO refactor
         for field, props in fields.items():
@@ -357,65 +357,23 @@ def do_discover_core_streams(resource_schema):
     return catalog
 
 
-def format_field_names(full_schema, stream_schema, stream_resource_names):
-    for resource_name, schema in full_schema["properties"].items():
-        is_attributed_resource = resource_name not in {"metrics", "segments"} and resource_name not in stream_resource_names
-        for field_name, data_type in schema["properties"].items():
-            # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
-            if resource_name == "ad_group_ad" and field_name == "ad":
-                for ad_field_name, ad_field_schema in data_type["properties"].items():
-                    stream_schema["properties"][ad_field_name] = ad_field_schema
-
-            if stream_schema["is_report"]:
-                # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
-                if is_attributed_resource:
-                    stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
-                else:
-                    stream_schema["properties"][field_name] = data_type
-            else:
-                if is_attributed_resource and field_name == "id":
-                    stream_schema["properties"][f"{resource_name}_id"] = schema["properties"]["id"]
-                elif resource_name in stream_resource_names:
-                    stream_schema["properties"][field_name] = data_type
-
-    return stream_schema
-
-
 def do_discover_reports(resource_schema):
     stream_name_to_resource = initialize_reports(resource_schema)
 
     streams = []
     for stream_name, stream in stream_name_to_resource.items():
+
+        full_schema = create_nested_resource_schema(resource_schema, stream.fields)
+
+        stream.format_field_names(full_schema)
+
+        # TODO refactor
         report_metadata = {
             (): {"inclusion": "available",
                  "table-key-properties": ["_sdc_record_hash"]},
             ("properties", "_sdc_record_hash"):
                 {"inclusion": "automatic"}
         }
-
-        full_schema = create_nested_resource_schema(resource_schema, stream.fields)
-        report_schema = {
-            "type": ["null", "object"],
-            "is_report": True,
-            "properties": {"_sdc_record_hash": {"type": "string"}},
-        }
-
-        # TODO refactor
-        for resource_name, schema in full_schema["properties"].items():
-            for field_name, data_type in schema["properties"].items():
-                # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
-                if resource_name not in {"metrics", "segments"} and resource_name not in stream.google_ads_resource_names:
-                    report_schema["properties"][f"{resource_name}_{field_name}"] = data_type
-                # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
-                elif resource_name == "ad_group_ad" and field_name == "ad":
-                    for ad_field_name, ad_field_schema in data_type["properties"].items():
-                        report_schema["properties"][ad_field_name] = ad_field_schema
-                else:
-                     report_schema["properties"][field_name] = data_type
-        stream_resource_names = stream.google_ads_resource_names[0]
-        #format_field_names(full_schema, report_schema, stream_resource_names)
-
-        # TODO refactor
         for report_field in stream.fields:
             # Transform the field name to match the schema
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
@@ -462,7 +420,7 @@ def do_discover_reports(resource_schema):
         catalog_entry = {
             "tap_stream_id": stream_name,
             "stream": stream_name,
-            "schema": report_schema,
+            "schema": stream.report_schema,
             "metadata": singer.metadata.to_list(report_metadata),
         }
         streams.append(catalog_entry)

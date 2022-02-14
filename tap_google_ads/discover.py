@@ -346,7 +346,7 @@ def do_discover_core_streams(resource_schema):
                 if "tap-google-ads.api-field-names" not in report_metadata[("properties", field)]:
                     report_metadata[("properties", field)]["tap-google-ads.api-field-names"] = []
 
-                if props['field_details']['selectable']:
+                if props["field_details"]["selectable"]:
                     report_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
 
         catalog_entry = {
@@ -360,23 +360,23 @@ def do_discover_core_streams(resource_schema):
 
 
 def format_field_names(full_schema, stream_schema, stream_resource_names):
-    for resource_name, schema in full_schema['properties'].items():
+    for resource_name, schema in full_schema["properties"].items():
         is_attributed_resource = resource_name not in {"metrics", "segments"} and resource_name not in stream_resource_names
-        for field_name, data_type in schema['properties'].items():
+        for field_name, data_type in schema["properties"].items():
             # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
-            if resource_name == 'ad_group_ad' and field_name == 'ad':
-                for ad_field_name, ad_field_schema in data_type['properties'].items():
-                    stream_schema['properties'][ad_field_name] = ad_field_schema
+            if resource_name == "ad_group_ad" and field_name == "ad":
+                for ad_field_name, ad_field_schema in data_type["properties"].items():
+                    stream_schema["properties"][ad_field_name] = ad_field_schema
 
             if stream_schema["is_report"]:
                 # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
                 if is_attributed_resource:
-                    stream_schema['properties'][f"{resource_name}_{field_name}"] = data_type
+                    stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
                 else:
-                    stream_schema['properties'][field_name] = data_type
+                    stream_schema["properties"][field_name] = data_type
             else:
                 if is_attributed_resource and field_name == "id":
-                    stream_schema['properties'][f"{resource_name}_id"] = schema["properties"]["id"]
+                    stream_schema["properties"][f"{resource_name}_id"] = schema["properties"]["id"]
                 elif resource_name in stream_resource_names:
                     stream_schema["properties"][field_name] = data_type
 
@@ -424,7 +424,7 @@ def do_discover_reports(resource_schema):
             if not is_metric_or_segment and report_field.split(".")[0] not in stream.google_ads_resource_names:
                 transformed_field_name = "_".join(report_field.split(".")[:2])
             # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
-            elif report_field.startswith('ad_group_ad.ad.'):
+            elif report_field.startswith("ad_group_ad.ad."):
                 transformed_field_name = report_field.split(".")[2]
             else:
                 transformed_field_name = report_field.split(".")[1]

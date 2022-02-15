@@ -259,44 +259,11 @@ class DiscoveryTest(GoogleAdsBase):
         """
         print("Discovery Test for tap-google-ads")
 
+        streams_to_test = self.expected_streams()
+
         conn_id = connections.ensure_connection(self)
 
-        streams_to_test = self.expected_streams() - {
-            # BUG_2 | missing
-            'landing_page_report',
-            'expanded_landing_page_report',
-            'display_topics_performance_report',
-            'call_metrics_call_details_report',
-            'gender_performance_report',
-            'search_query_performance_report',
-            'placeholder_feed_item_report',
-            'keywords_performance_report',
-            'video_performance_report',
-            'campaign_performance_report',
-            'geo_performance_report',
-            'placeholder_report',
-            'placement_performance_report',
-            'click_performance_report',
-            'display_keyword_performance_report',
-            'shopping_performance_report',
-            'ad_performance_report',
-            'age_range_performance_report',
-            'keywordless_query_report',
-            'account_performance_report',
-            'adgroup_performance_report',
-            'audience_performance_report',
-        }
-
-        # found_catalogs = self.run_and_verify_check_mode(conn_id) # TODO PUT BACK
-        # TODO REMOVE FROM HERE
-        check_job_name = runner.run_check_mode(self, conn_id)
-        exit_status = menagerie.get_exit_status(conn_id, check_job_name)
-        menagerie.verify_check_exit_status(self, exit_status, check_job_name)
-        found_catalogs = menagerie.get_catalogs(conn_id)
-        self.assertGreater(len(found_catalogs), 0)
-        found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
-        self.assertSetEqual(streams_to_test, found_catalog_names)
-        # TODO TO HERE
+        found_catalogs = self.run_and_verify_check_mode(conn_id)
 
         # Verify stream names follow naming convention
         # streams should only have lowercase alphas and underscores
@@ -304,7 +271,7 @@ class DiscoveryTest(GoogleAdsBase):
         self.assertTrue(all([re.fullmatch(r"[a-z_]+",  name) for name in found_catalog_names]),
                           msg="One or more streams don't follow standard naming")
 
-        for stream in streams_to_test: # {'accounts', 'campaigns', 'ad_groups', 'ads'}: # # TODO PUT BACK
+        for stream in streams_to_test:
             with self.subTest(stream=stream):
 
                 # Verify the catalog is found for a given stream
@@ -312,15 +279,17 @@ class DiscoveryTest(GoogleAdsBase):
                                      if catalog["stream_name"] == stream]))
                 self.assertIsNotNone(catalog)
 
-                # collecting expected values
+                # collecting expected values from base.py
                 expected_primary_keys = self.expected_primary_keys()[stream]
                 expected_foreign_keys = self.expected_foreign_keys()[stream]
                 expected_replication_keys = self.expected_replication_keys()[stream]
-                expected_automatic_fields = expected_primary_keys | expected_replication_keys
+                expected_automatic_fields = expected_primary_keys | expected_replication_keys | expected_foreign_keys
                 expected_replication_method = self.expected_replication_method()[stream]
-                expected_fields = self.expected_fields()[stream]
+                # expected_fields = self.expected_fields()[stream] # TODO
+                is_report = self.is_report(stream)
+                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE',}
 
-                # collecting actual values
+                # collecting actual values from the catalog
                 schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
                 metadata = schema_and_metadata["metadata"]
                 stream_properties = [item for item in metadata if item.get("breadcrumb") == []]
@@ -340,12 +309,17 @@ class DiscoveryTest(GoogleAdsBase):
                     "metadata", {self.REPLICATION_METHOD: None}).get(self.REPLICATION_METHOD)
                 actual_automatic_fields = set(
                     item.get("breadcrumb", ["properties", None])[1] for item in metadata
- if item.get("metadata").get("inclusion") == "automatic"
+                    if item.get("metadata").get("inclusion") == "automatic"
                 )
                 actual_fields = []
                 for md_entry in metadata:
                     if md_entry['breadcrumb'] != []:
                         actual_fields.append(md_entry['breadcrumb'][1])
+                fields_to_behaviors = {item['breadcrumb'][-1]: item['metadata']['behavior']
+                                       for item in metadata
+                                       if item.get("breadcrumb", []) != []
+                                       and item.get("metadata").get("behavior")}
+                fields_with_behavior = set(fields_to_behaviors.keys())
 
                 ##########################################################################
                 ### metadata assertions
@@ -357,33 +331,43 @@ class DiscoveryTest(GoogleAdsBase):
                                 "\nstream_properties | {}".format(stream_properties))
 
                 # verify there are no duplicate metadata entries
-                #self.assertEqual(len(actual_fields), len(set(actual_fields)), msg = f"duplicates in the fields retrieved")
+                self.assertEqual(len(actual_fields), len(set(actual_fields)), msg="duplicates in the fields retrieved")
 
-                # TODO BUG (unclear on significance in saas tap ?)
+
                 # verify the tap_stream_id and stream_name are consistent (only applies to SaaS taps)
-                # self.assertEqual(stream_properties[0]['stream_name'], stream_properties[0]['tap_stream_id'])
+                # BUG_TODO | not true for core streams (unclear on significance in saas tap ?)
+                #           DISCREPANCIES (7)
+                #           error: 'ad_groups' != 'ad_group'
+                #           error: 'bidding_strategies' != 'bidding_strategy'
+                #           error: 'campaigns' != 'campaign'
+                #           error: 'accounts' != 'customer'
+                #           error: 'accessible_bidding_strategies' != 'accessible_bidding_strategy'
+                #           error: 'ads' != 'ad_group_ad'
+                #           error: 'campaign_budgets' != 'campaign_budget'
+                if is_report:
+                    self.assertEqual(catalog['stream_name'], catalog['tap_stream_id'])
 
-                # BUG_TDL_17533
-                # [tap-google-ads] Primary keys have incorrect name for core objects
                 # verify primary key(s)
-                # self.assertSetEqual(expected_primary_keys, actual_primary_keys)  # BUG_TDL_17533
+                self.assertSetEqual(expected_primary_keys, actual_primary_keys)
 
-                # BUG_1' | all core streams are missing this metadata TODO does this thing even get used ANYWHERE?
+                # BUG_TODO | all core and report streams are missing this metadata
+                #            DISCREPANCIES (28)
                 # verify replication method
                 # self.assertEqual(expected_replication_method, actual_replication_method)
 
+                # BUG_TODO| md missing for report streams expected 'date' key
+                #           DISCREPANCIES (28)
                 # verify replication key(s)
-                self.assertSetEqual(expected_replication_keys, actual_replication_keys)
+                # self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
-                # TODO | implement when foreign keys are complete
-                # verify foreign keys are present for each core stream
+                # BUG_TODO | missing fks on core streams, see expected_metadata in base.py
+                #           DISCREPANCIES (6)
+                # verify foreign keys are present for each stream (core streams only)
                 # self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
 
-                # verify foreign keys are given inclusion of automatic
-
-                 # verify replication key is present for any stream with replication method = INCREMENTAL
+                # verify replication key is present for any stream with replication method is INCREMENTAL
                 if actual_replication_method == 'INCREMENTAL':
-                    # TODO | Implement at time sync is working
+                    # BUG_TODO | Implement when md present for keys and method
                     # self.assertEqual(expected_replication_keys, actual_replication_keys)
                     pass
                 else:
@@ -395,17 +379,42 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
 
-                # verify the primary, replication keys are given the inclusions of automatic
-                #self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
+                # verify the primary, replication keys and foreign keys are given the inclusions of automatic
+                self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
 
                 # verify all other fields are given inclusion of available
                 self.assertTrue(
-                    all({item.get("metadata").get("inclusion") in {"available", "unsupported"}
+                    all({item.get("metadata").get("inclusion") in {"available"}
                          for item in metadata
                          if item.get("breadcrumb", []) != []
                          and item.get("breadcrumb", ["properties", None])[1]
                          not in actual_automatic_fields}),
                     msg="Not all non key properties are set to available in metadata")
 
-                # verify field exclusions for each strema match our expectations
-                # TODO further tests may be needed, including attempted syncs with invalid field combos
+                # verify 'behavior' is present in metadata for all streams
+                if is_report:
+                    actual_fields.remove('_sdc_record_hash')
+                self.assertEqual(fields_with_behavior, set(actual_fields))
+
+                # verify 'behavior' falls into expected set of behaviors (based on stream type)
+                for field, behavior in fields_to_behaviors.items():
+                    with self.subTest(field=field):
+                        self.assertIn(behavior, expected_behaviors)
+
+                # NB | The following assertion is left commented with the assumption that this will be a valid
+                #      expectation by the time the tap moves to Beta. If this is not valid at that time it should
+                #      be removed.
+
+                # if is_report:
+                #     # verify each field in a report stream has a 'fieldExclusions' entry and that the fields listed
+                #     # in that set are present in elsewhere in the stream's catalog
+                #     fields_to_exclusions = {md['breadcrumb'][-1]: md['metadata']['fieldExclusions']
+                #                            for md in metadata
+                #                            if md['breadcrumb'] != [] and
+                #                            md['metadata'].get('fieldExclusions')}
+                #     for field, exclusions in fields_to_exclusions.items():
+                #         with self.subTest(field=field):
+                #             self.assertTrue(
+                #                 set(exclusions).issubset(set(actual_fields)),
+                #                 msg=f"'fieldExclusions' contain fields not accounted for by the catalog: {set(exclusions) - set(actual_fields)}"
+                #             )

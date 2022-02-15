@@ -6,7 +6,7 @@ from tap_tester import menagerie, connections, runner
 from base import GoogleAdsBase
 
 
-class DiscoveryTest(GoogleAdsBase):
+class BookmarksTest(GoogleAdsBase):
     """Test tap discovery mode and metadata conforms to standards."""
 
     @staticmethod

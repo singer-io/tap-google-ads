@@ -256,7 +256,7 @@ class ReportStream(BaseStream):
         self.full_schema = create_nested_resource_schema(resource_schema, self.fields)
 
     def set_stream_schema(self):
-        self.report_schema = {
+        self.stream_schema = {
             "type": ["null", "object"],
             "is_report": True,
             "properties": {"_sdc_record_hash": {"type": "string"}},
@@ -271,13 +271,13 @@ class ReportStream(BaseStream):
             for field_name, data_type in schema["properties"].items():
                 # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
                 if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
-                    self.report_schema["properties"][f"{resource_name}_{field_name}"] = data_type
+                    self.stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
                 # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
                 elif resource_name == "ad_group_ad" and field_name == "ad":
                     for ad_field_name, ad_field_schema in data_type["properties"].items():
-                        self.report_schema["properties"][ad_field_name] = ad_field_schema
+                        self.stream_schema["properties"][ad_field_name] = ad_field_schema
                 else:
-                    self.report_schema["properties"][field_name] = data_type
+                    self.stream_schema["properties"][field_name] = data_type
 
     def transform_keys(self, obj):
         transformed_obj = {}
@@ -295,7 +295,7 @@ class ReportStream(BaseStream):
         return transformed_obj
 
     def build_stream_metadata(self):
-        self.report_metadata = {
+        self.stream_metadata = {
             (): {"inclusion": "available",
                  "table-key-properties": ["_sdc_record_hash"]},
             ("properties", "_sdc_record_hash"):
@@ -313,8 +313,8 @@ class ReportStream(BaseStream):
                 transformed_field_name = report_field.split(".")[1]
 
             # Base metadata for every field
-            if ("properties", transformed_field_name) not in self.report_metadata:
-                self.report_metadata[("properties", transformed_field_name)] = {
+            if ("properties", transformed_field_name) not in self.stream_metadata:
+                self.stream_metadata[("properties", transformed_field_name)] = {
                     "fieldExclusions": [],
                     "behavior": self.behavior[report_field],
                 }
@@ -327,7 +327,7 @@ class ReportStream(BaseStream):
                     else:
                         new_field_name = field_name.split(".")[1]
 
-                    self.report_metadata[("properties", transformed_field_name)]["fieldExclusions"].append(new_field_name)
+                    self.stream_metadata[("properties", transformed_field_name)]["fieldExclusions"].append(new_field_name)
 
             # Add inclusion metadata
             if self.behavior[report_field]:
@@ -336,13 +336,13 @@ class ReportStream(BaseStream):
                     inclusion = "automatic"
             else:
                 inclusion = "unsupported"
-            self.report_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion
+            self.stream_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion
 
             # Save the full field name for sync code to use
-            if "tap-google-ads.api-field-names" not in self.report_metadata[("properties", transformed_field_name)]:
-                self.report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"] = []
+            if "tap-google-ads.api-field-names" not in self.stream_metadata[("properties", transformed_field_name)]:
+                self.stream_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"] = []
 
-            self.report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
+            self.stream_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
 
 
     def sync_report_streams(self, sdk_client, customer, stream, config, STATE):

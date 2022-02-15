@@ -245,34 +245,9 @@ def create_resource_schema(config):
         report_object["fields"] = fields
     return resource_schema
 
+def do_discover_streams(stream_name_to_resource):
 
-def create_nested_resource_schema(resource_schema, fields):
-    new_schema = {
-        "type": ["null", "object"],
-        "properties": {}
-    }
-
-    for field in fields:
-        walker = new_schema["properties"]
-        paths = field.split(".")
-        last_path = paths[-1]
-        for path in paths[:-1]:
-            if path not in walker:
-                walker[path] = {
-                    "type": ["null", "object"],
-                    "properties": {}
-                }
-            walker = walker[path]["properties"]
-        if last_path not in walker:
-            json_schema = resource_schema[field]["json_schema"]
-            walker[last_path] = json_schema
-    return new_schema
-
-
-def do_discover_core_streams(resource_schema):
-    stream_name_to_resource = initialize_core_streams(resource_schema)
-
-    catalog = []
+    streams = []
     for stream_name, stream in stream_name_to_resource.items():
 
         catalog_entry = {
@@ -281,31 +256,13 @@ def do_discover_core_streams(resource_schema):
             "schema": stream.stream_schema,
             "metadata": singer.metadata.to_list(stream.stream_metadata),
         }
-        catalog.append(catalog_entry)
-
-    return catalog
-
-
-def do_discover_reports(resource_schema):
-    stream_name_to_resource = initialize_reports(resource_schema)
-
-    streams = []
-    for stream_name, stream in stream_name_to_resource.items():
-
-        catalog_entry = {
-            "tap_stream_id": stream_name,
-            "stream": stream_name,
-            "schema": stream.report_schema,
-            "metadata": singer.metadata.to_list(stream.report_metadata),
-        }
         streams.append(catalog_entry)
 
     return streams
 
-
 def do_discover(resource_schema):
-    core_streams = do_discover_core_streams(resource_schema)
-    report_streams = do_discover_reports(resource_schema)
+    core_streams = do_discover_streams(initialize_core_streams(resource_schema))
+    report_streams = do_discover_streams(initialize_reports(resource_schema))
     streams = []
     streams.extend(core_streams)
     streams.extend(report_streams)

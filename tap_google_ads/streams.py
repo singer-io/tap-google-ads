@@ -119,6 +119,55 @@ class BaseStream:
             if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
                 self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
 
+    def build_stream_metadata(self):
+        self.stream_metadata = {
+            (): {
+                "inclusion": "available",
+                "table-key-properties": self.primary_keys,
+            }
+        }
+
+        for field, props in self.resource_fields.items():
+            resource_matches = field.startswith(self.resource_object["name"] + ".")
+            is_id_field = field.endswith(".id")
+            if is_id_field or (props["field_details"]["category"] == "ATTRIBUTE" and resource_matches):
+                # Transform the field name to match the schema
+                # Special case for ads since they are nested under ad_group_ad
+                # we have to bump them up a level
+                if field.startswith("ad_group_ad.ad."):
+                    field = field.split(".")[2]
+                else:
+                    if resource_matches:
+                        field = field.split(".")[1]
+                    elif is_id_field:
+                        field = field.replace(".", "_")
+
+                if ("properties", field) not in self.stream_metadata:
+                    # Base metadata for every field
+                    self.stream_metadata[("properties", field)] = {
+                        "fieldExclusions": props["incompatible_fields"],
+                        "behavior": props["field_details"]["category"],
+                    }
+
+                    # Add inclusion metadata
+                    # Foreign keys are automatically included and they are all id fields
+                    if field in self.primary_keys or is_id_field:
+                        inclusion = "automatic"
+                    elif props["field_details"]["selectable"]:
+                        inclusion = "available"
+                    else:
+                        # inclusion = "unsupported"
+                        continue
+                    self.stream_metadata[("properties", field)]["inclusion"] = inclusion
+
+                # Save the full field name for sync code to use
+                full_name = props["field_details"]["name"]
+                if "tap-google-ads.api-field-names" not in self.stream_metadata[("properties", field)]:
+                    self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"] = []
+
+                if props["field_details"]["selectable"]:
+                    self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
+
     def sync_core_streams(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
@@ -191,7 +240,7 @@ class BaseStream:
         self.set_stream_schema()
         self.format_field_names()
 
-        # TODO self.create_metadata()
+        self.build_stream_metadata()
 
 
 class ReportStream(BaseStream):
@@ -244,6 +293,57 @@ class ReportStream(BaseStream):
             transformed_obj["type"] = transformed_obj.pop("type_")
 
         return transformed_obj
+
+    def build_stream_metadata(self):
+        self.report_metadata = {
+            (): {"inclusion": "available",
+                 "table-key-properties": ["_sdc_record_hash"]},
+            ("properties", "_sdc_record_hash"):
+                {"inclusion": "automatic"}
+        }
+        for report_field in self.fields:
+            # Transform the field name to match the schema
+            is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
+            if not is_metric_or_segment and report_field.split(".")[0] not in self.google_ads_resource_names:
+                transformed_field_name = "_".join(report_field.split(".")[:2])
+            # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
+            elif report_field.startswith("ad_group_ad.ad."):
+                transformed_field_name = report_field.split(".")[2]
+            else:
+                transformed_field_name = report_field.split(".")[1]
+
+            # Base metadata for every field
+            if ("properties", transformed_field_name) not in self.report_metadata:
+                self.report_metadata[("properties", transformed_field_name)] = {
+                    "fieldExclusions": [],
+                    "behavior": self.behavior[report_field],
+                }
+
+                # Transform field exclusion names so they match the schema
+                for field_name in self.field_exclusions[report_field]:
+                    is_metric_or_segment = field_name.startswith("metrics.") or field_name.startswith("segments.")
+                    if not is_metric_or_segment and field_name.split(".")[0] not in self.google_ads_resource_names:
+                        new_field_name = field_name.replace(".", "_")
+                    else:
+                        new_field_name = field_name.split(".")[1]
+
+                    self.report_metadata[("properties", transformed_field_name)]["fieldExclusions"].append(new_field_name)
+
+            # Add inclusion metadata
+            if self.behavior[report_field]:
+                inclusion = "available"
+                if report_field == "segments.date":
+                    inclusion = "automatic"
+            else:
+                inclusion = "unsupported"
+            self.report_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion
+
+            # Save the full field name for sync code to use
+            if "tap-google-ads.api-field-names" not in self.report_metadata[("properties", transformed_field_name)]:
+                self.report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"] = []
+
+            self.report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
+
 
     def sync_report_streams(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)

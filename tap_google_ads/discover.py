@@ -275,62 +275,14 @@ def do_discover_core_streams(resource_schema):
     catalog = []
     for stream_name, stream in stream_name_to_resource.items():
 
-        report_metadata = {
-            (): {
-                "inclusion": "available",
-                "table-key-properties": stream.primary_keys,
-            }
-        }
-
-        # TODO refactor
-        for field, props in stream.resource_fields.items():
-            resource_matches = field.startswith(stream.resource_object["name"] + ".")
-            is_id_field = field.endswith(".id")
-            if is_id_field or (props["field_details"]["category"] == "ATTRIBUTE" and resource_matches):
-                # Transform the field name to match the schema
-                # Special case for ads since they are nested under ad_group_ad
-                # we have to bump them up a level
-                if field.startswith("ad_group_ad.ad."):
-                    field = field.split(".")[2]
-                else:
-                    if resource_matches:
-                        field = field.split(".")[1]
-                    elif is_id_field:
-                        field = field.replace(".", "_")
-
-                if ("properties", field) not in report_metadata:
-                    # Base metadata for every field
-                    report_metadata[("properties", field)] = {
-                        "fieldExclusions": props["incompatible_fields"],
-                        "behavior": props["field_details"]["category"],
-                    }
-
-                    # Add inclusion metadata
-                    # Foreign keys are automatically included and they are all id fields
-                    if field in stream.primary_keys or is_id_field:
-                        inclusion = "automatic"
-                    elif props["field_details"]["selectable"]:
-                        inclusion = "available"
-                    else:
-                        # inclusion = "unsupported"
-                        continue
-                    report_metadata[("properties", field)]["inclusion"] = inclusion
-
-                # Save the full field name for sync code to use
-                full_name = props["field_details"]["name"]
-                if "tap-google-ads.api-field-names" not in report_metadata[("properties", field)]:
-                    report_metadata[("properties", field)]["tap-google-ads.api-field-names"] = []
-
-                if props["field_details"]["selectable"]:
-                    report_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
-
         catalog_entry = {
             "tap_stream_id": stream_name,
             "stream": stream_name,
             "schema": stream.stream_schema,
-            "metadata": singer.metadata.to_list(report_metadata),
+            "metadata": singer.metadata.to_list(stream.stream_metadata),
         }
         catalog.append(catalog_entry)
+
     return catalog
 
 
@@ -340,61 +292,11 @@ def do_discover_reports(resource_schema):
     streams = []
     for stream_name, stream in stream_name_to_resource.items():
 
-        # TODO refactor
-        report_metadata = {
-            (): {"inclusion": "available",
-                 "table-key-properties": ["_sdc_record_hash"]},
-            ("properties", "_sdc_record_hash"):
-                {"inclusion": "automatic"}
-        }
-        for report_field in stream.fields:
-            # Transform the field name to match the schema
-            is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
-            if not is_metric_or_segment and report_field.split(".")[0] not in stream.google_ads_resource_names:
-                transformed_field_name = "_".join(report_field.split(".")[:2])
-            # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
-            elif report_field.startswith("ad_group_ad.ad."):
-                transformed_field_name = report_field.split(".")[2]
-            else:
-                transformed_field_name = report_field.split(".")[1]
-
-            # Base metadata for every field
-            if ("properties", transformed_field_name) not in report_metadata:
-                report_metadata[("properties", transformed_field_name)] = {
-                    "fieldExclusions": [],
-                    "behavior": stream.behavior[report_field],
-                }
-
-                # Transform field exclusion names so they match the schema
-                for field_name in stream.field_exclusions[report_field]:
-                    is_metric_or_segment = field_name.startswith("metrics.") or field_name.startswith("segments.")
-                    if not is_metric_or_segment and field_name.split(".")[0] not in stream.google_ads_resource_names:
-                        new_field_name = field_name.replace(".", "_")
-                    else:
-                        new_field_name = field_name.split(".")[1]
-
-                    report_metadata[("properties", transformed_field_name)]["fieldExclusions"].append(new_field_name)
-
-            # Add inclusion metadata
-            if stream.behavior[report_field]:
-                inclusion = "available"
-                if report_field == "segments.date":
-                    inclusion = "automatic"
-            else:
-                inclusion = "unsupported"
-            report_metadata[("properties", transformed_field_name)]["inclusion"] = inclusion
-
-            # Save the full field name for sync code to use
-            if "tap-google-ads.api-field-names" not in report_metadata[("properties", transformed_field_name)]:
-                report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"] = []
-
-            report_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
-
         catalog_entry = {
             "tap_stream_id": stream_name,
             "stream": stream_name,
             "schema": stream.report_schema,
-            "metadata": singer.metadata.to_list(report_metadata),
+            "metadata": singer.metadata.to_list(stream.report_metadata),
         }
         streams.append(catalog_entry)
 

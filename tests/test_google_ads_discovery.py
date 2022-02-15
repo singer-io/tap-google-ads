@@ -379,6 +379,10 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
 
+                # TODO Found that all report streams under test except account_performance_report
+                #      are not replicating the rep key of 'date'. This should
+                #      have been caught in the following assertion but was not. TEST_BUG?
+
                 # verify the primary, replication keys and foreign keys are given the inclusions of automatic
                 self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
 

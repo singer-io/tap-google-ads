@@ -1,17 +1,7 @@
 import json
-import os
-import re
 import sys
 
 import singer
-from singer import utils
-from singer import bookmarks
-from singer import metadata
-from singer import transform, UNIX_MILLISECONDS_INTEGER_DATETIME_PARSING, Transformer
-
-from google.ads.googleads.client import GoogleAdsClient
-from google.ads.googleads.errors import GoogleAdsException
-from google.protobuf.json_format import MessageToJson
 
 from tap_google_ads.client import create_sdk_client
 from tap_google_ads.streams import initialize_core_streams
@@ -208,8 +198,6 @@ def create_resource_schema(config):
 
         # Start discovery of field exclusions
         metrics_and_segments = set(metrics + segments)
-        all_fields = fields.items()
-        # do_field_exclusions(all_fields, metrics_and_segments)
 
         for field_name, field in fields.items():
             if field["field_details"]["category"] == "ATTRIBUTE":

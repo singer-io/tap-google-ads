@@ -40,7 +40,7 @@ def create_nested_resource_schema(resource_schema, fields):
     return new_schema
 
 
-def get_selected_fields(resource_name, stream_mdata):
+def get_selected_fields(stream_mdata):
     selected_fields = set()
     for mdata in stream_mdata:
         if (
@@ -79,9 +79,19 @@ def generate_hash(record, metadata):
     return hashlib.sha256(hash_bytes).hexdigest()
 
 
-# Todo Create report stream class
-class BaseStream:
+class BaseStream: # pylint: disable=too-many-instance-attributes
+
     def transform_keys(self, obj):
+        """This function does a few things with Google's response for sync queries:
+        1) checks an object's fields to see if they're for the current resource
+        2) if they are, keep the fields in transformed_obj with no modifications
+        3) if they are not, append a foreign key to the transformed_obj using the id value
+        4) if the resource is ad_group_ad, pops ad fields up to the ad_group_ad level
+
+        We've seen API responses where Google returns `type_` when the
+        field we ask for is `type`, so we transfrom the key-value pair
+        `"type_": X` to `"type": X`
+        """
         target_resource_name = self.google_ads_resource_names[0]
         transformed_obj = {}
 
@@ -98,13 +108,12 @@ class BaseStream:
                 transformed_obj.pop('ad')
 
         if 'type_' in transformed_obj:
-            LOGGER.info("Google sent us 'type_' when we asked for 'type', transforming this now")
             transformed_obj["type"] = transformed_obj.pop("type_")
 
         return transformed_obj
 
     def format_field_names(self):
-        """This function does two things right now:
+        """This function does two things:
         1. Appends a `resource_name` to an id field if it is the id of an attributed resource
         2. Lifts subfields of `ad_group_ad.ad` into `ad_group_ad`
         """
@@ -130,9 +139,10 @@ class BaseStream:
         for field, props in self.resource_fields.items():
             resource_matches = field.startswith(self.resource_object["name"] + ".")
             is_id_field = field.endswith(".id")
+
             if is_id_field or (props["field_details"]["category"] == "ATTRIBUTE" and resource_matches):
                 # Transform the field name to match the schema
-                # Special case for ads since they are nested under ad_group_ad
+                # Special case for ads since they are nested under ad_group_ad and
                 # we have to bump them up a level
                 if field.startswith("ad_group_ad.ad."):
                     field = field.split(".")[2]
@@ -173,7 +183,7 @@ class BaseStream:
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
-        selected_fields = get_selected_fields(resource_name, stream_mdata)
+        selected_fields = get_selected_fields(stream_mdata)
         LOGGER.info(f'Selected fields for stream {stream_name}: {selected_fields}')
 
         query = create_core_stream_query(resource_name, selected_fields)
@@ -244,10 +254,6 @@ class BaseStream:
 
 
 class ReportStream(BaseStream):
-
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
-
-        super().__init__(fields, google_ads_resource_names, resource_schema, primary_keys)
 
     def create_full_schema(self, resource_schema):
         google_ads_name = self.google_ads_resource_names[0]
@@ -350,7 +356,7 @@ class ReportStream(BaseStream):
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
-        selected_fields = get_selected_fields(resource_name, stream_mdata)
+        selected_fields = get_selected_fields(stream_mdata)
         replication_key = 'date'
         STATE = singer.set_currently_syncing(STATE, stream_name)
         conversion_window = timedelta(days=int(config.get('conversion_window_days') or DEFAULT_CONVERSION_WINDOW))

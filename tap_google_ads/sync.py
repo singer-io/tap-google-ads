@@ -1,10 +1,9 @@
 import json
 
 import singer
-from singer import metadata
 
+from tap_google_ads.client import create_sdk_client
 from tap_google_ads.streams import initialize_core_streams, initialize_reports
-
 
 LOGGER = singer.get_logger()
 

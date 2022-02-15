@@ -1,5 +1,4 @@
 from google.ads.googleads.client import GoogleAdsClient
-from google.ads.googleads.errors import GoogleAdsException
 
 def create_sdk_client(config, login_customer_id=None):
     CONFIG = {

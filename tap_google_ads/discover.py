@@ -274,13 +274,6 @@ def do_discover_core_streams(resource_schema):
 
     catalog = []
     for stream_name, stream in stream_name_to_resource.items():
-        google_ads_name = stream.google_ads_resource_names[0]
-        resource_object = resource_schema[google_ads_name]
-        fields = resource_object["fields"]
-        full_schema = create_nested_resource_schema(resource_schema, fields)
-        stream.stream_schema = full_schema["properties"][google_ads_name]
-
-        stream.format_field_names(full_schema)
 
         report_metadata = {
             (): {
@@ -290,8 +283,8 @@ def do_discover_core_streams(resource_schema):
         }
 
         # TODO refactor
-        for field, props in fields.items():
-            resource_matches = field.startswith(resource_object["name"] + ".")
+        for field, props in stream.resource_fields.items():
+            resource_matches = field.startswith(stream.resource_object["name"] + ".")
             is_id_field = field.endswith(".id")
             if is_id_field or (props["field_details"]["category"] == "ATTRIBUTE" and resource_matches):
                 # Transform the field name to match the schema
@@ -346,10 +339,6 @@ def do_discover_reports(resource_schema):
 
     streams = []
     for stream_name, stream in stream_name_to_resource.items():
-
-        full_schema = create_nested_resource_schema(resource_schema, stream.fields)
-
-        stream.format_field_names(full_schema)
 
         # TODO refactor
         report_metadata = {

@@ -17,6 +17,28 @@ REPORTS_WITH_90_DAY_MAX = frozenset([
 
 DEFAULT_CONVERSION_WINDOW = 30
 
+def create_nested_resource_schema(resource_schema, fields):
+    new_schema = {
+        "type": ["null", "object"],
+        "properties": {}
+    }
+
+    for field in fields:
+        walker = new_schema["properties"]
+        paths = field.split(".")
+        last_path = paths[-1]
+        for path in paths[:-1]:
+            if path not in walker:
+                walker[path] = {
+                    "type": ["null", "object"],
+                    "properties": {}
+                }
+            walker = walker[path]["properties"]
+        if last_path not in walker:
+            json_schema = resource_schema[field]["json_schema"]
+            walker[last_path] = json_schema
+    return new_schema
+
 
 def get_selected_fields(resource_name, stream_mdata):
     selected_fields = set()
@@ -81,14 +103,19 @@ class BaseStream:
 
         return transformed_obj
 
-    def format_field_names(self, full_schema):
-        for resource_name, schema in full_schema["properties"].items():
+    def format_field_names(self):
+        """This function does two things right now:
+        1. Appends a `resource_name` to an id field if it is the id of an attributed resource
+        2. Lifts subfields of `ad_group_ad.ad` into `ad_group_ad`
+        """
+        for resource_name, schema in self.full_schema["properties"].items():
             # ads stream is special since all of the ad fields are nested under ad_group_ad.ad
             # we need to bump the fields up a level so they are selectable
             if resource_name == "ad_group_ad":
-                for ad_field_name, ad_field_schema in full_schema["properties"]["ad_group_ad"]["properties"]["ad"]["properties"].items():
+                for ad_field_name, ad_field_schema in self.full_schema["properties"]["ad_group_ad"]["properties"]["ad"]["properties"].items():
                     self.stream_schema["properties"][ad_field_name] = ad_field_schema
                 self.stream_schema["properties"].pop("ad")
+
             if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
                 self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
 
@@ -140,33 +167,58 @@ class BaseStream:
             self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
 
+    def create_full_schema(self, resource_schema):
+        google_ads_name = self.google_ads_resource_names[0]
+        self.resource_object = resource_schema[google_ads_name]
+        self.resource_fields = self.resource_object["fields"]
+        self.full_schema = create_nested_resource_schema(resource_schema, self.resource_fields)
+
+
+    def set_stream_schema(self):
+        google_ads_name = self.google_ads_resource_names[0]
+        self.stream_schema = self.full_schema["properties"][google_ads_name]
+
+
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
+
+
         self.extract_field_information(resource_schema)
-        self.stream_schema = {
-            "type": ["null", "object"],
-            "properties": {},
-        }
+
+        self.create_full_schema(resource_schema)
+        self.set_stream_schema()
+        self.format_field_names()
+
+        # TODO self.create_metadata()
 
 
 class ReportStream(BaseStream):
 
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
+
         super().__init__(fields, google_ads_resource_names, resource_schema, primary_keys)
+
+    def create_full_schema(self, resource_schema):
+        google_ads_name = self.google_ads_resource_names[0]
+        self.resource_object = resource_schema[google_ads_name]
+        self.resource_fields = self.resource_object["fields"]
+        self.full_schema = create_nested_resource_schema(resource_schema, self.fields)
+
+    def set_stream_schema(self):
         self.report_schema = {
             "type": ["null", "object"],
             "is_report": True,
             "properties": {"_sdc_record_hash": {"type": "string"}},
         }
 
-    def format_field_names(self, full_schema):
+    def format_field_names(self):
         """This function does two things right now:
         1. Appends a `resource_name` to a field name if the field is in an attributed resource
         2. Lifts subfields of `ad_group_ad.ad` into `ad_group_ad`
         """
-        for resource_name, schema in full_schema["properties"].items():
+        for resource_name, schema in self.full_schema["properties"].items():
             for field_name, data_type in schema["properties"].items():
                 # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
                 if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:

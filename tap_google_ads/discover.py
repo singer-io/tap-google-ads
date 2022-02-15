@@ -278,12 +278,9 @@ def do_discover_core_streams(resource_schema):
         resource_object = resource_schema[google_ads_name]
         fields = resource_object["fields"]
         full_schema = create_nested_resource_schema(resource_schema, fields)
-        report_schema = full_schema["properties"][google_ads_name]
-        stream_schema = {
-            "type": ["null", "object"],
-            "is_report": False,
-            "properties": {}
-        }
+        stream.stream_schema = full_schema["properties"][google_ads_name]
+
+        stream.format_field_names(full_schema)
 
         report_metadata = {
             (): {
@@ -291,19 +288,6 @@ def do_discover_core_streams(resource_schema):
                 "table-key-properties": stream.primary_keys,
             }
         }
-
-
-        # TODO refactor
-        for resource_name, schema in full_schema["properties"].items():
-            # ads stream is special since all of the ad fields are nested under ad_group_ad.ad
-            # we need to bump the fields up a level so they are selectable
-            if resource_name == "ad_group_ad":
-                for ad_field_name, ad_field_schema in full_schema["properties"]["ad_group_ad"]["properties"]["ad"]["properties"].items():
-                    report_schema["properties"][ad_field_name] = ad_field_schema
-                report_schema["properties"].pop("ad")
-            if resource_name not in {"metrics", "segments", google_ads_name}:
-                report_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
-
 
         # TODO refactor
         for field, props in fields.items():
@@ -350,7 +334,7 @@ def do_discover_core_streams(resource_schema):
         catalog_entry = {
             "tap_stream_id": stream_name,
             "stream": stream_name,
-            "schema": report_schema,
+            "schema": stream.stream_schema,
             "metadata": singer.metadata.to_list(report_metadata),
         }
         catalog.append(catalog_entry)

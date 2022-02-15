@@ -81,6 +81,16 @@ class BaseStream:
 
         return transformed_obj
 
+    def format_field_names(self, full_schema):
+        for resource_name, schema in full_schema["properties"].items():
+            # ads stream is special since all of the ad fields are nested under ad_group_ad.ad
+            # we need to bump the fields up a level so they are selectable
+            if resource_name == "ad_group_ad":
+                for ad_field_name, ad_field_schema in full_schema["properties"]["ad_group_ad"]["properties"]["ad"]["properties"].items():
+                    self.stream_schema["properties"][ad_field_name] = ad_field_schema
+                self.stream_schema["properties"].pop("ad")
+            if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
+                self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
 
     def sync_core_streams(self, sdk_client, customer, stream):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -135,6 +145,10 @@ class BaseStream:
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
         self.extract_field_information(resource_schema)
+        self.stream_schema = {
+            "type": ["null", "object"],
+            "properties": {},
+        }
 
 
 class ReportStream(BaseStream):

@@ -20,7 +20,6 @@ jobs:
       - run:
           name: 'Setup virtual env'
           command: |
-            aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox /usr/local/share/virtualenvs/dev_env.sh
             python3 -mvenv /usr/local/share/virtualenvs/tap-google-ads
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
             pip install 'pip==21.1.3'
@@ -77,6 +76,7 @@ jobs:
       - run:
           name: 'Run Integration Tests'
           command: |
+            aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             source dev_env.sh
             source /usr/local/share/virtualenvs/tap-tester/bin/activate
             circleci tests glob "tests/*.py" | circleci tests split > ./tests-to-run

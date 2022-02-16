@@ -188,9 +188,6 @@ def create_resource_schema(config):
         for field in attributes + metrics + segments:
             field_schema = dict(resource_schema[field])
 
-            if field_schema["name"] in segments:
-                field_schema["category"] = "SEGMENT"
-
             fields[field_schema["name"]] = {
                 "field_details": field_schema,
                 "incompatible_fields": [],

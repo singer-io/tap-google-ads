@@ -59,29 +59,21 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         for stream in streams_to_test:
             with self.subTest(stream=stream):
 
-                # Verify that only the automatic fields are sent to the target.
+                # BUG TDL-17840
+                # # Verify that only the automatic fields are sent to the target.
                 expected_auto_fields = self.expected_automatic_fields()
                 expected_primary_key = list(self.expected_primary_keys()[stream])[0]  # assumes no compound-pks
-                target_file_fields = [row.get('data').keys() for row in
-                                      synced_records.get(stream, {'messages':[]}).get('messages', []) if row.get('data')]
-                # all_fields = set()
-                # for target_fields in target_file_fields:
-                #     all_fields.update(taget_fields)
-                # import ipdb; ipdb.set_trace()
-                # 1+1
+                self.assertEqual(len(self.expected_primary_keys()[stream]), 1, msg="Compound pk not supported")
+                # for record in synced_records[stream]['messages']:
 
-                # for dict_key in target_file_fields:
-                #     if not self.is_report(stream):
-                #         dict_key = set(dict_key) - {'resource_name'}
-                #     self.assertSetEqual(set(dict_key), expected_auto_fields[stream])
+                #     record_primary_key_values = record['data'][expected_primary_key]
+                #     record_keys = set(record['data'].keys())
 
-
-                for record in synced_records[stream]['messages']:
-
-                    record_primary_key_values = record['data'][expected_primary_key]
-                    record_keys = set(record['data'].keys())
-
-                    with self.subTest(primary_key=record_primary_key_values):
-                        self.assertSetEqual(expected_auto_fields[stream], record_keys)
+                #     with self.subTest(primary_key=record_primary_key_values):
+                #         self.assertSetEqual(expected_auto_fields[stream], record_keys)
 
                 # Verify that all replicated records have unique primary key values.
+                actual_pks = [row.get('data').get(expected_primary_key) for row in
+                                      synced_records.get(stream, {'messages':[]}).get('messages', []) if row.get('data')]
+
+                self.assertCountEqual(actual_pks, set(actual_pks))

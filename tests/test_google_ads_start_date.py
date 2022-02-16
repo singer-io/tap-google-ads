@@ -348,26 +348,20 @@ class StartDateTest(GoogleAdsBase):
                     #                 Improperly formatted replication keys for report streams
 
                     # Verify replication key is greater or equal to start_date for sync 1
+                    expected_start_date = dt.strptime(expected_start_date_1, self.START_DATE_FORMAT)
                     for replication_date in replication_dates_1:
-
-                        replication_date = dt.strftime( # remove me for BUG_TDL-17827
-                            dt.strptime(replication_date, "%Y-%m-%d"), self.START_DATE_FORMAT
-                        )
-
-                        self.assertGreaterEqual(replication_date, expected_start_date_1,
+                        replication_date = dt.strptime(replication_date, self.REPLICATION_KEY_FORMAT)
+                        self.assertGreaterEqual(replication_date, expected_start_date,
                                 msg="Report pertains to a date prior to our start date.\n" +
                                 "Sync start_date: {}\n".format(expected_start_date_1) +
                                 "Record date: {} ".format(replication_date)
                         )
 
+                    expected_start_date = dt.strptime(expected_start_date_2, self.START_DATE_FORMAT)
                     # Verify replication key is greater or equal to start_date for sync 2
                     for replication_date in replication_dates_2:
-
-                        replication_date = dt.strftime( # remove me for BUG_TDL-17827
-                            dt.strptime(replication_date, "%Y-%m-%d"), self.START_DATE_FORMAT
-                        )
-
-                        self.assertGreaterEqual(replication_date, expected_start_date_2,
+                        replication_date = dt.strptime(replication_date, self.REPLICATION_KEY_FORMAT)
+                        self.assertGreaterEqual(replication_date, expected_start_date,
                                 msg="Report pertains to a date prior to our start date.\n" +
                                 "Sync start_date: {}\n".format(expected_start_date_2) +
                                 "Record date: {} ".format(replication_date)

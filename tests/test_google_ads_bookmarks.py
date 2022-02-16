@@ -45,6 +45,8 @@ class BookmarksTest(GoogleAdsBase):
             'account_performance_report',
             'adgroup_performance_report',
             'audience_performance_report',
+            'user_view_performance_report',
+            'account_performance_report',
         }
 
         # Run a discovery job
@@ -56,10 +58,18 @@ class BookmarksTest(GoogleAdsBase):
         found_catalogs = menagerie.get_catalogs(conn_id)
         self.assertGreater(len(found_catalogs), 0)
         found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
-        self.assertSetEqual(streams_to_test, found_catalog_names)
+
+        # WORKAROUND: Check that we discover every stream we can test, and only select those streams
+        for catalog in streams_to_test:
+            self.assertIn(catalog, found_catalog_names)
 
         # Perform table and field selection
-        self.select_all_streams_and_fields(conn_id, found_catalogs, select_all_fields=True)
+        self.select_all_streams_and_fields(
+            conn_id,
+            [catalog for catalog in found_catalogs if catalog['stream_name'] in streams_to_test],
+            select_all_fields=True
+        )
+        # END WORKAROUND
 
 
         # Run a sync 

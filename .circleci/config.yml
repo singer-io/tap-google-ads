@@ -77,7 +77,7 @@ jobs:
       - run:
           name: 'Run Integration Tests'
           command: |
-            source /usr/local/share/virtualenvs/dev_env.sh
+            source dev_env.sh
             source /usr/local/share/virtualenvs/tap-tester/bin/activate
             circleci tests glob "tests/*.py" | circleci tests split > ./tests-to-run
             if [ -s ./tests-to-run ]; then

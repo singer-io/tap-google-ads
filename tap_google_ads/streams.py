@@ -739,6 +739,12 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
+        "user_view_performance_report": ReportStream(
+            report_definitions.USER_VIEW_PERFORMANCE_REPORT_FIELDS,
+            ["user_location_view"],
+            resource_schema,
+            ["_sdc_record_hash"],
+        ),
         "video_performance_report": ReportStream(
             report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS,
             ["video"],

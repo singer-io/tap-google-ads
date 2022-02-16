@@ -287,7 +287,8 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_method = self.expected_replication_method()[stream]
                 # expected_fields = self.expected_fields()[stream] # TODO
                 is_report = self.is_report(stream)
-                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE',}
+                # TODO Is SEGMENT a valid behavior for core objects? Depends on campaign_budgets issue, see base.py
+                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
 
                 # collecting actual values from the catalog
                 schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
@@ -404,6 +405,8 @@ class DiscoveryTest(GoogleAdsBase):
                 for field, behavior in fields_to_behaviors.items():
                     with self.subTest(field=field):
                         self.assertIn(behavior, expected_behaviors)
+
+                # TODO BUG | The 'behavior' column is no longer showing up in the UI for report streams
 
                 # NB | The following assertion is left commented with the assumption that this will be a valid
                 #      expectation by the time the tap moves to Beta. If this is not valid at that time it should

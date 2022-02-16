@@ -105,7 +105,10 @@ class GoogleAdsBase(unittest.TestCase):
             'campaign_budgets': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"customer_id"},
+                self.FOREIGN_KEYS: {
+                    "customer_id",
+                    "campaign_id", # TODO This is a SEGMENT, may not be valid
+                },
             },
             'bidding_strategies': {
                 self.PRIMARY_KEYS:{"id"},

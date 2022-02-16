@@ -25,7 +25,7 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)}
+                           if not self.is_report(stream)}
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
@@ -39,24 +39,49 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         # Run a sync
         sync_job_name = runner.run_sync_mode(self, conn_id)
 
-        # TODO BUG Tap does not save exit status messages (just code=1) in the case where a Critical Error occurs.
+        # BUG https://jira.talendforge.org/browse/TDL-17841
+        #    Tap does not save exit status messages (just code=1) in the case where a Critical Error occurs.
 
-        # TODO BUG Tap allows for invalid selection and does not throw an error, but rather attempts to query.
+        # BUG https://jira.talendforge.org/browse/TDL-17840
+        # Tap allows for invalid selection and does not throw an error, but rather attempts to query.
 
         # Verify the tap and target do not throw a critical error
         exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
         menagerie.verify_sync_exit_status(self, exit_status, sync_job_name)
 
         # TODO write an assertion around the error message thrown for report streams
+        # TODO Verify we can deselect all fields except when inclusion=automatic, which is handled by base.py methods
+
+        # acquire records from target output
+        synced_records = runner.get_records_from_target_output()
 
 
-        # # acquire records from target output
-        # synced_records = runner.get_records_from_target_output()
+        for stream in streams_to_test:
+            with self.subTest(stream=stream):
 
-        # # Verify at least 1 record was replicated for each stream
-        # for stream in streams_to_test:
+                # Verify that only the automatic fields are sent to the target.
+                expected_auto_fields = self.expected_automatic_fields()
+                expected_primary_key = list(self.expected_primary_keys()[stream])[0]  # assumes no compound-pks
+                target_file_fields = [row.get('data').keys() for row in
+                                      synced_records.get(stream, {'messages':[]}).get('messages', []) if row.get('data')]
+                # all_fields = set()
+                # for target_fields in target_file_fields:
+                #     all_fields.update(taget_fields)
+                # import ipdb; ipdb.set_trace()
+                # 1+1
 
-        #     with self.subTest(stream=stream):
-        #         record_count = len(synced_records.get(stream, {'messages': []})['messages'])
-        #         self.assertGreater(record_count, 0)
-        #         print(f"{record_count} {stream} record(s) replicated.")
+                # for dict_key in target_file_fields:
+                #     if not self.is_report(stream):
+                #         dict_key = set(dict_key) - {'resource_name'}
+                #     self.assertSetEqual(set(dict_key), expected_auto_fields[stream])
+
+
+                for record in synced_records[stream]['messages']:
+
+                    record_primary_key_values = record['data'][expected_primary_key]
+                    record_keys = set(record['data'].keys())
+
+                    with self.subTest(primary_key=record_primary_key_values):
+                        self.assertSetEqual(expected_auto_fields[stream], record_keys)
+
+                # Verify that all replicated records have unique primary key values.

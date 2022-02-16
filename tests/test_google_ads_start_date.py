@@ -199,6 +199,9 @@ class StartDateTest(GoogleAdsBase):
 
         self.start_date = self.start_date_1
 
+        # BUG https://jira.talendforge.org/browse/TDL-17839
+        #     [tap-google-ads] Most performance reports are not including 'date' in output file
+
         streams_to_test = self.expected_streams() - {
             'gender_performance_report',  # No date in 'data'
             'search_query_performance_report',  # No date in 'data'
@@ -223,6 +226,7 @@ class StartDateTest(GoogleAdsBase):
             "shopping_performance_report",
             'landing_page_report',
             'expanded_landing_page_report',
+            'user_view_performance_report',
         }
 
         ##########################################################################

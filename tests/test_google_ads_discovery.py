@@ -11,10 +11,6 @@ class DiscoveryTest(GoogleAdsBase):
 
     def expected_fields(self):
         """The expected streams and metadata about the streams"""
-        # TODO verify accounts, ads, ad_groups, campaigns contain foreign keys for
-        #                  'campaign_budgets', 'bidding_strategies', 'accessible_bidding_strategies'
-        #      and only foreign keys BUT CHECK DOCS
-
         return {
             # Core Objects
             "accounts": {  # TODO check with Brian on changes
@@ -336,28 +332,28 @@ class DiscoveryTest(GoogleAdsBase):
 
 
                 # verify the tap_stream_id and stream_name are consistent (only applies to SaaS taps)
-                # BUG_TODO | not true for core streams (unclear on significance in saas tap ?)
-                #           DISCREPANCIES (7)
-                #           error: 'ad_groups' != 'ad_group'
-                #           error: 'bidding_strategies' != 'bidding_strategy'
-                #           error: 'campaigns' != 'campaign'
-                #           error: 'accounts' != 'customer'
-                #           error: 'accessible_bidding_strategies' != 'accessible_bidding_strategy'
-                #           error: 'ads' != 'ad_group_ad'
-                #           error: 'campaign_budgets' != 'campaign_budget'
-                if is_report:
-                    self.assertEqual(catalog['stream_name'], catalog['tap_stream_id'])
+                self.assertEqual(catalog['stream_name'], catalog['tap_stream_id'])
 
                 # verify primary key(s)
                 self.assertSetEqual(expected_primary_keys, actual_primary_keys)
 
-                # BUG_TODO | all core and report streams are missing this metadata
+                # BUG | https://jira.talendforge.org/browse/TDL-17848
+                #           all core and report streams are missing this metadata
                 #            DISCREPANCIES (28)
                 # verify replication method
                 # self.assertEqual(expected_replication_method, actual_replication_method)
 
-                # BUG_TODO| md missing for report streams expected 'date' key
-                #           DISCREPANCIES (28)
+                # verify replication key is present for any stream with replication method is INCREMENTAL
+                if actual_replication_method == 'INCREMENTAL':
+                    # BUG_TDL-17848 | Implement when md present for keys and method
+                    # self.assertNotEqual(actual_replication_keys, set())
+                    pass
+                else:
+                    self.assertEqual(actual_replication_keys, set())
+
+                # BUG_TDL-17845 | https://jira.talendforge.org/browse/TDL-17845
+                #                 md missing for report streams expected 'date' key
+                #                   DISCREPANCIES (28)
                 # verify replication key(s)
                 # self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
@@ -365,14 +361,6 @@ class DiscoveryTest(GoogleAdsBase):
                 #           DISCREPANCIES (6)
                 # verify foreign keys are present for each stream (core streams only)
                 # self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
-
-                # verify replication key is present for any stream with replication method is INCREMENTAL
-                if actual_replication_method == 'INCREMENTAL':
-                    # BUG_TODO | Implement when md present for keys and method
-                    # self.assertEqual(expected_replication_keys, actual_replication_keys)
-                    pass
-                else:
-                    self.assertEqual(actual_replication_keys, set())
 
                 # verify all expected fields are found # TODO set expectations
                 # self.assertSetEqual(expected_fields, set(actual_fields))
@@ -382,7 +370,8 @@ class DiscoveryTest(GoogleAdsBase):
 
                 # TODO Found that all report streams under test except account_performance_report
                 #      are not replicating the rep key of 'date'. This should
-                #      have been caught in the following assertion but was not. TEST_BUG?
+                #      have been caught in the following assertion but was not.
+                #       see BUG_TDL-17839
 
                 # verify the primary, replication keys and foreign keys are given the inclusions of automatic
                 self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
@@ -405,8 +394,6 @@ class DiscoveryTest(GoogleAdsBase):
                 for field, behavior in fields_to_behaviors.items():
                     with self.subTest(field=field):
                         self.assertIn(behavior, expected_behaviors)
-
-                # TODO BUG | The 'behavior' column is no longer showing up in the UI for report streams
 
                 # NB | The following assertion is left commented with the assumption that this will be a valid
                 #      expectation by the time the tap moves to Beta. If this is not valid at that time it should

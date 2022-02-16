@@ -211,6 +211,7 @@ class StartDateTest(GoogleAdsBase):
             'age_range_performance_report',  # No date in 'data'
             # 'account_performance_report', # 12-6-2021, TESTED, OK
             'adgroup_performance_report',  # No date in 'data', TEST assertian fails w/o date
+            'user_view_performance_report', # No date in 'data'
         }
         streams_to_test = streams_to_test - {  # end result
             'display_keyword_performance_report', # no test data available

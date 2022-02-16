@@ -318,7 +318,7 @@ class DiscoveryTest(GoogleAdsBase):
             "keywordless_query_report",  # no test data available
             "shopping_performance_report",  # TODO find this in GoogleUI
             "video_performance_report",  # no test data available
-            "user_view_performance_report",  # no test data available
+            "user_location_performance_report",  # no test data available
             # TODO the following are not yet implemented
             'landing_page_report',
             'expanded_landing_page_report',

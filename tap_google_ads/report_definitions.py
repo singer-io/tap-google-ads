@@ -195,7 +195,6 @@ ADGROUP_PERFORMANCE_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    # 'label.resource_name',
 ]
 AD_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.base_ad_group",
@@ -368,9 +367,6 @@ AD_PERFORMANCE_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    # 'ad_group_criterion.negative',
-    # 'label.resource_name', 'label.name',
-    # 'ad_group_ad.policy_summary.review_state',
 ]
 AGE_RANGE_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.base_ad_group",
@@ -744,8 +740,6 @@ CAMPAIGN_PERFORMANCE_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    # 'campaign_criterion.device.type',  # "Not available with 'FROM campaign'. However, you can retrieve device type bid modifiers via 'FROM campaign_criterion' queries.",
-    # 'label.resource_name',  #'Select label.resource_name from the resource campaign_label',
 ]
 CLICK_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.id",
@@ -1155,7 +1149,6 @@ GEO_PERFORMANCE_REPORT_FIELDS = [
     "segments.quarter",
     "segments.week",
     "segments.year",
-    # 'user_location_view.targeting_location',
 ]
 KEYWORDLESS_QUERY_REPORT_FIELDS = [
     "ad_group.id",
@@ -1328,8 +1321,6 @@ KEYWORDS_PERFORMANCE_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    # 'label.name',  # Select label.name from the resource ad_group_label
-    # 'label.resource_name',  # Select label.resource_name from the resource ad_group_label
 ]
 LANDING_PAGE_REPORT_FIELDS = [
     "ad_group.id",
@@ -1451,7 +1442,6 @@ PLACEHOLDER_FEED_ITEM_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    # "feed_item_target.device", "feed_item_target.keyword.match_type", "feed_item_target.feed_item_target_id", "feed_item_target.keyword.match_type", "feed_item_target.keyword.text", "feed_item_target.feed_item_target_id",  "feed_item_target.ad_schedule", "feed_item_target.ad_group", "feed_item_target.campaign" # feed_item_target.x are available with FROM feed_item_target
 ]
 PLACEHOLDER_REPORT_FIELDS = [
     "ad_group.id",

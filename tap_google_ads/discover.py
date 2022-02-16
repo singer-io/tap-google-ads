@@ -114,7 +114,7 @@ def build_resource_metadata(api_objects, resource):
         0: {"type": ["null", "string"]},
         1: {"type": ["null", "string"]},
         2: {"type": ["null", "boolean"]},
-        3: {"type": ["null", "string"]},
+        3: {"type": ["null", "string"], "format": "date-time"},
         4: {"type": ["null", "string"], "format": "singer.decimal"},
         5: {"type": ["null", "string"]},
         6: {"type": ["null", "string"], "format": "singer.decimal"},

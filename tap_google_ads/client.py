@@ -1,5 +1,6 @@
 from google.ads.googleads.client import GoogleAdsClient
 
+
 def create_sdk_client(config, login_customer_id=None):
     CONFIG = {
         "use_proto_plus": False,

@@ -143,10 +143,7 @@ def build_resource_metadata(api_objects, resource):
 
 
 def get_root_resource_name(field_name):
-    if not (
-        field_name.startswith("segments.")
-        or field_name.startswith("metrics.")
-    ):
+    if not (field_name.startswith("segments.") or field_name.startswith("metrics.")):
         field_root_resource = field_name.split(".")[0]
     else:
         field_root_resource = field_name
@@ -203,8 +200,11 @@ def create_resource_schema(config):
                 field_root_resource = get_root_resource_name(field_name)
                 compared_field_root_resource = get_root_resource_name(compared_field)
 
-                #Fields can be any of the categories in CATEGORY_MAP, but only METRIC & SEGMENT have exclusions, so only check those
-                if (field_name != compared_field and not compared_field.startswith(f"{field_root_resource}.")) and (
+                # Fields can be any of the categories in CATEGORY_MAP, but only METRIC & SEGMENT have exclusions, so only check those
+                if (
+                    field_name != compared_field
+                    and not compared_field.startswith(f"{field_root_resource}.")
+                ) and (
                     fields[compared_field]["field_details"]["category"] == "METRIC"
                     or fields[compared_field]["field_details"]["category"] == "SEGMENT"
                 ):
@@ -212,23 +212,22 @@ def create_resource_schema(config):
                     field_to_check = field_root_resource or field_name
                     compared_field_to_check = compared_field_root_resource or compared_field
 
-                    #Metrics will not be incompatible with other metrics, so don't check those
-                    if field_name.startswith('metrics.') and compared_field.startswith('metrics.'):
+                    # Metrics will not be incompatible with other metrics, so don't check those
+                    if field_name.startswith("metrics.") and compared_field.startswith("metrics."):
                         continue
 
                     # If a resource is selectable with another resource they should be in
                     # each other's 'selectable_with' list, but Google is missing some of
                     # these so we have to check both ways
                     if (
-                        field_to_check
-                        not in resource_schema[compared_field_to_check]["selectable_with"]
-                        and compared_field_to_check
-                        not in resource_schema[field_to_check]["selectable_with"]
+                        field_to_check not in resource_schema[compared_field_to_check]["selectable_with"]
+                        and compared_field_to_check not in resource_schema[field_to_check]["selectable_with"]
                     ):
                         field["incompatible_fields"].append(compared_field)
 
         report_object["fields"] = fields
     return resource_schema
+
 
 def do_discover_streams(stream_name_to_resource):
 
@@ -244,6 +243,7 @@ def do_discover_streams(stream_name_to_resource):
         streams.append(catalog_entry)
 
     return streams
+
 
 def do_discover(resource_schema):
     core_streams = do_discover_streams(initialize_core_streams(resource_schema))

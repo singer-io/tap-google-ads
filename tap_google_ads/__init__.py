@@ -18,6 +18,7 @@ REQUIRED_CONFIG_KEYS = [
     "developer_token",
 ]
 
+
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)

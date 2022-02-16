@@ -11,11 +11,14 @@ LOGGER = singer.get_logger()
 
 API_VERSION = "v9"
 
-REPORTS_WITH_90_DAY_MAX = frozenset([
-    'click_performance_report',
-])
+REPORTS_WITH_90_DAY_MAX = frozenset(
+    [
+        "click_performance_report",
+    ]
+)
 
 DEFAULT_CONVERSION_WINDOW = 30
+
 
 def create_nested_resource_schema(resource_schema, fields):
     new_schema = {
@@ -48,39 +51,42 @@ def get_selected_fields(stream_mdata):
             and mdata["metadata"].get("selected")
             and (
                 mdata["metadata"].get("inclusion") == "available"
-                or mdata["metadata"].get("inclusion") == "automatic")
+                or mdata["metadata"].get("inclusion") == "automatic"
+            )
             and mdata["breadcrumb"][1] != "_sdc_record_hash"
         ):
-            selected_fields.update(mdata['metadata']["tap-google-ads.api-field-names"])
+            selected_fields.update(mdata["metadata"]["tap-google-ads.api-field-names"])
 
     return selected_fields
+
 
 def create_core_stream_query(resource_name, selected_fields):
     core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name}"
     return core_query
 
+
 def create_report_query(resource_name, selected_fields, query_date):
 
-    format_str = '%Y-%m-%d'
+    format_str = "%Y-%m-%d"
     query_date = utils.strftime(query_date, format_str=format_str)
     report_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date = '{query_date}'"
 
     return report_query
 
+
 def generate_hash(record, metadata):
     metadata = singer.metadata.to_map(metadata)
     fields_to_hash = {}
     for key, val in record.items():
-        if metadata[('properties', key)]['behavior'] != "METRIC":
+        if metadata[("properties", key)]["behavior"] != "METRIC":
             fields_to_hash[key] = val
 
     hash_source_data = {key: fields_to_hash[key] for key in sorted(fields_to_hash)}
-    hash_bytes = json.dumps(hash_source_data).encode('utf-8')
+    hash_bytes = json.dumps(hash_source_data).encode("utf-8")
     return hashlib.sha256(hash_bytes).hexdigest()
 
 
-class BaseStream: # pylint: disable=too-many-instance-attributes
-
+class BaseStream:  # pylint: disable=too-many-instance-attributes
     def transform_keys(self, obj):
         """This function does a few things with Google's response for sync queries:
         1) checks an object's fields to see if they're for the current resource
@@ -105,9 +111,9 @@ class BaseStream: # pylint: disable=too-many-instance-attributes
 
             if resource_name == "ad_group_ad":
                 transformed_obj.update(value["ad"])
-                transformed_obj.pop('ad')
+                transformed_obj.pop("ad")
 
-        if 'type_' in transformed_obj:
+        if "type_" in transformed_obj:
             transformed_obj["type"] = transformed_obj.pop("type_")
 
         return transformed_obj
@@ -125,7 +131,10 @@ class BaseStream: # pylint: disable=too-many-instance-attributes
                     self.stream_schema["properties"][ad_field_name] = ad_field_schema
                 self.stream_schema["properties"].pop("ad")
 
-            if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
+            if (
+                resource_name not in {"metrics", "segments"}
+                and resource_name not in self.google_ads_resource_names
+            ):
                 self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
 
     def build_stream_metadata(self):
@@ -184,7 +193,7 @@ class BaseStream: # pylint: disable=too-many-instance-attributes
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
-        LOGGER.info(f'Selected fields for stream {stream_name}: {selected_fields}')
+        LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
 
         query = create_core_stream_query(resource_name, selected_fields)
         response = gas.search(query=query, customer_id=customer["customerId"])
@@ -195,7 +204,6 @@ class BaseStream: # pylint: disable=too-many-instance-attributes
                 transformed_obj = self.transform_keys(json_message)
                 record = transformer.transform(transformed_obj, stream["schema"])
                 singer.write_record(stream_name, record)
-
 
     def add_extra_fields(self, resource_schema):
         """This function should add fields to `field_exclusions`, `schema`, and
@@ -232,17 +240,14 @@ class BaseStream: # pylint: disable=too-many-instance-attributes
         self.resource_fields = self.resource_object["fields"]
         self.full_schema = create_nested_resource_schema(resource_schema, self.resource_fields)
 
-
     def set_stream_schema(self):
         google_ads_name = self.google_ads_resource_names[0]
         self.stream_schema = self.full_schema["properties"][google_ads_name]
-
 
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
-
 
         self.extract_field_information(resource_schema)
 
@@ -254,7 +259,6 @@ class BaseStream: # pylint: disable=too-many-instance-attributes
 
 
 class ReportStream(BaseStream):
-
     def create_full_schema(self, resource_schema):
         google_ads_name = self.google_ads_resource_names[0]
         self.resource_object = resource_schema[google_ads_name]
@@ -265,7 +269,9 @@ class ReportStream(BaseStream):
         self.stream_schema = {
             "type": ["null", "object"],
             "is_report": True,
-            "properties": {"_sdc_record_hash": {"type": "string"}},
+            "properties": {
+                "_sdc_record_hash": {"type": "string"}
+            },
         }
 
     def format_field_names(self):
@@ -294,23 +300,27 @@ class ReportStream(BaseStream):
             else:
                 transformed_obj.update(value)
 
-        if 'type_' in transformed_obj:
-            LOGGER.info("Google sent us 'type_' when we asked for 'type', transforming this now")
+        if "type_" in transformed_obj:
             transformed_obj["type"] = transformed_obj.pop("type_")
 
         return transformed_obj
 
     def build_stream_metadata(self):
         self.stream_metadata = {
-            (): {"inclusion": "available",
-                 "table-key-properties": ["_sdc_record_hash"]},
-            ("properties", "_sdc_record_hash"):
-                {"inclusion": "automatic"}
+            (): {
+                "inclusion": "available",
+                "table-key-properties": ["_sdc_record_hash"],
+            },
+            ("properties", "_sdc_record_hash"): {
+                "inclusion": "automatic"
+            },
         }
         for report_field in self.fields:
             # Transform the field name to match the schema
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
-            if not is_metric_or_segment and report_field.split(".")[0] not in self.google_ads_resource_names:
+            if (not is_metric_or_segment
+                and report_field.split(".")[0] not in self.google_ads_resource_names
+            ):
                 transformed_field_name = "_".join(report_field.split(".")[:2])
             # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
             elif report_field.startswith("ad_group_ad.ad."):
@@ -328,7 +338,9 @@ class ReportStream(BaseStream):
                 # Transform field exclusion names so they match the schema
                 for field_name in self.field_exclusions[report_field]:
                     is_metric_or_segment = field_name.startswith("metrics.") or field_name.startswith("segments.")
-                    if not is_metric_or_segment and field_name.split(".")[0] not in self.google_ads_resource_names:
+                    if (not is_metric_or_segment
+                        and field_name.split(".")[0] not in self.google_ads_resource_names
+                    ):
                         new_field_name = field_name.replace(".", "_")
                     else:
                         new_field_name = field_name.split(".")[1]
@@ -350,19 +362,22 @@ class ReportStream(BaseStream):
 
             self.stream_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
 
-
     def sync_report_streams(self, sdk_client, customer, stream, config, STATE):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
-        replication_key = 'date'
+        replication_key = "date"
         STATE = singer.set_currently_syncing(STATE, stream_name)
-        conversion_window = timedelta(days=int(config.get('conversion_window_days') or DEFAULT_CONVERSION_WINDOW))
+        conversion_window = timedelta(
+            days=int(config.get("conversion_window_days") or DEFAULT_CONVERSION_WINDOW)
+        )
 
-        query_date = min(utils.strptime_to_utc(singer.get_bookmark(STATE, stream_name, replication_key, default=config['start_date'])),
-                         utils.now() - conversion_window)
+        query_date = min(
+            utils.strptime_to_utc(singer.get_bookmark(STATE, stream_name, replication_key, default=config["start_date"])),
+            utils.now() - conversion_window,
+        )
         end_date = utils.now()
 
         if stream_name in REPORTS_WITH_90_DAY_MAX:
@@ -371,7 +386,7 @@ class ReportStream(BaseStream):
             if query_date == cutoff:
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
 
-        LOGGER.info(f'Selected fields for stream {stream_name}: {selected_fields}')
+        LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
         singer.write_state(STATE)
 
         while query_date < end_date:
@@ -389,10 +404,7 @@ class ReportStream(BaseStream):
 
                     singer.write_record(stream_name, record)
 
-            singer.write_bookmark(STATE,
-                                  stream_name,
-                                  replication_key,
-                                  utils.strftime(query_date))
+            singer.write_bookmark(STATE, stream_name, replication_key, utils.strftime(query_date))
 
             singer.write_state(STATE)
 
@@ -405,7 +417,6 @@ class AdGroupPerformanceReport(ReportStream):
     def add_extra_fields(self, resource_schema):
         # from the resource ad_group_ad_label
         field_name = "label.resource_name"
-        # for field_name in []:
         self.field_exclusions[field_name] = {}
         self.schema[field_name] = {"type": ["null", "string"]}
         self.behavior[field_name] = "ATTRIBUTE"
@@ -447,6 +458,7 @@ class AudiencePerformanceReport(ReportStream):
     # 'user_list.name' is a "Segmenting resource"
     # `select user_list.name from `
 
+
 class CampaignPerformanceReport(ReportStream):
     # TODO: The sync needs to select from campaign_criterion if campaign_criterion.device.type is selected
     # TODO: The sync needs to select from campaign_label if label.resource_name
@@ -482,9 +494,7 @@ class GeoPerformanceReport(ReportStream):
             ]:
                 full_field_name = f"{resource_name}.{field_name}"
                 self.field_exclusions[full_field_name] = (
-                    resource_schema[resource_name]["fields"][full_field_name][
-                        "incompatible_fields"
-                    ]
+                    resource_schema[resource_name]["fields"][full_field_name]["incompatible_fields"]
                     or set()
                 )
                 self.schema[full_field_name] = {"type": ["null", "string"]}
@@ -495,10 +505,7 @@ class KeywordsPerformanceReport(ReportStream):
     # TODO: The sync needs to select from ad_group_label if label.name is selected
     # TODO: The sync needs to select from ad_group_label if label.resource_name is selected
     def add_extra_fields(self, resource_schema):
-        for field_name in [
-            "label.resource_name",
-            "label.name",
-        ]:
+        for field_name in ["label.resource_name", "label.name"]:
             self.field_exclusions[field_name] = set()
             self.schema[field_name] = {"type": ["null", "string"]}
             self.behavior[field_name] = "ATTRIBUTE"
@@ -652,7 +659,7 @@ def initialize_reports(resource_schema):
             report_definitions.EXPANDED_LANDING_PAGE_REPORT_FIELDS,
             ["expanded_landing_page_view"],
             resource_schema,
-            ["_sdc_record_hash"]
+            ["_sdc_record_hash"],
         ),
         "gender_performance_report": ReportStream(
             report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
@@ -694,7 +701,7 @@ def initialize_reports(resource_schema):
             report_definitions.LANDING_PAGE_REPORT_FIELDS,
             ["landing_page_view"],
             resource_schema,
-            ["_sdc_record_hash"]
+            ["_sdc_record_hash"],
         ),
         # "placeholder_feed_item_report": PlaceholderFeedItemReport(
         #     report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,

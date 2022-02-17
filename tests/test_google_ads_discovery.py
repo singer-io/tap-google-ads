@@ -337,25 +337,17 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify primary key(s)
                 self.assertSetEqual(expected_primary_keys, actual_primary_keys)
 
-                # BUG | https://jira.talendforge.org/browse/TDL-17848
-                #           all core and report streams are missing this metadata
-                #            DISCREPANCIES (28)
                 # verify replication method
-                # self.assertEqual(expected_replication_method, actual_replication_method)
+                self.assertEqual(expected_replication_method, actual_replication_method)
 
                 # verify replication key is present for any stream with replication method is INCREMENTAL
                 if actual_replication_method == 'INCREMENTAL':
-                    # BUG_TDL-17848 | Implement when md present for keys and method
-                    # self.assertNotEqual(actual_replication_keys, set())
-                    pass
+                    self.assertNotEqual(actual_replication_keys, set())
                 else:
                     self.assertEqual(actual_replication_keys, set())
 
-                # BUG_TDL-17845 | https://jira.talendforge.org/browse/TDL-17845
-                #                 md missing for report streams expected 'date' key
-                #                   DISCREPANCIES (28)
                 # verify replication key(s)
-                # self.assertSetEqual(expected_replication_keys, actual_replication_keys)
+                self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
                 # BUG_TODO | missing fks on core streams, see expected_metadata in base.py
                 #           DISCREPANCIES (6)

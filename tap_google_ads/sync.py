@@ -36,10 +36,10 @@ def do_sync(config, catalog, resource_schema, state):
             singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
 
             LOGGER.info(f"Syncing {stream_name} for customer Id {customer['customerId']}.")
-            if stream_name in core_streams:
+
+            if core_streams.get(stream_name):
                 stream_obj = core_streams[stream_name]
-                stream_obj.sync_core_streams(sdk_client, customer, catalog_entry)
             else:
-                # syncing report
                 stream_obj = report_streams[stream_name]
-                stream_obj.sync_report_streams(sdk_client, customer, catalog_entry, config, state)
+
+            stream_obj.sync(sdk_client, customer, catalog_entry, config, state)

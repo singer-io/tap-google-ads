@@ -83,36 +83,59 @@ def generate_hash(record, metadata):
 
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
-    def transform_keys(self, obj):
-        """This function does a few things with Google's response for sync queries:
-        1) checks an object's fields to see if they're for the current resource
-        2) if they are, keep the fields in transformed_obj with no modifications
-        3) if they are not, append a foreign key to the transformed_obj using the id value
-        4) if the resource is ad_group_ad, pops ad fields up to the ad_group_ad level
 
-        We've seen API responses where Google returns `type_` when the
-        field we ask for is `type`, so we transfrom the key-value pair
-        `"type_": X` to `"type": X`
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
+        self.fields = fields
+        self.google_ads_resource_names = google_ads_resource_names
+        self.primary_keys = primary_keys
+
+        self.extract_field_information(resource_schema)
+
+        self.create_full_schema(resource_schema)
+        self.set_stream_schema()
+        self.format_field_names()
+
+        self.build_stream_metadata()
+
+
+    def extract_field_information(self, resource_schema):
+        self.field_exclusions = defaultdict(set)
+        self.schema = {}
+        self.behavior = {}
+        self.selectable = {}
+
+        for resource_name in self.google_ads_resource_names:
+
+            # field_exclusions step
+            fields = resource_schema[resource_name]["fields"]
+            for field_name, field in fields.items():
+                if field_name in self.fields:
+                    self.field_exclusions[field_name].update(
+                        field["incompatible_fields"]
+                    )
+
+                    self.schema[field_name] = field["field_details"]["json_schema"]
+
+                    self.behavior[field_name] = field["field_details"]["category"]
+
+                    self.selectable[field_name] = field["field_details"]["selectable"]
+            self.add_extra_fields(resource_schema)
+        self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
+
+    def add_extra_fields(self, resource_schema):
+        """This function should add fields to `field_exclusions`, `schema`, and
+        `behavior` that are not covered by Google's resource_schema
         """
-        target_resource_name = self.google_ads_resource_names[0]
-        transformed_obj = {}
 
-        for resource_name, value in obj.items():
-            resource_matches = target_resource_name == resource_name
+    def create_full_schema(self, resource_schema):
+        google_ads_name = self.google_ads_resource_names[0]
+        self.resource_object = resource_schema[google_ads_name]
+        self.resource_fields = self.resource_object["fields"]
+        self.full_schema = create_nested_resource_schema(resource_schema, self.resource_fields)
 
-            if resource_matches:
-                transformed_obj.update(value)
-            else:
-                transformed_obj[f"{resource_name}_id"] = value["id"]
-
-            if resource_name == "ad_group_ad":
-                transformed_obj.update(value["ad"])
-                transformed_obj.pop("ad")
-
-        if "type_" in transformed_obj:
-            transformed_obj["type"] = transformed_obj.pop("type_")
-
-        return transformed_obj
+    def set_stream_schema(self):
+        google_ads_name = self.google_ads_resource_names[0]
+        self.stream_schema = self.full_schema["properties"][google_ads_name]
 
     def format_field_names(self):
         """This function does two things:
@@ -184,12 +207,44 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 if props["field_details"]["selectable"]:
                     self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
 
-    def sync_core_streams(self, sdk_client, customer, stream):
+    def transform_keys(self, obj):
+        """This function does a few things with Google's response for sync queries:
+        1) checks an object's fields to see if they're for the current resource
+        2) if they are, keep the fields in transformed_obj with no modifications
+        3) if they are not, append a foreign key to the transformed_obj using the id value
+        4) if the resource is ad_group_ad, pops ad fields up to the ad_group_ad level
+
+        We've seen API responses where Google returns `type_` when the
+        field we ask for is `type`, so we transfrom the key-value pair
+        `"type_": X` to `"type": X`
+        """
+        target_resource_name = self.google_ads_resource_names[0]
+        transformed_obj = {}
+
+        for resource_name, value in obj.items():
+            resource_matches = target_resource_name == resource_name
+
+            if resource_matches:
+                transformed_obj.update(value)
+            else:
+                transformed_obj[f"{resource_name}_id"] = value["id"]
+
+            if resource_name == "ad_group_ad":
+                transformed_obj.update(value["ad"])
+                transformed_obj.pop("ad")
+
+        if "type_" in transformed_obj:
+            transformed_obj["type"] = transformed_obj.pop("type_")
+
+        return transformed_obj
+
+    def sync(self, sdk_client, customer, stream, config, state): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
+        state = singer.set_currently_syncing(state, stream_name)
         LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
 
         query = create_core_stream_query(resource_name, selected_fields)
@@ -202,58 +257,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
 
                 singer.write_record(stream_name, record)
-
-    def add_extra_fields(self, resource_schema):
-        """This function should add fields to `field_exclusions`, `schema`, and
-        `behavior` that are not covered by Google's resource_schema
-        """
-
-    def extract_field_information(self, resource_schema):
-        self.field_exclusions = defaultdict(set)
-        self.schema = {}
-        self.behavior = {}
-        self.selectable = {}
-
-        for resource_name in self.google_ads_resource_names:
-
-            # field_exclusions step
-            fields = resource_schema[resource_name]["fields"]
-            for field_name, field in fields.items():
-                if field_name in self.fields:
-                    self.field_exclusions[field_name].update(
-                        field["incompatible_fields"]
-                    )
-
-                    self.schema[field_name] = field["field_details"]["json_schema"]
-
-                    self.behavior[field_name] = field["field_details"]["category"]
-
-                    self.selectable[field_name] = field["field_details"]["selectable"]
-            self.add_extra_fields(resource_schema)
-        self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
-
-    def create_full_schema(self, resource_schema):
-        google_ads_name = self.google_ads_resource_names[0]
-        self.resource_object = resource_schema[google_ads_name]
-        self.resource_fields = self.resource_object["fields"]
-        self.full_schema = create_nested_resource_schema(resource_schema, self.resource_fields)
-
-    def set_stream_schema(self):
-        google_ads_name = self.google_ads_resource_names[0]
-        self.stream_schema = self.full_schema["properties"][google_ads_name]
-
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
-        self.fields = fields
-        self.google_ads_resource_names = google_ads_resource_names
-        self.primary_keys = primary_keys
-
-        self.extract_field_information(resource_schema)
-
-        self.create_full_schema(resource_schema)
-        self.set_stream_schema()
-        self.format_field_names()
-
-        self.build_stream_metadata()
 
 
 class ReportStream(BaseStream):
@@ -288,20 +291,6 @@ class ReportStream(BaseStream):
                         self.stream_schema["properties"][ad_field_name] = ad_field_schema
                 else:
                     self.stream_schema["properties"][field_name] = data_type
-
-    def transform_keys(self, obj):
-        transformed_obj = {}
-
-        for resource_name, value in obj.items():
-            if resource_name == "ad_group_ad":
-                transformed_obj.update(value["ad"])
-            else:
-                transformed_obj.update(value)
-
-        if "type_" in transformed_obj:
-            transformed_obj["type"] = transformed_obj.pop("type_")
-
-        return transformed_obj
 
     def build_stream_metadata(self):
         self.stream_metadata = {
@@ -362,20 +351,34 @@ class ReportStream(BaseStream):
 
             self.stream_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
 
-    def sync_report_streams(self, sdk_client, customer, stream, config, STATE):
+    def transform_keys(self, obj):
+        transformed_obj = {}
+
+        for resource_name, value in obj.items():
+            if resource_name == "ad_group_ad":
+                transformed_obj.update(value["ad"])
+            else:
+                transformed_obj.update(value)
+
+        if "type_" in transformed_obj:
+            transformed_obj["type"] = transformed_obj.pop("type_")
+
+        return transformed_obj
+
+    def sync(self, sdk_client, customer, stream, config, state):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
         replication_key = "date"
-        STATE = singer.set_currently_syncing(STATE, stream_name)
+        state = singer.set_currently_syncing(state, stream_name)
         conversion_window = timedelta(
             days=int(config.get("conversion_window_days") or DEFAULT_CONVERSION_WINDOW)
         )
 
         query_date = min(
-            utils.strptime_to_utc(singer.get_bookmark(STATE, stream_name, replication_key, default=config["start_date"])),
+            utils.strptime_to_utc(singer.get_bookmark(state, stream_name, replication_key, default=config["start_date"])),
             utils.now() - conversion_window,
         )
         end_date = utils.now()
@@ -387,7 +390,7 @@ class ReportStream(BaseStream):
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
 
         LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
-        singer.write_state(STATE)
+        singer.write_state(state)
 
         if selected_fields == {'segments.date'}:
             raise Exception(f"Selected fields is currently limited to {', '.join(selected_fields)}. Please select at least one attribute and metric in order to replicate {stream_name}.")
@@ -407,13 +410,13 @@ class ReportStream(BaseStream):
 
                     singer.write_record(stream_name, record)
 
-            singer.write_bookmark(STATE, stream_name, replication_key, utils.strftime(query_date))
+            singer.write_bookmark(state, stream_name, replication_key, utils.strftime(query_date))
 
-            singer.write_state(STATE)
+            singer.write_state(state)
 
             query_date += timedelta(days=1)
 
-        singer.write_state(STATE)
+        singer.write_state(state)
 
 
 def initialize_core_streams(resource_schema):

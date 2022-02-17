@@ -21,9 +21,9 @@ class BookmarksTest(GoogleAdsBase):
 
         conn_id = connections.ensure_connection(self)
 
+        # TODO we are only testing core strems at the moment
         streams_to_test = self.expected_streams() - {
-            # TODO we are only testing core strems at the moment
-            'account_performance_report',
+            # 'account_performance_report',
             'ad_performance_report',
             'adgroup_performance_report',
             'age_range_performance_report',
@@ -49,27 +49,21 @@ class BookmarksTest(GoogleAdsBase):
         }
 
         # Run a discovery job
-        check_job_name = runner.run_check_mode(self, conn_id)
-        exit_status = menagerie.get_exit_status(conn_id, check_job_name)
-        menagerie.verify_check_exit_status(self, exit_status, check_job_name)
+        found_catalogs_1 = self.run_and_verify_check_mode(conn_id)
 
-        # Verify a catalog was produced for each stream under test
-        found_catalogs = menagerie.get_catalogs(conn_id)
-        self.assertGreater(len(found_catalogs), 0)
-        found_catalog_names = {found_catalog['stream_name'] for found_catalog in found_catalogs}
+        # partition catalogs for use in table/field seelction
+        test_catalogs_1 = [catalog for catalog in found_catalogs_1
+                           if catalog.get('stream_name') in streams_to_test]
+        core_catalogs_1 = [catalog for catalog in test_catalogs_1
+                           if not self.is_report(catalog['stream_name'])]
+        report_catalogs_1 = [catalog for catalog in test_catalogs_1
+                             if self.is_report(catalog['stream_name'])]
 
-        # WORKAROUND: Check that we discover every stream we can test, and only select those streams
-        for catalog in streams_to_test:
-            self.assertIn(catalog, found_catalog_names)
+        # select all fields for core streams
+        self.select_all_streams_and_fields(conn_id, core_catalogs_1, select_all_fields=True)
 
-        # Perform table and field selection
-        self.select_all_streams_and_fields(
-            conn_id,
-            [catalog for catalog in found_catalogs if catalog['stream_name'] in streams_to_test],
-            select_all_fields=True
-        )
-        # END WORKAROUND
-
+        # select 'default' fields for report streams
+        self.select_all_streams_and_default_fields(conn_id, report_catalogs_1)
 
         # Run a sync 
         sync_job_name_1 = runner.run_sync_mode(self, conn_id)
@@ -81,6 +75,8 @@ class BookmarksTest(GoogleAdsBase):
         # acquire records from target output
         synced_records_1 = runner.get_records_from_target_output()
         state_1 = menagerie.get_state(conn_id)
+
+        # TODO manipulate state
 
         # Run another sync
         sync_job_name_2 = runner.run_sync_mode(self, conn_id)

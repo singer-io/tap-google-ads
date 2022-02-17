@@ -388,6 +388,9 @@ class ReportStream(BaseStream):
         LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
         singer.write_state(STATE)
 
+        if selected_fields == {'segments.date'}:
+            raise Exception(f"Selected fields is currently limited to {', '.join(selected_fields)}. Please select at least one attribute and metric in order to replicate {stream_name}.")
+
         while query_date < end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")

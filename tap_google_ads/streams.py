@@ -3,7 +3,8 @@ import json
 import hashlib
 from datetime import timedelta
 import singer
-from singer import Transformer, utils
+from singer import Transformer
+from singer import utils
 from google.protobuf.json_format import MessageToJson
 from . import report_definitions
 
@@ -387,6 +388,9 @@ class ReportStream(BaseStream):
 
         LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
         singer.write_state(STATE)
+
+        if selected_fields == {'segments.date'}:
+            raise Exception(f"Selected fields is currently limited to {', '.join(selected_fields)}. Please select at least one attribute and metric in order to replicate {stream_name}.")
 
         while query_date < end_date:
             query = create_report_query(resource_name, selected_fields, query_date)

@@ -19,7 +19,7 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def main():
+def main_impl():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
     state = {}
@@ -34,6 +34,17 @@ def main():
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")
+
+
+def main():
+
+    try:
+        main_impl()
+    except Exception as e:
+        LOGGER.exception(e)
+        for line in str(e).splitlines():
+            LOGGER.critical(line)
+        raise e
 
 
 if __name__ == "__main__":

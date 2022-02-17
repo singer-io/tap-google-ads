@@ -518,10 +518,201 @@ class GoogleAdsBase(unittest.TestCase):
     ### Tap Specific Methods
     ##########################################################################
 
+    def select_all_streams_and_default_fields(self, conn_id, catalogs, select_all_fields: bool = True):
+        """Select all streams and all fields within streams"""
+        for catalog in catalogs:
+            if not self.is_report(catalog['stream_id']):
+                raise RuntimeError("Method intended for report streams only.")
+
+            schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
+            metadata = schema_and_metadata['metadata']
+            properties = {md['breadcrumb'][-1]
+                          for md in metadata
+                          if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
+            expected_fields = self.expected_default_fields()[catalog['stream_name']]
+            self.assertTrue(expected_fields.issubset(properties),
+                            msg=f"{catalog['stream_name']} missing {expected_fields.difference(properties)}")
+            non_selected_properties = properties.difference(expected_fields)
+            connections.select_catalog_and_fields_via_metadata(
+                conn_id, catalog, schema_and_metadata, [], non_selected_properties
+            )
+
     def is_report(self, stream):
         return stream.endswith('_report')
 
     # TODO exclusion rules
 
-    def expected_default_fields(self, stream):
-        pass # TODO
+    @staticmethod
+    def expected_default_fields():
+        """
+        Report streams will select fields based on the default values that
+        are provided when selecting the report type in Google's UI when possible.
+        These fields do not translate perfectly to our report syncs and so a subset
+        of those fields are used in almost all cases here.
+
+        returns a dictionary of reports to standard fields
+        """
+        return {
+            'ad_performance_report': {
+                'average_cpc',  # 'Avg. CPC',
+                'clicks',  # 'Clicks',
+                'conversions',  # 'Conversions',
+                'cost_per_conversion',  # 'Cost / conv.',
+                'ctr',  # 'CTR',
+                'customer_id',  # 'Customer ID',
+                'impressions',  # 'Impr.',
+                'view_through_conversions',  # 'View-through conv.',
+            },
+            "adgroup_performance_report": {
+                'average_cpc',  # Avg. CPC,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "audience_performance_report": {
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM
+                'clicks',  # Clicks,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'ad_group_targeting_setting',  # Targeting Setting,
+            },
+            "campaign_performance_report": {
+                'average_cpc',  # Avg. CPC,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "click_performance_report": {
+                'ad_group_ad',
+                'ad_group_id',
+                'ad_group_name',
+                'ad_group_status',
+                'ad_network_type',
+                'area_of_interest',
+                'campaign_location_target',
+                'click_type',
+                'clicks',
+                'customer_descriptive_name',
+                'customer_id',
+                'device',
+                'gclid',
+                'location_of_presence',
+                'month_of_year',
+                'page_number',
+                'slot',
+                'user_list',
+            },
+            "display_keyword_performance_report": { # TODO NO DATA AVAILABLE
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM,
+                'average_cpv',  # Avg. CPV,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'impressions',  # Impr.,
+                'interaction_rate',  # Interaction rate,
+                'interactions',  # Interactions,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "display_topics_performance_report": { # TODO NO DATA AVAILABLE
+                'ad_group_name', # 'ad_group',  # Ad group,
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM,
+                'campaign_name',  # 'campaign',  # Campaign,
+                'clicks',  # Clicks,
+                'ctr',  # CTR,
+                'customer_currency_code',  # 'currency_code',  # Currency code,
+                'impressions',  # Impr.,
+            },
+            "placement_performance_report": { # TODO NO DATA AVAILABLE
+                'clicks',
+                'impressions',  # Impr.,
+                'ad_group_criterion_placement',  # 'placement_group', 'placement_type',
+            },
+            # "keywords_performance_report": set(),
+            # "shopping_performance_report": set(),
+            "video_performance_report": {
+                'campaign_name',
+                'clicks',
+                'video_quartile_p25_rate',
+            },
+            # NOTE AFTER THIS POINT COULDN"T FIND IN UI
+            "account_performance_report": {
+                'average_cpc',
+                'click_type',
+                'clicks',
+                'date',
+                'descriptive_name',
+                'id',
+                'impressions',
+                'invalid_clicks',
+                'manager',
+                'test_account',
+                'time_zone',
+            },
+            "geo_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                'geo_target_region',
+           },
+            "gender_performance_report": {
+                'ad_group_criterion_gender',
+                'average_cpc',  # Avg. CPC,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "search_query_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                'search_term',
+                'search_term_match_type',
+            },
+            "age_range_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                'ad_group_criterion_age_range', # 'Age',
+            },
+            'placeholder_feed_item_report': {
+                'clicks',
+                'impressions',
+                'placeholder_type',
+            },
+            'placeholder_report': {
+                'clicks',
+                'cost_micros',
+                'interactions',
+                'placeholder_type',
+            },
+            # 'landing_page_report': set(), # TODO
+            # 'expanded_landing_page_report': set(), # TODO
+        }

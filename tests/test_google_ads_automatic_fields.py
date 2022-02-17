@@ -22,6 +22,45 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         """
         print("Automatic Fields Test for tap-google-ads")
 
+        # --- Test report streams throw an error --- #
+
+        streams_to_test = {stream for stream in self.expected_streams()
+                           if self.is_report(stream)}
+
+        for stream in streams_to_test:
+
+            conn_id = connections.ensure_connection(self)
+
+            # Run a discovery job
+            found_catalogs = self.run_and_verify_check_mode(conn_id)
+
+            catalogs_to_test = [catalog
+                                for catalog in found_catalogs
+                                if catalog["stream_name"] == stream]
+
+            # select all fields for core streams and...
+            self.select_all_streams_and_fields(
+                conn_id,
+                catalogs_to_test,
+                select_all_fields=False
+            )
+
+            # Run a sync
+            sync_job_name = runner.run_sync_mode(self, conn_id)
+
+            exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
+
+            self.assertEqual(1, exit_status.get('tap_exit_status'))
+            self.assertEqual(0, exit_status.get('target_exit_status'))
+            self.assertEqual(0, exit_status.get('discovery_exit_status'))
+            self.assertIsNone(exit_status.get('check_exit_status'))
+            self.assertIn(
+                "Please select at least one attribute and metric in order to replicate",
+                exit_status.get("tap_error_message")
+            )
+
+        # --- Start testing core streams --- #
+
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = {stream for stream in self.expected_streams()

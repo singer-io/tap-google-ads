@@ -198,7 +198,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             for message in response:
                 json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
                 transformed_obj = self.transform_keys(json_message)
-                record = transformer.transform(transformed_obj, stream["schema"])
+                record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
+
                 singer.write_record(stream_name, record)
 
     def add_extra_fields(self, resource_schema):

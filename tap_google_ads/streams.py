@@ -3,7 +3,8 @@ import json
 import hashlib
 from datetime import timedelta
 import singer
-from singer import Transformer, utils
+from singer import Transformer
+from singer import utils
 from google.protobuf.json_format import MessageToJson
 from . import report_definitions
 

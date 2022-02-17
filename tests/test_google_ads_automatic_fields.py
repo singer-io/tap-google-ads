@@ -82,6 +82,6 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
                     record_keys = set(record['data'].keys())
 
                     with self.subTest(primary_key=record_primary_key_values):
-                        self.assertSetEqual(expected_auto_fields[stream], record_keys)
+                        self.assertTrue(expected_auto_fields[stream].issubset(record_keys))
 
                 # Verify that all replicated records have unique primary key values.

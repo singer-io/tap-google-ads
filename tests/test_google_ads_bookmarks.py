@@ -44,7 +44,7 @@ class BookmarksTest(GoogleAdsBase):
             'placement_performance_report',
             'search_query_performance_report',
             'shopping_performance_report',
-            'user_view_performance_report',
+            'user_location_performance_report',
             'video_performance_report',
         }
 

@@ -1722,7 +1722,7 @@ SHOPPING_PERFORMANCE_REPORT_FIELDS = [
     "segments.week",
     "segments.year",
 ]
-USER_VIEW_PERFORMANCE_REPORT_FIELDS = [
+USER_LOCATION_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.id",
     "ad_group.name",
     "ad_group.status",

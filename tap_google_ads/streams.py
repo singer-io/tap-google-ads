@@ -136,6 +136,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         self.stream_metadata = {
             (): {
                 "inclusion": "available",
+                "forced-replication-method": "FULL_TABLE",
                 "table-key-properties": self.primary_keys,
             }
         }
@@ -197,7 +198,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             for message in response:
                 json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
                 transformed_obj = self.transform_keys(json_message)
-                record = transformer.transform(transformed_obj, stream["schema"])
+                record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
+
                 singer.write_record(stream_name, record)
 
     def add_extra_fields(self, resource_schema):
@@ -305,6 +307,8 @@ class ReportStream(BaseStream):
             (): {
                 "inclusion": "available",
                 "table-key-properties": ["_sdc_record_hash"],
+                "forced-replication-method": "INCREMENTAL",
+                "valid-replication-keys": ["date"]
             },
             ("properties", "_sdc_record_hash"): {
                 "inclusion": "automatic"
@@ -577,8 +581,8 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "user_view_performance_report": ReportStream(
-            report_definitions.USER_VIEW_PERFORMANCE_REPORT_FIELDS,
+        "user_location_performance_report": ReportStream(
+            report_definitions.USER_LOCATION_PERFORMANCE_REPORT_FIELDS,
             ["user_location_view"],
             resource_schema,
             ["_sdc_record_hash"],

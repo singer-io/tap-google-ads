@@ -64,7 +64,7 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
                 expected_auto_fields = self.expected_automatic_fields()
                 expected_primary_key = list(self.expected_primary_keys()[stream])[0]  # assumes no compound-pks
                 self.assertEqual(len(self.expected_primary_keys()[stream]), 1, msg="Compound pk not supported")
-                # for record in synced_records[stream]['messages']:
+                # for record in synced_records[stream]['messages']: # uncomment to reproduce BUG TDL-17840
 
                 #     record_primary_key_values = record['data'][expected_primary_key]
                 #     record_keys = set(record['data'].keys())

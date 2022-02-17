@@ -202,21 +202,7 @@ class StartDateTest(GoogleAdsBase):
         # BUG https://jira.talendforge.org/browse/TDL-17839
         #     [tap-google-ads] Most performance reports are not including 'date' in output file
 
-        streams_to_test = self.expected_streams() - {
-            'gender_performance_report',  # No date in 'data'
-            'search_query_performance_report',  # No date in 'data'
-            'placeholder_feed_item_report',  # No date in 'data'
-            'campaign_performance_report',  # No date in 'data'
-            'geo_performance_report',  # No date in 'data'
-            'placeholder_report',  # No date in 'data'
-            'click_performance_report',  # No date in 'data'
-            'ad_performance_report',  # No date in 'data'
-            'age_range_performance_report',  # No date in 'data'
-            # 'account_performance_report', # 12-6-2021, TESTED, OK
-            'adgroup_performance_report',  # No date in 'data', TEST assertian fails w/o date
-            'user_location_performance_report', # No date in 'data'
-        }
-        streams_to_test = streams_to_test - {  # end result
+        streams_to_test = self.expected_streams() - {  # end result
             'display_keyword_performance_report', # no test data available
             'display_topics_performance_report',  # no test data available
             'placement_performance_report',  # no test data available
@@ -350,7 +336,7 @@ class StartDateTest(GoogleAdsBase):
 
                     # BUG_TDL-17827 | https://jira.talendforge.org/browse/TDL-17827
                     #                 Improperly formatted replication keys for report streams
-
+                    print(f"DATE BOUNDARIES SYNC 1: {stream} {sorted(replication_dates_1)[0]} {sorted(replication_dates_1)[-1]}")
                     # Verify replication key is greater or equal to start_date for sync 1
                     expected_start_date = dt.strptime(expected_start_date_1, self.START_DATE_FORMAT)
                     for replication_date in replication_dates_1:

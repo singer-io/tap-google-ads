@@ -55,26 +55,11 @@ class StartDateTest(GoogleAdsBase):
         test_catalogs_1 = [catalog for catalog in found_catalogs_1
                            if catalog.get('stream_name') in streams_to_test]
         core_catalogs_1 = [catalog for catalog in test_catalogs_1 if not self.is_report(catalog['stream_name'])]
+        report_catalogs_1 = [catalog for catalog in test_catalogs_1 if self.is_report(catalog['stream_name'])]
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id_1, core_catalogs_1, select_all_fields=True)
         # select 'default' fields for report streams
-        for report in self.expected_default_fields().keys():
-            if report not in streams_to_test:
-                continue
-            catalog = [catalog for catalog in test_catalogs_1
-                       if catalog['stream_name'] == report][0]
-            schema_and_metadata = menagerie.get_annotated_schema(conn_id_1, catalog['stream_id'])
-            metadata = schema_and_metadata['metadata']
-            properties = {md['breadcrumb'][-1]
-                          for md in metadata
-                          if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
-            expected_fields = self.expected_default_fields()[catalog['stream_name']]
-            self.assertTrue(expected_fields.issubset(properties),
-                            msg=f"{report} missing {expected_fields.difference(properties)}")
-            non_selected_properties = properties.difference(expected_fields)
-            connections.select_catalog_and_fields_via_metadata(
-                conn_id_1, catalog, schema_and_metadata, [], non_selected_properties
-            )
+        self.select_all_streams_and_default_fields(conn_id_1, report_catalogs_1)
 
         # run initial sync
         record_count_by_stream_1 = self.run_and_verify_sync(conn_id_1)
@@ -101,26 +86,11 @@ class StartDateTest(GoogleAdsBase):
         test_catalogs_2 = [catalog for catalog in found_catalogs_2
                            if catalog.get('stream_name') in streams_to_test]
         core_catalogs_2 = [catalog for catalog in test_catalogs_2 if not self.is_report(catalog['stream_name'])]
+        report_catalogs_2 = [catalog for catalog in test_catalogs_2 if self.is_report(catalog['stream_name'])]
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id_2, core_catalogs_2, select_all_fields=True)
         # select 'default' fields for report streams
-        for report in self.expected_default_fields().keys():
-            if report not in streams_to_test:
-                continue
-            catalog = [catalog for catalog in test_catalogs_2
-                       if catalog['stream_name'] == report][0]
-            schema_and_metadata = menagerie.get_annotated_schema(conn_id_2, catalog['stream_id'])
-            metadata = schema_and_metadata['metadata']
-            properties = {md['breadcrumb'][-1]
-                          for md in metadata
-                          if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
-            expected_fields = self.expected_default_fields()[catalog['stream_name']]
-            self.assertTrue(expected_fields.issubset(properties),
-                            msg=f"{report} missing {expected_fields.difference(properties)}")
-            non_selected_properties = properties.difference(expected_fields)
-            connections.select_catalog_and_fields_via_metadata(
-                conn_id_2, catalog, schema_and_metadata, [], non_selected_properties
-            )
+        self.select_all_streams_and_default_fields(conn_id_2, report_catalogs_2)
 
         # run sync
         record_count_by_stream_2 = self.run_and_verify_sync(conn_id_2)

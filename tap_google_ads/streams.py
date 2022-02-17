@@ -136,6 +136,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         self.stream_metadata = {
             (): {
                 "inclusion": "available",
+                "forced-replication-method": "FULL_TABLE",
                 "table-key-properties": self.primary_keys,
             }
         }
@@ -305,6 +306,8 @@ class ReportStream(BaseStream):
             (): {
                 "inclusion": "available",
                 "table-key-properties": ["_sdc_record_hash"],
+                "forced-replication-method": "INCREMENTAL",
+                "valid-replication-keys": ["date"]
             },
             ("properties", "_sdc_record_hash"): {
                 "inclusion": "automatic"

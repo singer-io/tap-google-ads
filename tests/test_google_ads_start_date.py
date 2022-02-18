@@ -6,11 +6,30 @@ from tap_tester import connections, runner, menagerie
 
 from base import GoogleAdsBase
 
+class StartDateTest1(GoogleAdsBase):
 
-class StartDateTest(GoogleAdsBase):
+    missing_coverage_streams = {  # end result
+        'display_keyword_performance_report', # no test data available
+        'display_topics_performance_report',  # no test data available
+        'placement_performance_report',  # no test data available
+        "keywords_performance_report",  # no test data available
+        "keywordless_query_report",  # no test data available
+        "video_performance_report",  # no test data available
+        'audience_performance_report',
+        "shopping_performance_report",
+        'landing_page_report',
+        'expanded_landing_page_report',
+        'user_location_performance_report',
+    }
+    def setUp(self):
+        self.start_date_1 = self.get_properties().get('start_date') # '2021-12-01T00:00:00Z',
+        self.start_date_2 = self.timedelta_formatted(self.start_date_1, days=15)
 
-    start_date_1 = ""
-    start_date_2 = ""
+
+    def streams_to_test(self):
+        return self.expected_streams() - {
+            'search_query_performance_report', # Covered in other start date test
+        } - self.missing_coverage_streams # TODO
 
     @staticmethod
     def name():
@@ -19,27 +38,12 @@ class StartDateTest(GoogleAdsBase):
     def test_run(self):
         """Instantiate start date according to the desired data set and run the test"""
 
-        self.start_date_1 = self.get_properties().get('start_date') # '2021-12-01T00:00:00Z',
-        self.start_date_2 = self.timedelta_formatted(self.start_date_1, days=15)
-
         self.start_date = self.start_date_1
 
         # BUG https://jira.talendforge.org/browse/TDL-17839
         #     [tap-google-ads] Most performance reports are not including 'date' in output file
 
-        streams_to_test = self.expected_streams() - {  # end result
-            'display_keyword_performance_report', # no test data available
-            'display_topics_performance_report',  # no test data available
-            'placement_performance_report',  # no test data available
-            "keywords_performance_report",  # no test data available
-            "keywordless_query_report",  # no test data available
-            "video_performance_report",  # no test data available
-            'audience_performance_report',
-            "shopping_performance_report",
-            'landing_page_report',
-            'expanded_landing_page_report',
-            'user_location_performance_report',
-        }
+        streams_to_test = self.streams_to_test()
 
         ##########################################################################
         ### Sync with Connection 1
@@ -59,6 +63,7 @@ class StartDateTest(GoogleAdsBase):
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id_1, core_catalogs_1, select_all_fields=True)
         # select 'default' fields for report streams
+
         self.select_all_streams_and_default_fields(conn_id_1, report_catalogs_1)
 
         # run initial sync

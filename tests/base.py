@@ -531,7 +531,7 @@ class GoogleAdsBase(unittest.TestCase):
     def select_all_streams_and_default_fields(self, conn_id, catalogs, select_all_fields: bool = True):
         """Select all streams and all fields within streams"""
         for catalog in catalogs:
-            if not self.is_report(catalog['stream_id']):
+            if not self.is_report(catalog['tap_stream_id']):
                 raise RuntimeError("Method intended for report streams only.")
 
             schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])

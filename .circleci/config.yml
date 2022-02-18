@@ -25,6 +25,10 @@ jobs:
             pip install 'pip==21.1.3'
             pip install 'setuptools==56.0.0'
             pip install -e .[dev]
+      - run:
+          name: Verify pip installs
+          command: |
+            pip list
       - slack/notify-on-failure:
           only_for_branches: master
       - persist_to_workspace:

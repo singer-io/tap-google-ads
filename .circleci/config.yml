@@ -38,10 +38,6 @@ jobs:
       - attach_workspace:
           at: /usr/local/share/virtualenvs
       - run:
-          name: 'Test Counter'
-          command: |
-            echo "${ls -l tests/test_*.py | wc -l}"
-      - run:
           name: 'Run pylint'
           command: |
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate

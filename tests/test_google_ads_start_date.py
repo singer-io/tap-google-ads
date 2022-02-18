@@ -6,36 +6,11 @@ from tap_tester import connections, runner, menagerie
 
 from base import GoogleAdsBase
 
-class StartDateTest1(GoogleAdsBase):
 
-    missing_coverage_streams = {  # end result
-        'display_keyword_performance_report', # no test data available
-        'display_topics_performance_report',  # no test data available
-        'placement_performance_report',  # no test data available
-        "keywords_performance_report",  # no test data available
-        "keywordless_query_report",  # no test data available
-        "video_performance_report",  # no test data available
-        'audience_performance_report',
-        "shopping_performance_report",
-        'landing_page_report',
-        'expanded_landing_page_report',
-        'user_location_performance_report',
-    }
-    def setUp(self):
-        self.start_date_1 = self.get_properties().get('start_date') # '2021-12-01T00:00:00Z',
-        self.start_date_2 = self.timedelta_formatted(self.start_date_1, days=15)
+class StartDateTest(GoogleAdsBase):
+    """A shared test to be ran with various configurations of start dates and streams to test"""
 
-
-    def streams_to_test(self):
-        return self.expected_streams() - {
-            'search_query_performance_report', # Covered in other start date test
-        } - self.missing_coverage_streams # TODO
-
-    @staticmethod
-    def name():
-        return "tt_google_ads_start_date"
-
-    def test_run(self):
+    def run_test(self):
         """Instantiate start date according to the desired data set and run the test"""
 
         self.start_date = self.start_date_1
@@ -43,7 +18,10 @@ class StartDateTest1(GoogleAdsBase):
         # BUG https://jira.talendforge.org/browse/TDL-17839
         #     [tap-google-ads] Most performance reports are not including 'date' in output file
 
-        streams_to_test = self.streams_to_test()
+        streams_to_test = self.streams_to_test
+        print(f"Streams under test {streams_to_test}")
+        print(f"Start Date 1: {self.start_date_1}")
+        print(f"Start Date 2: {self.start_date_2}")
 
         ##########################################################################
         ### Sync with Connection 1
@@ -63,7 +41,6 @@ class StartDateTest1(GoogleAdsBase):
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id_1, core_catalogs_1, select_all_fields=True)
         # select 'default' fields for report streams
-
         self.select_all_streams_and_default_fields(conn_id_1, report_catalogs_1)
 
         # run initial sync
@@ -106,10 +83,9 @@ class StartDateTest1(GoogleAdsBase):
 
                 # expected values
                 expected_primary_keys = self.expected_primary_keys()[stream]
-                # TODO update this with the lookback window DOES IT APPLY TO START DATE?
-                # expected_conversion_window = -1 * int(self.get_properties()['conversion_window'])
-                expected_start_date_1 = self.timedelta_formatted(self.start_date_1, days=0) # expected_conversion_window)
-                expected_start_date_2 = self.timedelta_formatted(self.start_date_2, days=0) # expected_conversion_window)
+                expected_lookback_window = -1 * 30 # int(self.get_properties()['conversion_window_days'])
+                expected_start_date_1 = self.timedelta_formatted(self.start_date_1, days=expected_lookback_window)
+                expected_start_date_2 = self.timedelta_formatted(self.start_date_2, days=expected_lookback_window)
 
                 # collect information for assertions from syncs 1 & 2 base on expected values
                 record_count_sync_1 = record_count_by_stream_1.get(stream, 0)
@@ -157,9 +133,11 @@ class StartDateTest1(GoogleAdsBase):
                                 "Record date: {} ".format(replication_date)
                         )
 
+                    # TODO Remove if this does not apply with the lookback window at the time that it is
+                    #      available as a configurable property.
                     # Verify the number of records replicated in sync 1 is greater than the number
                     # of records replicated in sync 2
-                    self.assertGreater(record_count_sync_1, record_count_sync_2)
+                    # self.assertGreater(record_count_sync_1, record_count_sync_2)
 
                     # Verify the records replicated in sync 2 were also replicated in sync 1
                     self.assertTrue(primary_keys_sync_2.issubset(primary_keys_sync_1))
@@ -172,3 +150,33 @@ class StartDateTest1(GoogleAdsBase):
 
                     # Verify by primary key the same records are replicated in the 1st and 2nd syncs
                     self.assertSetEqual(primary_keys_sync_1, primary_keys_sync_2)
+
+class StartDateTest1(StartDateTest):
+
+    missing_coverage_streams = {  # end result
+        'display_keyword_performance_report', # no test data available
+        'display_topics_performance_report',  # no test data available
+        'placement_performance_report',  # no test data available
+        "keywords_performance_report",  # no test data available
+        "keywordless_query_report",  # no test data available
+        "video_performance_report",  # no test data available
+        'audience_performance_report',
+        "shopping_performance_report",
+        'landing_page_report',
+        'expanded_landing_page_report',
+        'user_location_performance_report',
+    }
+
+    def setUp(self):
+        self.start_date_1 = self.get_properties().get('start_date') # '2021-12-01T00:00:00Z',
+        self.start_date_2 = self.timedelta_formatted(self.start_date_1, days=15)
+        self.streams_to_test = self.expected_streams() - {
+            'search_query_performance_report', # Covered in other start date test
+        } - self.missing_coverage_streams # TODO
+
+    @staticmethod
+    def name():
+        return "tt_google_ads_start_date"
+
+    def test_run(self):
+        self.run_test()

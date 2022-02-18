@@ -48,9 +48,10 @@ class GoogleAdsBase(unittest.TestCase):
             'user_id':      'not used?', # TODO
             # TODO does this need to be two separate fields
             'customer_ids': '5548074409,2728292456',
+            # 'conversion_window_days': '30',
             'login_customer_ids': [{"customerId": "5548074409", "loginCustomerId": "2728292456",}],
         }
-
+        # TODO Add a test around conversion_window_days
         if original:
             return return_value
 

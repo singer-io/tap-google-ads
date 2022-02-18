@@ -167,7 +167,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     # Add inclusion metadata
                     # Foreign keys are automatically included and they are all id fields
-                    if field in self.primary_keys or is_id_field:
+                    if field in self.primary_keys or field in {'customer_id', 'ad_group_id', 'campaign_id'}:
                         inclusion = "automatic"
                     elif props["field_details"]["selectable"]:
                         inclusion = "available"

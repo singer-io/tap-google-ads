@@ -65,7 +65,9 @@ class GoogleAdsBase(unittest.TestCase):
 
     def expected_metadata(self):
         """The expected streams and metadata about the streams"""
-
+        # TODO Investigate the foreign key expectations here,
+        #       - must prove each uncommented entry is a true foregin key constraint.
+        #       - must prove each commented entry is a NOT true foregin key constraint.
         return {
             # Core Objects
             "accounts": {
@@ -77,9 +79,9 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    'accessible_bidding_strategy_id',
-                    'bidding_strategy_id',
-                    'campaign_budget_id',
+                    # 'accessible_bidding_strategy_id',
+                    # 'bidding_strategy_id',
+                    # 'campaign_budget_id',
                     'customer_id'
                 },
             },
@@ -87,8 +89,8 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    'accessible_bidding_strategy_id',
-                    'bidding_strategy_id',
+                    # 'accessible_bidding_strategy_id',
+                    # 'bidding_strategy_id',
                     'campaign_id',
                     'customer_id',
                 },
@@ -300,7 +302,8 @@ class GoogleAdsBase(unittest.TestCase):
     def expected_automatic_fields(self):
         auto_fields = {}
         for k, v in self.expected_metadata().items():
-            auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set())
+            auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set()) | \
+                v.get(self.FOREIGN_KEYS, set())
 
         return auto_fields
 
@@ -452,6 +455,13 @@ class GoogleAdsBase(unittest.TestCase):
 
             connections.select_catalog_and_fields_via_metadata(
                 conn_id, catalog, schema, [], non_selected_properties)
+    @staticmethod
+    def deselect_streams(conn_id, catalogs):
+        """Select all streams and all fields within streams"""
+        for catalog in catalogs:
+            schema = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
+
+            connections.deselect_catalog_via_metadata(conn_id, catalog, schema)
 
     def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields):
         """Select all streams and all fields within streams"""

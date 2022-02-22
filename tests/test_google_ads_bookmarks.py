@@ -66,7 +66,7 @@ class BookmarksTest(GoogleAdsBase):
         # select 'default' fields for report streams
         self.select_all_streams_and_default_fields(conn_id, report_catalogs_1)
 
-        # Run a sync 
+        # Run a sync
         sync_job_name_1 = runner.run_sync_mode(self, conn_id)
 
         # Verify the tap and target do not throw a critical error
@@ -99,16 +99,13 @@ class BookmarksTest(GoogleAdsBase):
         # Checking syncs were successful prior to stream-level assertions
         with self.subTest():
 
-            # BUG_TDL-17887 [tap-google-ads] State does not save `currently_syncing` as None when the sync successfully ends
-            #               https://jira.talendforge.org/browse/TDL-17887
-            
             # Verify sync is not interrupted by checking currently_syncing in state for sync 1
-            # self.assertIsNone(currently_syncing_1) # BUG_TDL-17887
+            self.assertIsNone(currently_syncing_1)
             # Verify bookmarks are saved
             self.assertIsNotNone(bookmarks_1)
 
             # Verify sync is not interrupted by checking currently_syncing in state for sync 2
-            # self.assertIsNone(currently_syncing_2) # BUG_TDL-17887
+            self.assertIsNone(currently_syncing_2)
             # Verify bookmarks are saved
             self.assertIsNotNone(bookmarks_2)
 
@@ -156,7 +153,7 @@ class BookmarksTest(GoogleAdsBase):
                     except ValueError as err:
                         raise AssertionError() from err
 
-                    # # WIP 
+                    # # WIP
                     # # Verify bookmarks saved match formatting standards for sync 2
                     # self.assertIsNotNone(stream_bookmark_2)
                     # bookmark_value_2 = stream_bookmark_2.get(expected_replication_key)
@@ -175,8 +172,8 @@ class BookmarksTest(GoogleAdsBase):
                     # Verify the bookmark is the max value sent to the target for the a given replication key.
 
                     # Verify 2nd sync only replicates records from the previous sync bookmark minus the conversion_window
-                    # END WIP 
-                    
+                    # END WIP
+
                 elif expected_replication_method == self.FULL_TABLE:
 
                     # Verify full table streams replicate the same number of records on each sync
@@ -192,9 +189,9 @@ class BookmarksTest(GoogleAdsBase):
                     # Verify full tables streams replicate the exact same set of records on each sync
                     for record in records_1:
                         self.assertIn(record, records_2)
-                    
+
                 # Verify at least 1 record was replicated for each stream
                 self.assertGreater(record_count_1, 0)
-                
-                
+
+
                 print(f"{stream} {record_count_1} records replicated.")

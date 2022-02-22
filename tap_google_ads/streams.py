@@ -258,6 +258,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                 singer.write_record(stream_name, record)
 
+        state = singer.bookmarks.set_currently_syncing(state, None)
 
 class ReportStream(BaseStream):
     def create_full_schema(self, resource_schema):
@@ -416,6 +417,7 @@ class ReportStream(BaseStream):
 
             query_date += timedelta(days=1)
 
+        state = singer.bookmarks.set_currently_syncing(state, None)
         singer.write_state(state)
 
 

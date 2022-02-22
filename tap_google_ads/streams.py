@@ -392,7 +392,7 @@ class ReportStream(BaseStream):
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
 
-        query_date = get_start_date(
+        query_date = get_query_date(
             config_start_date=config["start_date"],
             bookmark=singer.get_bookmark(state, stream_name, replication_key, default=config["start_date"]),
             conversion_window_date=utils.now() - conversion_window

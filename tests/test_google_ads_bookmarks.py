@@ -1,5 +1,6 @@
 """Test tap discovery mode and metadata."""
 import re
+from datetime import datetime as dt
 
 from tap_tester import menagerie, connections, runner
 
@@ -75,8 +76,12 @@ class BookmarksTest(GoogleAdsBase):
         # acquire records from target output
         synced_records_1 = runner.get_records_from_target_output()
         state_1 = menagerie.get_state(conn_id)
+        bookmarks_1 = state_1.get('bookmarks')
+        currently_syncing_1 = state_1.get('currently_syncing', 'KEY NOT SAVED IN STATE')
 
-        # TODO manipulate state
+        # TODO manipulate state dynamically
+        manipulated_state = {'currently_syncing': 'None', 'bookmarks': {'account_performance_report': {'date': '2022-01-24T00:00:00.000000Z'}}}
+        menagerie.set_state(conn_id, manipulated_state)
 
         # Run another sync
         sync_job_name_2 = runner.run_sync_mode(self, conn_id)
@@ -88,8 +93,28 @@ class BookmarksTest(GoogleAdsBase):
         # acquire records from target output
         synced_records_2 = runner.get_records_from_target_output()
         state_2 = menagerie.get_state(conn_id)
+        bookmarks_2 = state_2.get('bookmarks')
+        currently_syncing_2 = state_2.get('currently_syncing', 'KEY NOT SAVED IN STATE')
 
+        # Checking syncs were successful prior to stream-level assertions
+        with self.subTest():
 
+            # BUG_TDL-17887 [tap-google-ads] State does not save `currently_syncing` as None when the sync successfully ends
+            #               https://jira.talendforge.org/browse/TDL-17887
+            
+            # Verify sync is not interrupted by checking currently_syncing in state for sync 1
+            # self.assertIsNone(currently_syncing_1) # BUG_TDL-17887
+            # Verify bookmarks are saved
+            self.assertIsNotNone(bookmarks_1)
+
+            # Verify sync is not interrupted by checking currently_syncing in state for sync 2
+            # self.assertIsNone(currently_syncing_2) # BUG_TDL-17887
+            # Verify bookmarks are saved
+            self.assertIsNotNone(bookmarks_2)
+
+            # TODO only expected streams should have bookmarks ?
+
+        # stream-level assertions
         for stream in streams_to_test:
             with self.subTest(stream=stream):
 
@@ -101,8 +126,8 @@ class BookmarksTest(GoogleAdsBase):
                 records_2 = [message['data'] for message in synced_records_2[stream]['messages']]
                 record_count_1 = len(records_1)
                 record_count_2 = len(records_2)
-                bookmarks_1 = state_1.get(stream)
-                bookmarks_2 = state_2.get(stream)
+                stream_bookmark_1 = bookmarks_1.get(stream)
+                stream_bookmark_2 = bookmarks_2.get(stream)
 
                 # sanity check WIP
                 print(f"Stream: {stream} \n"
@@ -112,21 +137,54 @@ class BookmarksTest(GoogleAdsBase):
                 if expected_replication_method == self.INCREMENTAL:
 
                     # included to catch a contradiction in our base expectations
-                    if not stream.endswith('_report'):
+                    if not self.is_report(stream):
                         raise AssertionError(
                             f"Only Reports streams should be expected to support {expected_replication_method} replication."
                         )
 
                     # TODO need to finish implementing test cases for report streams
+                    expected_replication_key = list(self.expected_replication_keys()[stream])[0]  # assumes 1 value
 
+                    # Verify bookmarks saved match formatting standards for sync 1
+                    self.assertIsNotNone(stream_bookmark_1)
+                    bookmark_value_1 = stream_bookmark_1.get(expected_replication_key)
+                    self.assertIsNotNone(bookmark_value_1)
+
+                    self.assertIsInstance(bookmark_value_1, str)
+                    try:
+                        parsed_bookmark_value_1 = dt.strptime(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
+                    except ValueError as err:
+                        raise AssertionError() from err
+
+                    # # WIP 
+                    # # Verify bookmarks saved match formatting standards for sync 2
+                    # self.assertIsNotNone(stream_bookmark_2)
+                    # bookmark_value_2 = stream_bookmark_2.get(expected_replication_key)
+                    # self.assertIsNotNone(bookmark_value_2)
+                    # self.assertIsInstance(bookmark_value_2, str)
+                    # # BUG_TDL-17888  https://jira.talendforge.org/browse/TDL-17888
+                    # # [tap-google-ads] Inconsistent bookmark value saved for `account_performance_report` stream
+                    # self.assertIsInstance(bookmark_value_1, str)
+                    # try:
+                    #     parsed_bookmark_value_1 = dt.strptime(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
+                    # except ValueError as err:
+                    #     raise AssertionError() from err
+
+
+                    # TODO does this apply?
+                    # Verify the bookmark is the max value sent to the target for the a given replication key.
+
+                    # Verify 2nd sync only replicates records from the previous sync bookmark minus the conversion_window
+                    # END WIP 
+                    
                 elif expected_replication_method == self.FULL_TABLE:
 
                     # Verify full table streams replicate the same number of records on each sync
                     self.assertEqual(record_count_1, record_count_2)
 
                     # Verify full table streams do not save bookmarked values at the conclusion of a succesful sync
-                    self.assertIsNone(bookmarks_1)
-                    self.assertIsNone(bookmarks_2)
+                    self.assertIsNone(stream_bookmark_1)
+                    self.assertIsNone(stream_bookmark_2)
 
                     # Verify full table streams replicate the same number of records on each sync
                     self.assertEqual(record_count_1, record_count_2)

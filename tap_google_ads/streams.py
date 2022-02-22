@@ -374,7 +374,7 @@ class ReportStream(BaseStream):
         replication_key = "date"
         state = singer.set_currently_syncing(state, stream_name)
         conversion_window = timedelta(
-            days=int(config.get("conversion_window_days") or DEFAULT_CONVERSION_WINDOW)
+            days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
 
         query_date = min(

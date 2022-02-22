@@ -15,9 +15,6 @@ class StartDateTest(GoogleAdsBase):
 
         self.start_date = self.start_date_1
 
-        # BUG https://jira.talendforge.org/browse/TDL-17839
-        #     [tap-google-ads] Most performance reports are not including 'date' in output file
-
         streams_to_test = self.streams_to_test
         print(f"Streams under test {streams_to_test}")
         print(f"Start Date 1: {self.start_date_1}")
@@ -110,8 +107,6 @@ class StartDateTest(GoogleAdsBase):
                                            synced_records_2.get(stream, {'messages': []}).get('messages', [])
                                            if row.get('data')]
 
-                    # BUG_TDL-17827 | https://jira.talendforge.org/browse/TDL-17827
-                    #                 Improperly formatted replication keys for report streams
                     print(f"DATE BOUNDARIES SYNC 1: {stream} {sorted(replication_dates_1)[0]} {sorted(replication_dates_1)[-1]}")
                     # Verify replication key is greater or equal to start_date for sync 1
                     expected_start_date = dt.strptime(expected_start_date_1, self.START_DATE_FORMAT)

@@ -1,5 +1,5 @@
 import unittest
-from tap_google_ads.reports import generate_hash
+from tap_google_ads.streams import generate_hash
 from tap_google_ads.streams import create_nested_resource_schema
 from singer import metadata
 

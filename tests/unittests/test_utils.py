@@ -1,6 +1,6 @@
 import unittest
 from tap_google_ads.reports import flatten, generate_hash, make_field_names
-from tap_google_ads import create_nested_resource_schema
+from tap_google_ads.streams import create_nested_resource_schema
 from singer import metadata
 
 class TestFlatten(unittest.TestCase):

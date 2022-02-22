@@ -260,6 +260,20 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         state = singer.bookmarks.set_currently_syncing(state, None)
 
+
+def get_query_date(start_date, bookmark, conversion_window_date):
+    """Return a date within the conversion window and after start date
+
+    All inputs are datetime strings.
+    NOTE: `bookmark` may be None"""
+    # TODO dylan implement me
+    if not bookmark:
+        return start_date
+    else:
+        query_date = min(bookmark, max(start_date, conversion_window_date))
+        return query_date
+
+
 class ReportStream(BaseStream):
     def create_full_schema(self, resource_schema):
         google_ads_name = self.google_ads_resource_names[0]
@@ -378,9 +392,10 @@ class ReportStream(BaseStream):
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
 
-        query_date = min(
-            utils.strptime_to_utc(singer.get_bookmark(state, stream_name, replication_key, default=config["start_date"])),
-            utils.now() - conversion_window,
+        query_date = get_start_date(
+            config_start_date=config["start_date"],
+            bookmark=singer.get_bookmark(state, stream_name, replication_key, default=config["start_date"]),
+            conversion_window_date=utils.now() - conversion_window
         )
         end_date = utils.now()
 

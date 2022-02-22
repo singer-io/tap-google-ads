@@ -1,5 +1,6 @@
 import unittest
 from tap_google_ads.streams import generate_hash
+from tap_google_ads.streams import get_query_date
 from tap_google_ads.streams import create_nested_resource_schema
 from singer import metadata
 
@@ -139,6 +140,77 @@ class TestRecordHashing(unittest.TestCase):
         test_diff_record['date'] = '2022-02-03'
         self.assertNotEqual(self.expected_hash, generate_hash(test_diff_record, self.test_metadata))
 
+
+class TestGetQueryDate(unittest.TestCase):
+    def test_one(self):
+        """Given:
+        - Start date before the conversion window
+        - No bookmark
+
+        return the start date"""
+        actual = get_query_date(
+            start_date="2022-01-01T00:00:00Z",
+            bookmark=None,
+            conversion_window_date="2022-01-23T00:00:00Z"
+        )
+        expected = "2022-01-01T00:00:00Z"
+        self.assertEqual(expected, actual)
+
+    def test_two(self):
+        """Given:
+        - Start date before the conversion window
+        - bookmark after the conversion window
+
+        return the conversion window"""
+        actual = get_query_date(
+            start_date="2022-01-01T00:00:00Z",
+            bookmark="2022-02-01T00:00:00Z",
+            conversion_window_date="2022-01-23T00:00:00Z"
+        )
+        expected = "2022-01-23T00:00:00Z"
+        self.assertEqual(expected, actual)
+
+    def test_three(self):
+        """Given:
+        - Start date after the conversion window
+        - no bookmark
+
+        return the start date"""
+        actual = get_query_date(
+            start_date="2022-02-01T00:00:00Z",
+            bookmark=None,
+            conversion_window_date="2022-01-23T00:00:00Z"
+        )
+        expected = "2022-02-01T00:00:00Z"
+        self.assertEqual(expected, actual)
+
+    def test_four(self):
+        """Given:
+        - Start date after the conversion window
+        - bookmark after the start date
+
+        return the start date"""
+        actual = get_query_date(
+            start_date="2022-02-01T00:00:00Z",
+            bookmark="2022-02-08T00:00:00Z",
+            conversion_window_date="2022-01-23T00:00:00Z"
+        )
+        expected = "2022-02-01T00:00:00Z"
+        self.assertEqual(expected, actual)
+
+    def test_five(self):
+        """Given:
+        - Start date before the conversion window
+        - bookmark after the start date and before the conversion window
+
+        return the bookmark"""
+        actual = get_query_date(
+            start_date="2022-01-01T00:00:00Z",
+            bookmark="2022-01-14T00:00:00Z",
+            conversion_window_date="2022-01-23T00:00:00Z"
+        )
+        expected = "2022-01-14T00:00:00Z"
+        self.assertEqual(expected, actual)
 
 if __name__ == '__main__':
     unittest.main()

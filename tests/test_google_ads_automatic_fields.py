@@ -30,12 +30,6 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         # BUG https://jira.talendforge.org/browse/TDL-17841
         #    Tap does not save exit status messages (just code=1) in the case where a Critical Error occurs.
 
-        # BUG https://jira.talendforge.org/browse/TDL-17840
-        # Tap allows for invalid selection and does not throw an error, but rather attempts to query.
-
-        # TODO Need to implement a deselect_catalog_via_metadata method so that we can re-use the connection and
-        #      decrease overhead of creating new connection and running check job on every iterration.
-
         conn_id = connections.ensure_connection(self)
 
         # Run a discovery job
@@ -104,8 +98,6 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         # Verify the tap and target do not throw a critical error
         exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
         menagerie.verify_sync_exit_status(self, exit_status, sync_job_name)
-
-        # TODO Verify we can deselect all fields except when inclusion=automatic, which is handled by base.py methods
 
         # acquire records from target output
         synced_records = runner.get_records_from_target_output()

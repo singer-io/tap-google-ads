@@ -80,9 +80,8 @@ class StartDateTest(GoogleAdsBase):
 
                 # expected values
                 expected_primary_keys = self.expected_primary_keys()[stream]
-                expected_lookback_window = -1 * 30 # int(self.get_properties()['conversion_window_days'])
-                expected_start_date_1 = self.timedelta_formatted(self.start_date_1, days=expected_lookback_window)
-                expected_start_date_2 = self.timedelta_formatted(self.start_date_2, days=expected_lookback_window)
+                expected_start_date_1 = self.start_date_1
+                expected_start_date_2 = self.start_date_2
 
                 # collect information for assertions from syncs 1 & 2 base on expected values
                 record_count_sync_1 = record_count_by_stream_1.get(stream, 0)

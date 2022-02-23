@@ -27,9 +27,6 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         streams_to_test = {stream for stream in self.expected_streams()
                            if self.is_report(stream)}
 
-        # BUG https://jira.talendforge.org/browse/TDL-17841
-        #    Tap does not save exit status messages (just code=1) in the case where a Critical Error occurs.
-
         conn_id = connections.ensure_connection(self)
 
         # Run a discovery job
@@ -37,7 +34,7 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
 
         for stream in streams_to_test:
             with self.subTest(stream=stream):
-                
+
                 catalogs_to_test = [catalog
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]

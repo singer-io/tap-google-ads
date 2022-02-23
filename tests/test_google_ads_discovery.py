@@ -10,10 +10,14 @@ class DiscoveryTest(GoogleAdsBase):
     """Test tap discovery mode and metadata conforms to standards."""
 
     def expected_fields(self):
-        """The expected streams and metadata about the streams"""
+        """
+        The expected streams and metadata about the streams.
+
+        TODO's in this method will be picked up as part of TDL-17909
+        """
         return {
             # Core Objects
-            "accounts": {  # TODO check with Brian on changes
+            "accounts": {  # TODO_TDL-17909 check with Brian on changes
                 # OLD FIELDS (with mapping)
                 "currency_code",
                 "id", # "customer_id",
@@ -37,7 +41,7 @@ class DiscoveryTest(GoogleAdsBase):
                 'remarketing_setting.google_global_site_tag',
                 'tracking_url_template',
             },
-            "campaigns": {  # TODO check out nested keys once these are satisfied
+            "campaigns": {  # TODO_TDL-17909 check out nested keys once these are satisfied
                 # OLD FIELDS
                 "ad_serving_optimization_status",
                 "advertising_channel_type",
@@ -120,12 +124,12 @@ class DiscoveryTest(GoogleAdsBase):
                 "vanity_pharma.vanity_pharma_text",
                 "video_brand_safety_suitability",
             },
-            "ad_groups": {  # TODO check out nested keys once these are satisfied
+            "ad_groups": {  # TODO_TDL-17909 check out nested keys once these are satisfied
                 # OLD FIELDS (with mappings)
                 "type",  # ("ad_group_type")
                 "base_ad_group",  # ("base_ad_group_id")
                 # "bidding_strategy_configuration", # DNE
-                "campaign",  #("campaign_name", "campaign_id", "base_campaign_id") # TODO redo this
+                "campaign",  #("campaign_name", "campaign_id", "base_campaign_id") # TODO_TDL-17909 redo this
                 "id",
                 "labels",
                 "name",
@@ -157,7 +161,7 @@ class DiscoveryTest(GoogleAdsBase):
                 "target_cpa_micros",
                 "effective_target_roas",
             },
-            "ads": {  # TODO check out nested keys once these are satisfied
+            "ads": {  # TODO_TDL-17909 check out nested keys once these are satisfied
                 # OLD FIELDS (with mappings)
                 "ad_group_id",
                 "base_ad_group_id",
@@ -196,8 +200,7 @@ class DiscoveryTest(GoogleAdsBase):
             "display_keyword_performance_report": {  # "display_keyword_view"
             },
             "display_topics_performance_report":{  # "topic_view"
-            },
-            "": {  # "topic_view" todo consult https://developers.google.com/google-ads/api/docs/migration/url-reports for migrating this report
+            },# TODO_TDL-17909 consult https://developers.google.com/google-ads/api/docs/migration/url-reports for migrating this report
             },
             "gender_performance_report": {  # "gender_view"
             },
@@ -229,7 +232,7 @@ class DiscoveryTest(GoogleAdsBase):
             },
             "ad_performance_report": {  # ads
             },
-            # Custom Reports TODO feature
+            # Custom Reports [OUTSIDE SCOPE OF ALPHA]
         }
 
     @staticmethod
@@ -281,9 +284,8 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_keys = self.expected_replication_keys()[stream]
                 expected_automatic_fields = expected_primary_keys | expected_replication_keys | expected_foreign_keys
                 expected_replication_method = self.expected_replication_method()[stream]
-                # expected_fields = self.expected_fields()[stream] # TODO
+                # expected_fields = self.expected_fields()[stream] # TODO_TDL-17909
                 is_report = self.is_report(stream)
-                # TODO Is SEGMENT a valid behavior for core objects? Depends on campaign_budgets issue, see base.py
                 expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
 
                 # collecting actual values from the catalog
@@ -293,10 +295,6 @@ class DiscoveryTest(GoogleAdsBase):
                 actual_primary_keys = set(
                     stream_properties[0].get(
                         "metadata", {self.PRIMARY_KEYS: []}).get(self.PRIMARY_KEYS, [])
-                )
-                actual_foreign_keys = set(
-                    stream_properties[0].get(
-                        "metadata", {self.FOREIGN_KEYS: []}).get(self.FOREIGN_KEYS, [])
                 )
                 actual_replication_keys = set(
                     stream_properties[0].get(
@@ -349,21 +347,11 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify replication key(s)
                 self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
-                # BUG_TODO | missing fks on core streams, see expected_metadata in base.py
-                #           DISCREPANCIES (6)
-                # verify foreign keys are present for each stream (core streams only)
-                # self.assertSetEqual(expected_foreign_keys, actual_foreign_keys)
-
-                # verify all expected fields are found # TODO set expectations
+                # verify all expected fields are found # TODO_TDL-17909 set expectations
                 # self.assertSetEqual(expected_fields, set(actual_fields))
 
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
-
-                # TODO Found that all report streams under test except account_performance_report
-                #      are not replicating the rep key of 'date'. This should
-                #      have been caught in the following assertion but was not.
-                #       see BUG_TDL-17839
 
                 # verify the primary, replication keys and foreign keys are given the inclusions of automatic
                 self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
@@ -389,7 +377,7 @@ class DiscoveryTest(GoogleAdsBase):
 
                 # NB | The following assertion is left commented with the assumption that this will be a valid
                 #      expectation by the time the tap moves to Beta. If this is not valid at that time it should
-                #      be removed.
+                #      be removed. Or if work done in TDL-17910 results in this being an unnecessary check
 
                 # if is_report:
                 #     # verify each field in a report stream has a 'fieldExclusions' entry and that the fields listed

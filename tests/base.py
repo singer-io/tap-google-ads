@@ -110,7 +110,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
                     "customer_id",
-                    "campaign_id", # TODO This is a SEGMENT, may not be valid
+                    "campaign_id",
                 },
             },
             'bidding_strategies': {
@@ -529,7 +529,7 @@ class GoogleAdsBase(unittest.TestCase):
     ### Tap Specific Methods
     ##########################################################################
 
-    def select_all_streams_and_default_fields(self, conn_id, catalogs, select_all_fields: bool = True):
+    def select_all_streams_and_default_fields(self, conn_id, catalogs):
         """Select all streams and all fields within streams"""
         for catalog in catalogs:
             if not self.is_report(catalog['tap_stream_id']):

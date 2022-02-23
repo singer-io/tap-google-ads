@@ -23,7 +23,7 @@ class DiscoveryTest(GoogleAdsBase):
         returns a dictionary of reports to standard fields
         """
 
-        # BUG_TODO_1 commented out fields below are not discovered for the given stream by the tap
+        # TODO_TDL-17909 [BUG?] commented out fields below are not discovered for the given stream by the tap
         return {
             'ad_performance_report': {
                 # 'account_name', # 'Account name',
@@ -78,7 +78,7 @@ class DiscoveryTest(GoogleAdsBase):
                 'impressions',  # Impr.,
                 'view_through_conversions',  # View-through conv.,
             },
-            # BUG_TODO | missing audience fields
+            # TODO_TDL-17909 | [BUG?] missing audience fields
             "audience_performance_report": {
                 # 'account_name', # Account name,
                 # 'ad_group_name', # 'ad_group',  # Ad group,
@@ -135,7 +135,7 @@ class DiscoveryTest(GoogleAdsBase):
                 'slot',
                 'user_list',
             },
-            "display_keyword_performance_report": { # TODO NO DATA AVAILABLE
+            "display_keyword_performance_report": { # TODO_TDL-17885 NO DATA AVAILABLE
                 # 'ad_group',  # Ad group,
                 # 'ad_group_bid_strategy_type',  # Ad group bid strategy type,
                 'average_cpc',  # Avg. CPC,
@@ -156,7 +156,7 @@ class DiscoveryTest(GoogleAdsBase):
                 'interactions',  # Interactions,
                 'view_through_conversions',  # View-through conv.,
             },
-            "display_topics_performance_report": { # TODO NO DATA AVAILABLE
+            "display_topics_performance_report": { # TODO_TDL-17885 NO DATA AVAILABLE
                 'ad_group_name', # 'ad_group',  # Ad group,
                 'average_cpc',  # Avg. CPC,
                 'average_cpm',  # Avg. CPM,
@@ -169,7 +169,7 @@ class DiscoveryTest(GoogleAdsBase):
                 # 'topic',  # Topic,
                 # 'topic_state',  # Topic state,
             },
-            "placement_performance_report": { # TODO NO DATA AVAILABLE
+            "placement_performance_report": { # TODO_TDL-17885 NO DATA AVAILABLE
                 # 'ad_group_name',
                 # 'ad_group_id',
                 # 'campaign_name',
@@ -229,7 +229,7 @@ class DiscoveryTest(GoogleAdsBase):
                 # 'geo_target_metro',
                 # 'geo_target_most_specific_location',
                 'geo_target_region',
-                # 'country_criterion_id',  # BUG_TODO | PROHIBITED_RESOURCE_TYPE_IN_SELECT_CLAUSE
+                # 'country_criterion_id',  # TODO_TDL-17910 | [BUG?] PROHIBITED_RESOURCE_TYPE_IN_SELECT_CLAUSE
            },
             "gender_performance_report": {
                 # 'account_name',  # Account name,
@@ -293,8 +293,8 @@ class DiscoveryTest(GoogleAdsBase):
                 'interactions',
                 'placeholder_type',
             },
-            # 'landing_page_report': set(), # TODO
-            # 'expanded_landing_page_report': set(), # TODO
+            # 'landing_page_report': set(), # TODO_TDL-17885
+            # 'expanded_landing_page_report': set(), # TODO_TDL-17885
         }
 
     @staticmethod
@@ -310,18 +310,18 @@ class DiscoveryTest(GoogleAdsBase):
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = self.expected_streams() - {
+            # TODO_TDL-17885 the following are not yet implemented
             'display_keyword_performance_report', # no test data available
             'display_topics_performance_report',  # no test data available
-            'audience_performance_report',  # BUG see above
+            'audience_performance_report',  # Potential BUG see above
             'placement_performance_report',  # no test data available
             "keywords_performance_report",  # no test data available
             "keywordless_query_report",  # no test data available
-            "shopping_performance_report",  # TODO find this in GoogleUI
+            "shopping_performance_report",  # cannot find this in GoogleUI
             "video_performance_report",  # no test data available
             "user_location_performance_report",  # no test data available
-            # TODO the following are not yet implemented
-            'landing_page_report',
-            'expanded_landing_page_report',
+            'landing_page_report',  # not attempted 
+            'expanded_landing_page_report', # not attempted 
         }
 
         # Run a discovery job
@@ -331,26 +331,13 @@ class DiscoveryTest(GoogleAdsBase):
         core_catalogs = [catalog for catalog in found_catalogs
                          if not self.is_report(catalog['stream_name'])
                          and catalog['stream_name'] in streams_to_test]
+        report_catalogs = [catalog for catalog in found_catalogs
+                           if self.is_report(catalog['stream_name'])
+                           and catalog['stream_name'] in streams_to_test]
         # select all fields for core streams and...
         self.select_all_streams_and_fields(conn_id, core_catalogs, select_all_fields=True)
         # select 'default' fields for report streams
-        for report in self.expected_default_fields().keys():
-            if report not in streams_to_test:
-                continue
-            catalog = [catalog for catalog in found_catalogs
-                       if catalog['stream_name'] == report][0]
-            schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
-            metadata = schema_and_metadata['metadata']
-            properties = {md['breadcrumb'][-1]
-                          for md in metadata
-                          if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
-            expected_fields = self.expected_default_fields()[catalog['stream_name']]
-            self.assertTrue(expected_fields.issubset(properties),
-                            msg=f"{report} missing {expected_fields.difference(properties)}")
-            non_selected_properties = properties.difference(expected_fields)
-            connections.select_catalog_and_fields_via_metadata(
-                conn_id, catalog, schema_and_metadata, [], non_selected_properties
-            )
+        self.select_all_streams_and_default_fields(conn_id, report_catalogs)
 
         # Run a sync
         sync_job_name = runner.run_sync_mode(self, conn_id)
@@ -369,3 +356,4 @@ class DiscoveryTest(GoogleAdsBase):
                 record_count = len(synced_records.get(stream, {'messages': []})['messages'])
                 self.assertGreater(record_count, 0)
                 print(f"{record_count} {stream} record(s) replicated.")
+

@@ -3,7 +3,7 @@ from tap_google_ads.streams import generate_hash
 from tap_google_ads.streams import get_query_date
 from tap_google_ads.streams import create_nested_resource_schema
 from singer import metadata
-
+from singer.utils import strptime_to_utc
 
 resource_schema = {
     "accessible_bidding_strategy.id": {"json_schema": {"type": ["null", "integer"]}},
@@ -153,7 +153,7 @@ class TestGetQueryDate(unittest.TestCase):
             bookmark=None,
             conversion_window_date="2022-01-23T00:00:00Z"
         )
-        expected = "2022-01-01T00:00:00Z"
+        expected = strptime_to_utc("2022-01-01T00:00:00Z")
         self.assertEqual(expected, actual)
 
     def test_two(self):
@@ -167,7 +167,7 @@ class TestGetQueryDate(unittest.TestCase):
             bookmark="2022-02-01T00:00:00Z",
             conversion_window_date="2022-01-23T00:00:00Z"
         )
-        expected = "2022-01-23T00:00:00Z"
+        expected = strptime_to_utc("2022-01-23T00:00:00Z")
         self.assertEqual(expected, actual)
 
     def test_three(self):
@@ -181,7 +181,7 @@ class TestGetQueryDate(unittest.TestCase):
             bookmark=None,
             conversion_window_date="2022-01-23T00:00:00Z"
         )
-        expected = "2022-02-01T00:00:00Z"
+        expected = strptime_to_utc("2022-02-01T00:00:00Z")
         self.assertEqual(expected, actual)
 
     def test_four(self):
@@ -195,7 +195,7 @@ class TestGetQueryDate(unittest.TestCase):
             bookmark="2022-02-08T00:00:00Z",
             conversion_window_date="2022-01-23T00:00:00Z"
         )
-        expected = "2022-02-01T00:00:00Z"
+        expected = strptime_to_utc("2022-02-01T00:00:00Z")
         self.assertEqual(expected, actual)
 
     def test_five(self):
@@ -209,7 +209,7 @@ class TestGetQueryDate(unittest.TestCase):
             bookmark="2022-01-14T00:00:00Z",
             conversion_window_date="2022-01-23T00:00:00Z"
         )
-        expected = "2022-01-14T00:00:00Z"
+        expected = strptime_to_utc("2022-01-14T00:00:00Z")
         self.assertEqual(expected, actual)
 
 if __name__ == '__main__':

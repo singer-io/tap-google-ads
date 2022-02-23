@@ -199,7 +199,7 @@ class DiscoveryTest(GoogleAdsBase):
             },
             "display_keyword_performance_report": {  # "display_keyword_view"
             },
-            "display_topics_performance_report":{  # "topic_view"
+            "display_topics_performance_report": {  # "topic_view"
             },# TODO_TDL-17909 consult https://developers.google.com/google-ads/api/docs/migration/url-reports for migrating this report
             "gender_performance_report": {  # "gender_view"
             },

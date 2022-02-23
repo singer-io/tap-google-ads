@@ -266,7 +266,6 @@ def get_query_date(start_date, bookmark, conversion_window_date):
 
     All inputs are datetime strings.
     NOTE: `bookmark` may be None"""
-    # TODO dylan implement me
     if not bookmark:
         return singer.utils.strptime_to_utc(start_date)
     else:

@@ -391,11 +391,12 @@ class ReportStream(BaseStream):
         conversion_window = timedelta(
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
+        conversion_window_date = utils.now() - conversion_window
 
         query_date = get_query_date(
             start_date=config["start_date"],
-            conversion_window_date=utils.now() - conversion_window
             bookmark=singer.get_bookmark(state, stream_name, replication_key),
+            conversion_window_date=singer.utils.strftime(conversion_window_date)
         )
         end_date = utils.now()
 

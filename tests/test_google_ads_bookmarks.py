@@ -23,25 +23,14 @@ class BookmarksTest(GoogleAdsBase):
 
         conn_id = connections.ensure_connection(self)
 
-        # TODO we are only testing core strems at the moment
         streams_to_test = self.expected_streams() - {
-            # 'account_performance_report',
-            # 'ad_performance_report',
-            # 'adgroup_performance_report',
-            # 'age_range_performance_report',
             'audience_performance_report',
-            # 'campaign_performance_report',
-            # 'click_performance_report',
             'display_keyword_performance_report',
             'display_topics_performance_report',
             'expanded_landing_page_report',
-            # 'gender_performance_report',
-            # 'geo_performance_report',
             'keywordless_query_report',
             'keywords_performance_report',
             'landing_page_report',
-            # 'placeholder_feed_item_report',
-            # 'placeholder_report',
             'placement_performance_report',
             'search_query_performance_report',
             'shopping_performance_report',
@@ -80,6 +69,7 @@ class BookmarksTest(GoogleAdsBase):
         currently_syncing_1 = state_1.get('currently_syncing', 'KEY NOT SAVED IN STATE')
 
         # TEST CASE 1: state > today - converstion window, time format 2.  Will age out and become TC2 Feb 24, 22
+        # TEST CASE 2: state < today - converstion window, time format 1
         manipulated_state = {'currently_syncing': 'None',
                              'bookmarks': {
                                  'adgroup_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
@@ -92,13 +82,7 @@ class BookmarksTest(GoogleAdsBase):
                                  'campaign_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
                                  'placeholder_report': {'date': '2021-12-30T00:00:00.000000Z'},
                                  'ad_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                             }
-
-                             }
-
-        # TEST CASE 2: state < today - converstion window, time format 1
-        #manipulated_state = \
-            #{'currently_syncing': 'None', 'bookmarks': {'account_performance_report': {'date': '2022-01-04T00:00:00.000000Z'}}}
+                             }}
         menagerie.set_state(conn_id, manipulated_state)
 
         # Run another sync

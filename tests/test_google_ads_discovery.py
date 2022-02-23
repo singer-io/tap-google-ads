@@ -201,7 +201,6 @@ class DiscoveryTest(GoogleAdsBase):
             },
             "display_topics_performance_report":{  # "topic_view"
             },# TODO_TDL-17909 consult https://developers.google.com/google-ads/api/docs/migration/url-reports for migrating this report
-            },
             "gender_performance_report": {  # "gender_view"
             },
             "geo_performance_report": {  # "geographic_view", "user_location_view"

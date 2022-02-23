@@ -268,10 +268,10 @@ def get_query_date(start_date, bookmark, conversion_window_date):
     NOTE: `bookmark` may be None"""
     # TODO dylan implement me
     if not bookmark:
-        return start_date
+        return singer.utils.strptime_to_utc(start_date)
     else:
         query_date = min(bookmark, max(start_date, conversion_window_date))
-        return query_date
+        return singer.utils.strptime_to_utc(query_date)
 
 
 class ReportStream(BaseStream):

@@ -44,21 +44,13 @@ class GoogleAdsBase(unittest.TestCase):
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
-            'start_date':   '2020-12-01T00:00:00Z',
-            'user_id':      'not used?',
+            'start_date':   '2021-12-01T00:00:00Z',
+            'user_id':      'not used?', # TODO ?
             'customer_ids': '5548074409,2728292456',
-            'login_customer_ids': [
-                {
-                    "customerId": "5548074409",
-                    "loginCustomerId": "2728292456",
-                 },
-                {
-                    "customerId": "2728292456",
-                    "loginCustomerId": "2728292456",
-                 },
-            ],
+            # 'conversion_window_days': '30',
+            'login_customer_ids': [{"customerId": "5548074409", "loginCustomerId": "2728292456",}],
         }
-
+        # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
 
@@ -73,7 +65,9 @@ class GoogleAdsBase(unittest.TestCase):
 
     def expected_metadata(self):
         """The expected streams and metadata about the streams"""
-
+        # TODO Investigate the foreign key expectations here,
+        #       - must prove each uncommented entry is a true foregin key constraint.
+        #       - must prove each commented entry is a NOT true foregin key constraint.
         return {
             # Core Objects
             "accounts": {
@@ -85,9 +79,9 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    'accessible_bidding_strategy_id', 
-                    'bidding_strategy_id',
-                    'campaign_budget_id',
+                    # 'accessible_bidding_strategy_id',
+                    # 'bidding_strategy_id',
+                    # 'campaign_budget_id',
                     'customer_id'
                 },
             },
@@ -95,8 +89,8 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    'accessible_bidding_strategy_id',
-                    'bidding_strategy_id',
+                    # 'accessible_bidding_strategy_id',
+                    # 'bidding_strategy_id',
                     'campaign_id',
                     'customer_id',
                 },
@@ -113,7 +107,10 @@ class GoogleAdsBase(unittest.TestCase):
             'campaign_budgets': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"customer_id"},
+                self.FOREIGN_KEYS: {
+                    "customer_id",
+                    "campaign_id",
+                },
             },
             'bidding_strategies': {
                 self.PRIMARY_KEYS:{"id"},
@@ -127,115 +124,123 @@ class GoogleAdsBase(unittest.TestCase):
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "audience_performance_report": {  # "campaign_audience_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "campaign_performance_report": {  # "campaign_audience_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "call_metrics_call_details_report": {  # "call_view"
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
+            # TODO Post Alpha
+            # "call_metrics_call_details_report": {  # "call_view"
+            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
+            #     self.REPLICATION_METHOD: self.INCREMENTAL,
+            #     self.REPLICATION_KEYS: {"date"},
+            # },
             "click_performance_report": { #  "click_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "display_keyword_performance_report": {  # "display_keyword_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "display_topics_performance_report": {  # "topic_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "gender_performance_report": {  # "gender_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "geo_performance_report": {  # "geographic_view", "user_location_view"
-                self.PRIMARY_KEYS: {"TODO"},
+            "geo_performance_report": {  # "geographic_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+            },
+            "user_location_performance_report": {  # "user_location_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "keywordless_query_report": {  # "dynamic_search_ads_search_term_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "keywords_performance_report": {  # "keyword_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            #  TODO Do the land page reports have a different name in UI from the resource?
-            #  TODO should they follow the _report naming convention
             "landing_page_report": {
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "expanded_landing_page_report": {
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "placeholder_feed_item_report": {  # "feed_item", "feed_item_target"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "placeholder_report": { # "feed_placeholder_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "placement_performance_report": {  # "managed_placement_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "search_query_performance_report": {  # "search_term_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "shopping_performance_report": {  # "shopping_performance_view"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+            },
+            "user_location_performance_report": {  # "user_location_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "video_performance_report": {  # "video"
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            # MISSING V1 reports
             "account_performance_report": { # accounts
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "adgroup_performance_report": {  # ad_group
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
             "ad_performance_report": {  # ads
-                self.PRIMARY_KEYS: {"TODO"},
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
@@ -297,7 +302,8 @@ class GoogleAdsBase(unittest.TestCase):
     def expected_automatic_fields(self):
         auto_fields = {}
         for k, v in self.expected_metadata().items():
-            auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set())
+            auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set()) | \
+                v.get(self.FOREIGN_KEYS, set())
 
         return auto_fields
 
@@ -449,8 +455,15 @@ class GoogleAdsBase(unittest.TestCase):
 
             connections.select_catalog_and_fields_via_metadata(
                 conn_id, catalog, schema, [], non_selected_properties)
+    @staticmethod
+    def deselect_streams(conn_id, catalogs):
+        """Select all streams and all fields within streams"""
+        for catalog in catalogs:
+            schema = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
 
-    def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields, select_pagination_fields):
+            connections.deselect_catalog_via_metadata(conn_id, catalog, schema)
+
+    def _select_streams_and_fields(self, conn_id, catalogs, select_default_fields):
         """Select all streams and all fields within streams"""
 
         for catalog in catalogs:
@@ -465,10 +478,6 @@ class GoogleAdsBase(unittest.TestCase):
             if select_default_fields:
                 non_selected_properties = properties.difference(
                     self.expected_default_fields()[catalog['stream_name']]
-                )
-            elif select_pagination_fields:
-                non_selected_properties = properties.difference(
-                    self.expected_pagination_fields()[catalog['stream_name']]
                 )
             else:
                 non_selected_properties = properties
@@ -519,9 +528,201 @@ class GoogleAdsBase(unittest.TestCase):
     ### Tap Specific Methods
     ##########################################################################
 
+    def select_all_streams_and_default_fields(self, conn_id, catalogs):
+        """Select all streams and all fields within streams"""
+        for catalog in catalogs:
+            if not self.is_report(catalog['tap_stream_id']):
+                raise RuntimeError("Method intended for report streams only.")
+
+            schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
+            metadata = schema_and_metadata['metadata']
+            properties = {md['breadcrumb'][-1]
+                          for md in metadata
+                          if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
+            expected_fields = self.expected_default_fields()[catalog['stream_name']]
+            self.assertTrue(expected_fields.issubset(properties),
+                            msg=f"{catalog['stream_name']} missing {expected_fields.difference(properties)}")
+            non_selected_properties = properties.difference(expected_fields)
+            connections.select_catalog_and_fields_via_metadata(
+                conn_id, catalog, schema_and_metadata, [], non_selected_properties
+            )
+
     def is_report(self, stream):
         return stream.endswith('_report')
 
     # TODO exclusion rules
 
-    # TODO core objects vs reports
+    @staticmethod
+    def expected_default_fields():
+        """
+        Report streams will select fields based on the default values that
+        are provided when selecting the report type in Google's UI when possible.
+        These fields do not translate perfectly to our report syncs and so a subset
+        of those fields are used in almost all cases here.
+
+        returns a dictionary of reports to standard fields
+        """
+        return {
+            'ad_performance_report': {
+                'average_cpc',  # 'Avg. CPC',
+                'clicks',  # 'Clicks',
+                'conversions',  # 'Conversions',
+                'cost_per_conversion',  # 'Cost / conv.',
+                'ctr',  # 'CTR',
+                'customer_id',  # 'Customer ID',
+                'impressions',  # 'Impr.',
+                'view_through_conversions',  # 'View-through conv.',
+            },
+            "adgroup_performance_report": {
+                'average_cpc',  # Avg. CPC,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "audience_performance_report": {
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM
+                'clicks',  # Clicks,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'ad_group_targeting_setting',  # Targeting Setting,
+            },
+            "campaign_performance_report": {
+                'average_cpc',  # Avg. CPC,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "click_performance_report": {
+                'ad_group_ad',
+                'ad_group_id',
+                'ad_group_name',
+                'ad_group_status',
+                'ad_network_type',
+                'area_of_interest',
+                'campaign_location_target',
+                'click_type',
+                'clicks',
+                'customer_descriptive_name',
+                'customer_id',
+                'device',
+                'gclid',
+                'location_of_presence',
+                'month_of_year',
+                'page_number',
+                'slot',
+                'user_list',
+            },
+            "display_keyword_performance_report": { # TODO NO DATA AVAILABLE
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM,
+                'average_cpv',  # Avg. CPV,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'impressions',  # Impr.,
+                'interaction_rate',  # Interaction rate,
+                'interactions',  # Interactions,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "display_topics_performance_report": { # TODO NO DATA AVAILABLE
+                'ad_group_name', # 'ad_group',  # Ad group,
+                'average_cpc',  # Avg. CPC,
+                'average_cpm',  # Avg. CPM,
+                'campaign_name',  # 'campaign',  # Campaign,
+                'clicks',  # Clicks,
+                'ctr',  # CTR,
+                'customer_currency_code',  # 'currency_code',  # Currency code,
+                'impressions',  # Impr.,
+            },
+            "placement_performance_report": { # TODO NO DATA AVAILABLE
+                'clicks',
+                'impressions',  # Impr.,
+                'ad_group_criterion_placement',  # 'placement_group', 'placement_type',
+            },
+            # "keywords_performance_report": set(),
+            # "shopping_performance_report": set(),
+            "video_performance_report": {
+                'campaign_name',
+                'clicks',
+                'video_quartile_p25_rate',
+            },
+            # NOTE AFTER THIS POINT COULDN"T FIND IN UI
+            "account_performance_report": {
+                'average_cpc',
+                'click_type',
+                'clicks',
+                'date',
+                'descriptive_name',
+                'id',
+                'impressions',
+                'invalid_clicks',
+                'manager',
+                'test_account',
+                'time_zone',
+            },
+            "geo_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                'geo_target_region',
+           },
+            "gender_performance_report": {
+                'ad_group_criterion_gender',
+                'average_cpc',  # Avg. CPC,
+                'clicks',  # Clicks,
+                'conversions',  # Conversions,
+                'cost_per_conversion',  # Cost / conv.,
+                'ctr',  # CTR,
+                'customer_id',  # Customer ID,
+                'impressions',  # Impr.,
+                'view_through_conversions',  # View-through conv.,
+            },
+            "search_query_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                'search_term',
+                'search_term_match_type',
+            },
+            "age_range_performance_report": {
+                'clicks',
+                'ctr',  # CTR,
+                'impressions',  # Impr.,
+                'average_cpc',
+                'conversions',
+                'view_through_conversions',  # View-through conv.,
+                'cost_per_conversion',  # Cost / conv.,
+                'ad_group_criterion_age_range', # 'Age',
+            },
+            'placeholder_feed_item_report': {
+                'clicks',
+                'impressions',
+                'placeholder_type',
+            },
+            'placeholder_report': {
+                'clicks',
+                'cost_micros',
+                'interactions',
+                'placeholder_type',
+            },
+            # 'landing_page_report': set(), # TODO
+            # 'expanded_landing_page_report': set(), # TODO
+        }

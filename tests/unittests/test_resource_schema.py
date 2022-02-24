@@ -1,7 +1,7 @@
 from collections import namedtuple
 import unittest
-from tap_google_ads import get_segments
-from tap_google_ads import get_attributes
+from tap_google_ads.discover import get_segments
+from tap_google_ads.discover import get_attributes
 
 
 RESOURCE_SCHEMA = {

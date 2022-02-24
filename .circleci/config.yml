@@ -2,50 +2,123 @@ version: 2.1
 orbs:
   slack: circleci/slack@3.4.2
 
-jobs:
-  build:
+executors:
+  docker-executor:
     docker:
       - image: 218546966473.dkr.ecr.us-east-1.amazonaws.com/circle-ci:stitch-tap-tester
+
+jobs:
+  # TODO remove if not needed
+  # build:
+  #   executor: docker-executor
+  #   steps:
+  #     - run: echo 'CI done'
+  ensure_env:
+    executor: docker-executor
     steps:
       - checkout
       - run:
           name: 'Setup virtual env'
           command: |
-            aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             python3 -mvenv /usr/local/share/virtualenvs/tap-google-ads
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
-            pip install -U pip setuptools
-            pip install -e .[dev]
+            pip install 'pip==21.1.3'
+            pip install 'setuptools==56.0.0'
+            pip install .[dev]
+      - slack/notify-on-failure:
+          only_for_branches: master
+      - persist_to_workspace:
+          root: /usr/local/share/virtualenvs
+          paths:
+            - tap-google-ads
+  run_pylint:
+    executor: docker-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /usr/local/share/virtualenvs
       - run:
-          name: 'pylint'
+          name: 'Run pylint'
           command: |
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
-            # TODO: Adjust the pylint disables
-            pylint tap_google_ads --disable 'broad-except,chained-comparison,empty-docstring,fixme,invalid-name,line-too-long,missing-class-docstring,missing-function-docstring,missing-module-docstring,no-else-raise,no-else-return,too-few-public-methods,too-many-arguments,too-many-branches,too-many-lines,too-many-locals,ungrouped-imports,wrong-spelling-in-comment,wrong-spelling-in-docstring,bad-whitespace,missing-class-docstring'
-      # TODO implement this run block when tests are avialable!
-      # - run:
-      #     name: 'Unit Tests'
-      #     command: |
-      #       source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
-      #       nosetests tests/unittests
+            aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
+            source dev_env.sh
+            echo "$PYLINT_DISABLE_LIST"
+            pylint tap_google_ads --disable "$PYLINT_DISABLE_LIST"
+      - slack/notify-on-failure:
+          only_for_branches: master
+
+  run_unit_tests:
+    executor: docker-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /usr/local/share/virtualenvs
       - run:
-          name: 'Integration Tests'
+          name: 'Run Unit Tests'
           command: |
+            source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
+            pip install nose coverage
+            nosetests --with-coverage --cover-erase --cover-package=tap_google_ads --cover-html-dir=htmlcov tests/unittests
+            coverage html
+      - store_test_results:
+          path: test_output/report.xml
+      - store_artifacts:
+          path: htmlcov
+      - slack/notify-on-failure:
+          only_for_branches: master
+
+  run_integration_tests:
+    executor: docker-executor
+    parallelism: 6
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /usr/local/share/virtualenvs
+      - run:
+          name: 'Run Integration Tests'
+          command: |
+            aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             source dev_env.sh
             source /usr/local/share/virtualenvs/tap-tester/bin/activate
-            run-test --tap=tap-google-ads tests
+            circleci tests glob "tests/*.py" | circleci tests split > ./tests-to-run
+            if [ -s ./tests-to-run ]; then
+              for test_file in $(cat ./tests-to-run)
+              do
+                run-test --tap=${CIRCLE_PROJECT_REPONAME} $test_file
+              done
+            fi
       - slack/notify-on-failure:
-          only_for_branches: main
+          only_for_branches: master
 
 workflows:
   version: 2
-  commit:
+  commit: &commit_jobs
     jobs:
-      - build:
+      - ensure_env:
           context:
             - circleci-user
-            - tap-tester-user
+            - tier-1-tap-user
+      - run_pylint:
+          context:
+            - circleci-user
+            - tier-1-tap-user
+          requires:
+            - ensure_env
+      - run_unit_tests:
+          context:
+            - circleci-user
+            - tier-1-tap-user
+          requires:
+            - ensure_env
+      - run_integration_tests:
+          context:
+            - circleci-user
+            - tier-1-tap-user
+          requires:
+            - ensure_env
   build_daily:
+    <<: *commit_jobs
     triggers:
       - schedule:
           cron: "0 3 * * *"
@@ -53,8 +126,3 @@ workflows:
             branches:
               only:
                 - main
-    jobs:
-      - build:
-          context:
-            - circleci-user
-            - tap-tester-user

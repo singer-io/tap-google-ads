@@ -8,11 +8,10 @@ executors:
       - image: 218546966473.dkr.ecr.us-east-1.amazonaws.com/circle-ci:stitch-tap-tester
 
 jobs:
-  # TODO remove if not needed
-  # build:
-  #   executor: docker-executor
-  #   steps:
-  #     - run: echo 'CI done'
+  build:
+    executor: docker-executor
+    steps:
+      - run: echo 'CI done'
   ensure_env:
     executor: docker-executor
     steps:
@@ -117,6 +116,14 @@ workflows:
             - tier-1-tap-user
           requires:
             - ensure_env
+      - build:
+          context:
+            - circleci-user
+            - tier-1-tap-user
+          requires:
+            - run_pylint
+            - run_unit_tests
+            - run_integration_tests
   build_daily:
     <<: *commit_jobs
     triggers:

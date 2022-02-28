@@ -6,6 +6,7 @@ import singer
 from singer import Transformer
 from singer import utils
 from google.protobuf.json_format import MessageToJson
+from google.api_core.retry import Retry
 from . import report_definitions
 
 LOGGER = singer.get_logger()
@@ -248,7 +249,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
 
         query = create_core_stream_query(resource_name, selected_fields)
-        response = gas.search(query=query, customer_id=customer["customerId"])
+        response = gas.search(query=query, customer_id=customer["customerId"], retry=Retry())
         with Transformer() as transformer:
             # Pages are fetched automatically while iterating through the response
             for message in response:
@@ -414,7 +415,7 @@ class ReportStream(BaseStream):
         while query_date < end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
-            response = gas.search(query=query, customer_id=customer["customerId"])
+            response = gas.search(query=query, customer_id=customer["customerId"], retry=Retry())
 
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response

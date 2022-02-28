@@ -390,7 +390,7 @@ class ReportStream(BaseStream):
         conversion_window = timedelta(
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
-        conversion_window_date = utils.now() - conversion_window
+        conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
 
         query_date = get_query_date(
             start_date=config["start_date"],
@@ -400,7 +400,7 @@ class ReportStream(BaseStream):
         end_date = utils.now()
 
         if stream_name in REPORTS_WITH_90_DAY_MAX:
-            cutoff = end_date - timedelta(days=90)
+            cutoff = end_date.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=90)
             query_date = max(query_date, cutoff)
             if query_date == cutoff:
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")

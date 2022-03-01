@@ -103,11 +103,19 @@ def should_give_up(ex):
     return True
 
 
+def on_giveup_func(err):
+    """This function lets us know that backoff ran, but it does not print
+    Google's verbose message and stack trace"""
+    LOGGER.warning("Giving up make_request after %s tries", err.get("tries"))
+
+
 @backoff.on_exception(backoff.expo,
                       GoogleAdsException,
                       max_tries=5,
                       jitter=None,
-                      giveup=should_give_up)
+                      giveup=should_give_up,
+                      on_giveup=on_giveup_func,
+                      logger=None)
 def make_request(gas, query, customer_id):
     response = gas.search(query=query, customer_id=customer_id)
     return response

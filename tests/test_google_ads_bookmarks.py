@@ -77,7 +77,7 @@ class BookmarksTest(GoogleAdsBase):
         self.select_all_streams_and_default_fields(conn_id, report_catalogs_1)
 
         # Run a sync
-        sync_job_name_1 = self.run_and_verify_sync(conn_id)
+        _ = self.run_and_verify_sync(conn_id)
 
         # acquire records from target output
         synced_records_1 = runner.get_records_from_target_output()
@@ -108,11 +108,7 @@ class BookmarksTest(GoogleAdsBase):
         menagerie.set_state(conn_id, manipulated_state)
 
         # Run another sync
-        sync_job_name_2 = self.run_and_verify_sync(conn_id)
-
-        # Verify the tap and target do not throw a critical error
-        exit_status_2 = menagerie.get_exit_status(conn_id, sync_job_name_2)
-        menagerie.verify_sync_exit_status(self, exit_status_2, sync_job_name_2)
+        _ = self.run_and_verify_sync(conn_id)
 
         # acquire records from target output
         synced_records_2 = runner.get_records_from_target_output()

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import singer
 from singer import utils
-
 from tap_google_ads.discover import create_resource_schema
 from tap_google_ads.discover import do_discover
 from tap_google_ads.sync import do_sync
-
 import logging
 
 LOGGER = singer.get_logger()
+
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",

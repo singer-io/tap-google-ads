@@ -276,7 +276,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
         state = singer.set_currently_syncing(state, stream_name)
-        LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
 
         query = create_core_stream_query(resource_name, selected_fields)
         try:
@@ -441,7 +440,6 @@ class ReportStream(BaseStream):
             if query_date == cutoff:
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
 
-        LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
         singer.write_state(state)
 
         if selected_fields == {'segments.date'}:

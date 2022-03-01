@@ -6,7 +6,8 @@ import singer
 from singer import Transformer
 from singer import utils
 from google.protobuf.json_format import MessageToJson
-from google.api_core.retry import Retry
+from google.ads.googleads.errors import GoogleAdsException
+import backoff
 from . import report_definitions
 
 LOGGER = singer.get_logger()
@@ -81,6 +82,35 @@ def generate_hash(record, metadata):
     hash_source_data = {key: fields_to_hash[key] for key in sorted(fields_to_hash)}
     hash_bytes = json.dumps(hash_source_data).encode("utf-8")
     return hashlib.sha256(hash_bytes).hexdigest()
+
+
+retryable_errors = [
+    "QuotaError.RESOURCE_EXHAUSTED",
+    "QuotaError.RESOURCE_TEMPORARILY_EXHAUSTED",
+    "InternalError.INTERNAL_ERROR",
+    "InternalError.TRANSIENT_ERROR",
+    "InternalError.DEADLINE_EXCEEDED",
+]
+
+
+def should_give_up(ex):
+    for googleads_error in ex.failure.errors:
+        quota_error = str(googleads_error.error_code.quota_error)
+        internal_error = str(googleads_error.error_code.internal_error)
+        for err in [quota_error, internal_error]:
+            if err in retryable_errors:
+                return False
+    return True
+
+
+@backoff.on_exception(backoff.expo,
+                      GoogleAdsException,
+                      max_tries=5,
+                      jitter=None,
+                      giveup=should_give_up)
+def make_request(gas, query, customer_id):
+    response = gas.search(query=query, customer_id=customer_id)
+    return response
 
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
@@ -249,7 +279,12 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
 
         query = create_core_stream_query(resource_name, selected_fields)
-        response = gas.search(query=query, customer_id=customer["customerId"], retry=Retry())
+        try:
+            response = make_request(gas, query, customer["customerId"])
+        except GoogleAdsException as err:
+            LOGGER.warning("Failed query: %s", query)
+            raise err
+
         with Transformer() as transformer:
             # Pages are fetched automatically while iterating through the response
             for message in response:
@@ -415,7 +450,12 @@ class ReportStream(BaseStream):
         while query_date < end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
-            response = gas.search(query=query, customer_id=customer["customerId"], retry=Retry())
+
+            try:
+                response = make_request(gas, query, customer["customerId"])
+            except GoogleAdsException as err:
+                LOGGER.warning("Failed query: %s", query)
+                raise err
 
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response

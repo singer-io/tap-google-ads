@@ -27,7 +27,7 @@ class GoogleAdsBase(unittest.TestCase):
     INCREMENTAL = "INCREMENTAL"
     FULL_TABLE = "FULL_TABLE"
     START_DATE_FORMAT = "%Y-%m-%dT00:00:00Z"
-    REPLICATION_KEY_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+    REPLICATION_KEY_FORMAT = "%Y-%m-%dT00:00:00.000000Z"
 
     start_date = ""
 

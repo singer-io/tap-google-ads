@@ -45,7 +45,6 @@ def main():
     try:
         main_impl()
     except Exception as e:
-        LOGGER.exception(e)
         for line in str(e).splitlines():
             LOGGER.critical(line)
         raise e

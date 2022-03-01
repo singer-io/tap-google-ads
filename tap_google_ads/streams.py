@@ -461,7 +461,9 @@ class ReportStream(BaseStream):
                 response = make_request(gas, query, customer["customerId"])
             except GoogleAdsException as err:
                 LOGGER.warning("Failed query: %s", query)
-                raise err
+                LOGGER.critical(str(err.failure.errors[0].message))
+                raise RuntimeError from None
+
 
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response

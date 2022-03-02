@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.0
+## v0.1.0 [#23](https://github.com/singer-io/tap-google-ads/pull/23)
   * Update bookmarks to only be written with a midnight time value
   * Fix error logging to more concise
   * Add retry logic to sync queries [#22](https://github.com/singer-io/tap-google-ads/pull/22)

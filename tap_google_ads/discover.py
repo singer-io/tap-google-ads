@@ -194,24 +194,16 @@ def create_resource_schema(config):
         metrics_and_segments = set(metrics + segments)
 
         for field_name, field in fields.items():
-            if field["field_details"]["category"] == "ATTRIBUTE":
-                continue
             for compared_field in metrics_and_segments:
                 field_root_resource = get_root_resource_name(field_name)
                 compared_field_root_resource = get_root_resource_name(compared_field)
 
-                # Fields can be any of the categories in CATEGORY_MAP, but only METRIC & SEGMENT have exclusions, so only check those
                 if (
                     field_name != compared_field
                     and not compared_field.startswith(f"{field_root_resource}.")
                 ):
-
                     field_to_check = field_root_resource or field_name
                     compared_field_to_check = compared_field_root_resource or compared_field
-
-                    # Metrics will not be incompatible with other metrics, so don't check those
-                    if field_name.startswith("metrics.") and compared_field.startswith("metrics."):
-                        continue
 
                     # If a resource is selectable with another resource they should be in
                     # each other's 'selectable_with' list, but Google is missing some of

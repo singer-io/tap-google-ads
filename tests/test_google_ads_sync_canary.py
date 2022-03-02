@@ -321,7 +321,8 @@ class DiscoveryTest(GoogleAdsBase):
             "video_performance_report",  # no test data available
             "user_location_performance_report",  # no test data available
             'landing_page_report',  # not attempted 
-            'expanded_landing_page_report', # not attempted 
+            'expanded_landing_page_report', # not attempted
+            'ad_group_audience_performance_report',
         }
 
         # Run a discovery job

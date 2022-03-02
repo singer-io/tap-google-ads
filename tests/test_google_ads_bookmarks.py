@@ -57,6 +57,7 @@ class BookmarksTest(GoogleAdsBase):
             'shopping_performance_report',
             'user_location_performance_report',
             'video_performance_report',
+            'ad_group_audience_performance_report',
         }
 
         # Run a discovery job

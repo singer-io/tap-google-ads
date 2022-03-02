@@ -159,6 +159,7 @@ class StartDateTest1(StartDateTest):
         'landing_page_report',
         'expanded_landing_page_report',
         'user_location_performance_report',
+        'ad_group_audience_performance_report',
     }
 
     def setUp(self):

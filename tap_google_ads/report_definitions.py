@@ -78,7 +78,7 @@ ACCOUNT_PERFORMANCE_REPORT_FIELDS = [
     "segments.week",
     "segments.year",
 ]
-ADGROUP_PERFORMANCE_REPORT_FIELDS = [
+AD_GROUP_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.ad_rotation_mode",
     "ad_group.base_ad_group",
     "ad_group.cpc_bid_micros",

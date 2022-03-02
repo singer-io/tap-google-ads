@@ -540,9 +540,15 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "adgroup_performance_report": ReportStream(
-            report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
+        "ad_group_performance_report": ReportStream(
+            report_definitions.AD_GROUP_PERFORMANCE_REPORT_FIELDS,
             ["ad_group"],
+            resource_schema,
+            ["_sdc_record_hash"],
+        ),
+        "ad_group_audience_performance_report": ReportStream(
+            report_definitions.AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+            ["ad_group_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
@@ -558,15 +564,15 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "audience_performance_report": ReportStream(
-            report_definitions.AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
-            ["ad_group_audience_view"],
-            resource_schema,
-            ["_sdc_record_hash"],
-        ),
         "campaign_performance_report": ReportStream(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
+            resource_schema,
+            ["_sdc_record_hash"],
+        ),
+        "campaign_audience_performance_report": ReportStream(
+            report_definitions.CAMPAIGN_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+            ["campaign_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),

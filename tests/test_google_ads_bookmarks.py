@@ -15,16 +15,37 @@ class BookmarksTest(GoogleAdsBase):
     def name():
         return "tt_google_ads_bookmarks"
 
+    def assertIsDateFormat(self, value, str_format):
+        """
+        Assertion Method that verifies a string value is a formatted datetime with
+        the specified format.
+        """
+        try:
+            _ = dt.strptime(value, str_format)
+        except ValueError as err:
+            raise AssertionError(
+                f"Value does not conform to expected format: {str_format}"
+            ) from err
+
+
     def test_run(self):
         """
-        Testing that the tap sets and uses bookmarks correctly
+        Testing that the tap sets and uses bookmarks correctly where
+        state < (today - converstion window), therefore the state should be used
+        on sync 2
+
+        Outstanding Work:
+          TODO_TDL-17918 Determine if we can test the following case at the tap-tester level
+          A sync results in a state such that state > (today - converstion window), therfore the
+          tap should pick up based on (today - converstion window) on sync 2.
+
         """
         print("Bookmarks Test for tap-google-ads")
 
         conn_id = connections.ensure_connection(self)
 
-        streams_to_test = self.expected_streams() - {
-            'audience_performance_report',
+        streams_under_test = self.expected_streams() - {
+            'ad_group_audience_performance_report',
             'display_keyword_performance_report',
             'display_topics_performance_report',
             'expanded_landing_page_report',
@@ -36,6 +57,7 @@ class BookmarksTest(GoogleAdsBase):
             'shopping_performance_report',
             'user_location_performance_report',
             'video_performance_report',
+            'campaign_audience_performance_report',
         }
 
         # Run a discovery job
@@ -43,7 +65,7 @@ class BookmarksTest(GoogleAdsBase):
 
         # partition catalogs for use in table/field seelction
         test_catalogs_1 = [catalog for catalog in found_catalogs_1
-                           if catalog.get('stream_name') in streams_to_test]
+                           if catalog.get('stream_name') in streams_under_test]
         core_catalogs_1 = [catalog for catalog in test_catalogs_1
                            if not self.is_report(catalog['stream_name'])]
         report_catalogs_1 = [catalog for catalog in test_catalogs_1
@@ -56,11 +78,7 @@ class BookmarksTest(GoogleAdsBase):
         self.select_all_streams_and_default_fields(conn_id, report_catalogs_1)
 
         # Run a sync
-        sync_job_name_1 = runner.run_sync_mode(self, conn_id)
-
-        # Verify the tap and target do not throw a critical error
-        exit_status_1 = menagerie.get_exit_status(conn_id, sync_job_name_1)
-        menagerie.verify_sync_exit_status(self, exit_status_1, sync_job_name_1)
+        _ = self.run_and_verify_sync(conn_id)
 
         # acquire records from target output
         synced_records_1 = runner.get_records_from_target_output()
@@ -68,30 +86,30 @@ class BookmarksTest(GoogleAdsBase):
         bookmarks_1 = state_1.get('bookmarks')
         currently_syncing_1 = state_1.get('currently_syncing', 'KEY NOT SAVED IN STATE')
 
-        # TODO_TDL-17918 Determine if we can test all cases at the tap-tester level
-        # TEST CASE 1: state > today - converstion window, time format 2.  Will age out and become TC2 Feb 24, 22
-        # TEST CASE 2: state < today - converstion window, time format 1
-        manipulated_state = {'currently_syncing': 'None',
-                             'bookmarks': {
-                                 'adgroup_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'geo_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'gender_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'placeholder_feed_item_report': {'date': '2021-12-30T00:00:00.000000Z'},
-                                 'age_range_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'account_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'click_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'campaign_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                                 'placeholder_report': {'date': '2021-12-30T00:00:00.000000Z'},
-                                 'ad_performance_report': {'date': '2022-01-24T00:00:00.000000Z'},
-                             }}
+        # inject a simulated state value for each report stream under test
+        data_set_state_value_1 = '2022-01-24T00:00:00.000000Z'
+        data_set_state_value_2 = '2021-12-30T00:00:00.000000Z'
+        injected_state_by_stream = {
+            'ad_group_performance_report':data_set_state_value_1,
+            'geo_performance_report':data_set_state_value_1,
+            'gender_performance_report':data_set_state_value_1,
+            'placeholder_feed_item_report':data_set_state_value_2,
+            'age_range_performance_report':data_set_state_value_1,
+            'account_performance_report':data_set_state_value_1,
+            'click_performance_report':data_set_state_value_1,
+            'campaign_performance_report':data_set_state_value_1,
+            'placeholder_report':data_set_state_value_2,
+            'ad_performance_report':data_set_state_value_1,
+        }
+        manipulated_state = {
+            'currently_syncing': 'None',
+            'bookmarks': {stream: {'date': injected_state_by_stream[stream]}
+                          for stream in streams_under_test if self.is_report(stream)}
+        }
         menagerie.set_state(conn_id, manipulated_state)
 
         # Run another sync
-        sync_job_name_2 = runner.run_sync_mode(self, conn_id)
-
-        # Verify the tap and target do not throw a critical error
-        exit_status_2 = menagerie.get_exit_status(conn_id, sync_job_name_2)
-        menagerie.verify_sync_exit_status(self, exit_status_2, sync_job_name_2)
+        _ = self.run_and_verify_sync(conn_id)
 
         # acquire records from target output
         synced_records_2 = runner.get_records_from_target_output()
@@ -112,21 +130,25 @@ class BookmarksTest(GoogleAdsBase):
             # Verify bookmarks are saved
             self.assertIsNotNone(bookmarks_2)
 
-            # Verify ONLY report streams under test have bookmark entries in state
-            expected_incremental_streams = {stream for stream in streams_to_test if self.is_report(stream)}
-            unexpected_incremental_streams_1 = {stream for stream in bookmarks_1.keys() if stream not in expected_incremental_streams}
-            unexpected_incremental_streams_2 = {stream for stream in bookmarks_2.keys() if stream not in expected_incremental_streams}
+            # Verify ONLY report streams under test have bookmark entries in state for sync 1
+            expected_incremental_streams = {stream for stream in streams_under_test if self.is_report(stream)}
+            unexpected_incremental_streams_1 = {stream for stream in bookmarks_1.keys()
+                                                if stream not in expected_incremental_streams}
             self.assertSetEqual(set(), unexpected_incremental_streams_1)
+
+            # Verify ONLY report streams under test have bookmark entries in state for sync 2
+            unexpected_incremental_streams_2 = {stream for stream in bookmarks_2.keys()
+                                                if stream not in expected_incremental_streams}
             self.assertSetEqual(set(), unexpected_incremental_streams_2)
 
         # stream-level assertions
-        for stream in streams_to_test:
+        for stream in streams_under_test:
             with self.subTest(stream=stream):
 
                 # set expectations
                 expected_replication_method = self.expected_replication_method()[stream]
                 conversion_window = timedelta(days=30) # defaulted value
-
+                today_datetime = dt.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 # gather results
                 records_1 = [message['data'] for message in synced_records_1[stream]['messages']]
                 records_2 = [message['data'] for message in synced_records_2[stream]['messages']]
@@ -137,71 +159,48 @@ class BookmarksTest(GoogleAdsBase):
 
                 if expected_replication_method == self.INCREMENTAL:
 
-                    # included to catch a contradiction in our base expectations
-                    if not self.is_report(stream):
-                        raise AssertionError(
-                            f"Only Reports streams should be expected to support {expected_replication_method} replication."
-                        )
-
+                    # gather expectations
                     expected_replication_key = list(self.expected_replication_keys()[stream])[0]  # assumes 1 value
                     manipulated_bookmark = manipulated_state['bookmarks'][stream]
-                    today_minus_conversion_window = dt.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
-                    today = dt.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                     manipulated_state_formatted = dt.strptime(manipulated_bookmark.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
-                    if manipulated_state_formatted < today_minus_conversion_window:
-                        reference_time = manipulated_state_formatted
-                    else:
-                        reference_time = today_minus_conversion_window
 
                     # Verify bookmarks saved match formatting standards for sync 1
                     self.assertIsNotNone(stream_bookmark_1)
                     bookmark_value_1 = stream_bookmark_1.get(expected_replication_key)
                     self.assertIsNotNone(bookmark_value_1)
                     self.assertIsInstance(bookmark_value_1, str)
-                    try:
-                        parsed_bookmark_value_1 = dt.strptime(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
-                    except ValueError as err:
-                        raise AssertionError(
-                            f"Bookmarked value does not conform to expected format: {self.REPLICATION_KEY_FORMAT}"
-                        ) from err
+                    self.assertIsDateFormat(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
 
                     # Verify bookmarks saved match formatting standards for sync 2
                     self.assertIsNotNone(stream_bookmark_2)
                     bookmark_value_2 = stream_bookmark_2.get(expected_replication_key)
                     self.assertIsNotNone(bookmark_value_2)
                     self.assertIsInstance(bookmark_value_2, str)
+                    self.assertIsDateFormat(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
 
-                    try:
-                        parsed_bookmark_value_2 = dt.strptime(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
-                    except ValueError as err:
+                    # Verify the bookmark is set based on sync end date (today) for sync 1
+                    # (The tap replicaates from the start date through to today)
+                    parsed_bookmark_value_1 = dt.strptime(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
+                    self.assertEqual(parsed_bookmark_value_1, today_datetime)
 
-                        try:
-                            parsed_bookmark_value_2 = dt.strptime(bookmark_value_2, "%Y-%m-%dT%H:%M:%S.%fZ")
-                        except ValueError as err:
+                    # Verify the bookmark is set based on sync execution time for sync 2
+                    # (The tap replicaates from the manipulated state through to todayf)
+                    parsed_bookmark_value_2 = dt.strptime(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
+                    self.assertEqual(parsed_bookmark_value_2, today_datetime)
 
-                            raise AssertionError(
-                                f"Bookmarked value does not conform to expected formats: " +
-                                "\n Format 1: {}".format(self.REPLICATION_KEY_FORMAT) +
-                                "\n Format 2: %Y-%m-%dT%H:%M:%S.%fZ"
-                            ) from err
-
-                    # Verify the bookmark is set based on sync execution time
-                    self.assertGreaterEqual(parsed_bookmark_value_1, today) # TODO can we get more sepecifc with this?
-                    self.assertGreaterEqual(parsed_bookmark_value_2, today)
-
-                    # Verify 2nd sync only replicates records newer than reference_time
+                    # Verify 2nd sync only replicates records newer than manipulated_state_formatted
                     for record in records_2:
                         rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
-                        self.assertGreaterEqual(rec_time, reference_time, \
-                            msg="record time cannot be less than reference time: {}".format(reference_time)
+                        self.assertGreaterEqual(rec_time, manipulated_state_formatted, \
+                            msg="record time cannot be less than reference time: {}".format(manipulated_state_formatted)
                         )
 
-                    # Verify  the number of records in records_1 where sync >= reference_time
+                    # Verify  the number of records in records_1 where sync >= manipulated_state_formatted
                     # matches the number of records in records_2
                     records_1_after_manipulated_bookmark = 0
                     for record in records_1:
                         rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
-                        if rec_time >= reference_time:
+                        if rec_time >= manipulated_state_formatted:
                             records_1_after_manipulated_bookmark += 1
                     self.assertEqual(records_1_after_manipulated_bookmark, record_count_2, \
                                      msg="Expected {} records in each sync".format(records_1_after_manipulated_bookmark))

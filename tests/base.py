@@ -128,12 +128,12 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "audience_performance_report": {  # "campaign_audience_view"
+            "campaign_performance_report": {  # "campaign"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "campaign_performance_report": {  # "campaign_audience_view"
+            "campaign_audience_performance_report": {  # "campaign_audience_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
@@ -234,7 +234,12 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "adgroup_performance_report": {  # ad_group
+            "ad_group_performance_report": {  # ad_group
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+            },
+            "ad_group_audience_performance_report": {  # ad_group_audience_view
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
@@ -573,7 +578,7 @@ class GoogleAdsBase(unittest.TestCase):
                 'impressions',  # 'Impr.',
                 'view_through_conversions',  # 'View-through conv.',
             },
-            "adgroup_performance_report": {
+            "ad_group_performance_report": {
                 'average_cpc',  # Avg. CPC,
                 'clicks',  # Clicks,
                 'conversions',  # Conversions,
@@ -583,7 +588,7 @@ class GoogleAdsBase(unittest.TestCase):
                 'impressions',  # Impr.,
                 'view_through_conversions',  # View-through conv.,
             },
-            "audience_performance_report": {
+            "ad_group_audience_performance_report": {
                 'average_cpc',  # Avg. CPC,
                 'average_cpm',  # Avg. CPM
                 'clicks',  # Clicks,

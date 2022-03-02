@@ -1,4 +1,3 @@
-"""Test tap discovery mode and metadata."""
 import re
 
 from tap_tester import menagerie, connections, runner
@@ -6,7 +5,7 @@ from tap_tester import menagerie, connections, runner
 from base import GoogleAdsBase
 
 
-class DiscoveryTest(GoogleAdsBase):
+class SyncCanaryTest(GoogleAdsBase):
     """
     Test tap's sync mode can extract records for all streams
     with standard table and field selection.
@@ -59,7 +58,7 @@ class DiscoveryTest(GoogleAdsBase):
                 # 'long_headline',  # 'Long headline',
                 'view_through_conversions',  # 'View-through conv.',
             },
-            "adgroup_performance_report": {
+            "ad_group_performance_report": {
                 # 'account_name',  # Account name,
                 # 'ad_group',  # Ad group,
                 # 'ad_group_state',  # Ad group state,
@@ -79,7 +78,7 @@ class DiscoveryTest(GoogleAdsBase):
                 'view_through_conversions',  # View-through conv.,
             },
             # TODO_TDL-17909 | [BUG?] missing audience fields
-            "audience_performance_report": {
+            "ad_group_audience_performance_report": {
                 # 'account_name', # Account name,
                 # 'ad_group_name', # 'ad_group',  # Ad group,
                 # 'ad_group_default_max_cpc',  # Ad group default max. CPC,
@@ -313,7 +312,7 @@ class DiscoveryTest(GoogleAdsBase):
             # TODO_TDL-17885 the following are not yet implemented
             'display_keyword_performance_report', # no test data available
             'display_topics_performance_report',  # no test data available
-            'audience_performance_report',  # Potential BUG see above
+            'ad_group_audience_performance_report',  # Potential BUG see above
             'placement_performance_report',  # no test data available
             "keywords_performance_report",  # no test data available
             "keywordless_query_report",  # no test data available
@@ -321,7 +320,8 @@ class DiscoveryTest(GoogleAdsBase):
             "video_performance_report",  # no test data available
             "user_location_performance_report",  # no test data available
             'landing_page_report',  # not attempted 
-            'expanded_landing_page_report', # not attempted 
+            'expanded_landing_page_report', # not attempted
+            'campaign_audience_performance_report', # not attempted
         }
 
         # Run a discovery job

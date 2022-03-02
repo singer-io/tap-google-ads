@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
+import logging
 import singer
 from singer import utils
-
 from tap_google_ads.discover import create_resource_schema
 from tap_google_ads.discover import do_discover
 from tap_google_ads.sync import do_sync
 
 
 LOGGER = singer.get_logger()
+
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",
@@ -38,10 +39,12 @@ def main_impl():
 
 def main():
 
+    google_logger = logging.getLogger("google")
+    google_logger.setLevel(level=logging.CRITICAL)
+
     try:
         main_impl()
     except Exception as e:
-        LOGGER.exception(e)
         for line in str(e).splitlines():
             LOGGER.critical(line)
         raise e

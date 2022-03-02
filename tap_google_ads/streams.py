@@ -6,6 +6,8 @@ import singer
 from singer import Transformer
 from singer import utils
 from google.protobuf.json_format import MessageToJson
+from google.ads.googleads.errors import GoogleAdsException
+import backoff
 from . import report_definitions
 
 LOGGER = singer.get_logger()
@@ -80,6 +82,49 @@ def generate_hash(record, metadata):
     hash_source_data = {key: fields_to_hash[key] for key in sorted(fields_to_hash)}
     hash_bytes = json.dumps(hash_source_data).encode("utf-8")
     return hashlib.sha256(hash_bytes).hexdigest()
+
+
+retryable_errors = [
+    "QuotaError.RESOURCE_EXHAUSTED",
+    "QuotaError.RESOURCE_TEMPORARILY_EXHAUSTED",
+    "InternalError.INTERNAL_ERROR",
+    "InternalError.TRANSIENT_ERROR",
+    "InternalError.DEADLINE_EXCEEDED",
+]
+
+
+def should_give_up(ex):
+    if isinstance(ex, AttributeError):
+        if str(ex) == "'NoneType' object has no attribute 'Call'":
+            return False
+        return True
+
+    for googleads_error in ex.failure.errors:
+        quota_error = str(googleads_error.error_code.quota_error)
+        internal_error = str(googleads_error.error_code.internal_error)
+        for err in [quota_error, internal_error]:
+            if err in retryable_errors:
+                return False
+    return True
+
+
+def on_giveup_func(err):
+    """This function lets us know that backoff ran, but it does not print
+    Google's verbose message and stack trace"""
+    LOGGER.warning("Giving up make_request after %s tries", err.get("tries"))
+
+
+@backoff.on_exception(backoff.expo,
+                      [GoogleAdsException,
+                       AttributeError],
+                      max_tries=5,
+                      jitter=None,
+                      giveup=should_give_up,
+                      on_giveup=on_giveup_func,
+                      logger=None)
+def make_request(gas, query, customer_id):
+    response = gas.search(query=query, customer_id=customer_id)
+    return response
 
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
@@ -245,10 +290,14 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
         state = singer.set_currently_syncing(state, stream_name)
-        LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
 
         query = create_core_stream_query(resource_name, selected_fields)
-        response = gas.search(query=query, customer_id=customer["customerId"])
+        try:
+            response = make_request(gas, query, customer["customerId"])
+        except GoogleAdsException as err:
+            LOGGER.warning("Failed query: %s", query)
+            raise err
+
         with Transformer() as transformer:
             # Pages are fetched automatically while iterating through the response
             for message in response:
@@ -390,7 +439,7 @@ class ReportStream(BaseStream):
         conversion_window = timedelta(
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
-        conversion_window_date = utils.now() - conversion_window
+        conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
 
         query_date = get_query_date(
             start_date=config["start_date"],
@@ -400,12 +449,11 @@ class ReportStream(BaseStream):
         end_date = utils.now()
 
         if stream_name in REPORTS_WITH_90_DAY_MAX:
-            cutoff = end_date - timedelta(days=90)
+            cutoff = end_date.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=90)
             query_date = max(query_date, cutoff)
             if query_date == cutoff:
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
 
-        LOGGER.info(f"Selected fields for stream {stream_name}: {selected_fields}")
         singer.write_state(state)
 
         if selected_fields == {'segments.date'}:
@@ -414,7 +462,14 @@ class ReportStream(BaseStream):
         while query_date < end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
-            response = gas.search(query=query, customer_id=customer["customerId"])
+
+            try:
+                response = make_request(gas, query, customer["customerId"])
+            except GoogleAdsException as err:
+                LOGGER.warning("Failed query: %s", query)
+                LOGGER.critical(str(err.failure.errors[0].message))
+                raise RuntimeError from None
+
 
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response
@@ -491,9 +546,15 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "adgroup_performance_report": ReportStream(
-            report_definitions.ADGROUP_PERFORMANCE_REPORT_FIELDS,
+        "ad_group_performance_report": ReportStream(
+            report_definitions.AD_GROUP_PERFORMANCE_REPORT_FIELDS,
             ["ad_group"],
+            resource_schema,
+            ["_sdc_record_hash"],
+        ),
+        "ad_group_audience_performance_report": ReportStream(
+            report_definitions.AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+            ["ad_group_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),
@@ -509,15 +570,15 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
         ),
-        "audience_performance_report": ReportStream(
-            report_definitions.AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
-            ["ad_group_audience_view"],
-            resource_schema,
-            ["_sdc_record_hash"],
-        ),
         "campaign_performance_report": ReportStream(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
+            resource_schema,
+            ["_sdc_record_hash"],
+        ),
+        "campaign_audience_performance_report": ReportStream(
+            report_definitions.CAMPAIGN_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
+            ["campaign_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
         ),

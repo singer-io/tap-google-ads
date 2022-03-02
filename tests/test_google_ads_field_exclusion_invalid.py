@@ -1,4 +1,4 @@
-"""Test tap field exclusions with random field selection."""
+"""Test tap field exclusions for invalid selection sets."""
 import re
 import random
 
@@ -7,21 +7,21 @@ from tap_tester import menagerie, connections, runner
 from base import GoogleAdsBase
 
 
-class FieldExclusionGoogleAds(GoogleAdsBase):
+class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
     """
-    Test tap's field exclusion logic for all streams
+    Test tap's field exclusion logic with invalid selection for all streams
     TODO Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manual case)
     """
 
     @staticmethod
     def name():
-        return "tt_google_ads_field_exclusion"
+        return "tt_google_ads_field_exclusion_invalid"
 
     def random_field_gather(self, input_fields_with_exclusions):
         """
         Method takes list of fields with exclusions and generates a random set fields without conflicts as a result
         The set of fields with exclusions is generated in random order so that different combinations of fields can
-        be tested over time.
+        be tested over time.  A single invalid field is then added to violate exclusion rules.
         """
 
         # Build random set of fields with exclusions.  Select as many as possible
@@ -44,39 +44,37 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                 if field in remaining_available_fields_with_exclusions:
                     remaining_available_fields_with_exclusions.remove(field)
 
+        # Now add one more exclusion field to make the selection invalid
+        # Select a field from our list and random
+        invalid_field_partner = randomly_selected_list_of_fields_with_exclusions[
+            random.randrange(len(randomly_selected_list_of_fields_with_exclusions))]
+        # Select a field from that fields exclusion list
+        invalid_field = self.field_exclusions[invalid_field_partner][
+            random.randrange(len(self.field_exclusions[invalid_field_partner]))]
+        # Add the invalid field to the lists
+        self.random_order_of_exclusion_fields[self.stream].append(invalid_field,)
+        randomly_selected_list_of_fields_with_exclusions.append(invalid_field)
+
         exclusion_fields_to_select = randomly_selected_list_of_fields_with_exclusions
         #print(f"random_order_of_exclusion_fields: {self.random_order_of_exclusion_fields}")
 
         return exclusion_fields_to_select
 
 
-    def test_default_case(self):
+    def test_invalid_case(self):
         """
-        Verify tap can perform sync for random combinations of fields that do not violate exclusion rules.
+        Verify tap generates suitable error message when randomized combination of fields voilates exclusion rules.
+
         Established randomization for valid field selection using new method to select specific fields.
+        Implemented random selection in valid selection test, then added a new field randomly to violate exclusion rules.
+
         """
-        print("Field Exclusion Test with random field selection for tap-google-ads report streams")
+        print("Field Exclusions - Invalid selection test for tap-google-ads report streams")
 
         # --- Test report streams --- #
 
         streams_to_test = {stream for stream in self.expected_streams()
                            if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
-
-        streams_to_test = streams_to_test - {
-            # These streams missing from expected_default_fields() method TODO unblocked due to random? Test them now
-            # 'expanded_landing_page_report',
-            # 'shopping_performance_report',
-            # 'user_location_performance_report',
-            # 'keywordless_query_report',
-            # 'keywords_performance_report',
-            # 'landing_page_report',
-            # TODO These streams have no data to replicate and fail the last assertion
-            'video_performance_report',
-            'audience_performance_report',
-            'placement_performance_report',
-            'display_topics_performance_report',
-            'display_keyword_performance_report',
-        }
 
         #streams_to_test = {'gender_performance_report', 'placeholder_report',}
 
@@ -100,7 +98,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                     select_all_fields=False
                 )
 
-                # make second call to get field level metadata
+                # make second call to get field metadata
                 schema = menagerie.get_annotated_schema(conn_id, catalogs_to_test[0]['stream_id'])
                 field_exclusions = {
                     rec['breadcrumb'][1]: rec['metadata']['fieldExclusions']
@@ -108,7 +106,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                     if rec['breadcrumb'] != [] and rec['breadcrumb'][1] != "_sdc_record_hash"
                 }
 
-                self.field_exclusions = field_exclusions  # expose filed_exclusions globally
+                self.field_exclusions = field_exclusions
 
                 print(f"Perform assertions for stream: {stream}")
 
@@ -162,37 +160,30 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                                                      msg="Expected selection for field {} = 'False'".format(rec['breadcrumb'][1]))
 
                         # Run a sync
-                        #sync_job_name = self.run_and_verify_sync(conn_id)
                         sync_job_name = runner.run_sync_mode(self, conn_id)
                         exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
 
-                        self.assertEqual(0, exit_status.get('tap_exit_status'))
+                        print(f"Perform assertions for stream: {stream}")
+                        self.assertEqual(1, exit_status.get('tap_exit_status'))
                         self.assertEqual(0, exit_status.get('target_exit_status'))
                         self.assertEqual(0, exit_status.get('discovery_exit_status'))
                         self.assertIsNone(exit_status.get('check_exit_status'))
 
-                        # These streams likely replicate records using the default field selection but may not produce any
-                        # records when selecting this many fields with exclusions.
-                        streams_unlikely_to_replicate_records = {
-                            'ad_performance_report',
-                            'account_performance_report',
-                            'shopping_performance_report',
-                            'search_query_performance_report',
-                            'placeholder_feed_item_report',
-                            'placeholder_report',
-                            'keywords_performance_report',
-                            'keywordless_query_report',
-                            'geo_performance_report',
-                            }
+                        # Verify error message tells user they must select an attribute/metric for the invalid stream
+                        # TODO build list of strings to test in future
 
-                        if stream not in streams_unlikely_to_replicate_records:
-                            sync_record_count = runner.examine_target_output_file(
-                                self, conn_id, self.expected_streams(), self.expected_primary_keys())
-                            self.assertGreater(
-                                sum(sync_record_count.values()), 0,
-                                msg="failed to replicate any data: {}".format(sync_record_count)
-                            )
-                            print("total replicated row count: {}".format(sum(sync_record_count.values())))
+                        # Initial assertion group generated if all fields selelcted
+                        # self.assertIn(
+                        #     "PROHIBITED_FIELD_COMBINATION_IN_SELECT_CLAUSE",
+                        #     exit_status.get("tap_error_message")
+                        # )
+                        # self.assertIn(
+                        #     "The following pairs of fields may not be selected together",
+                        #     exit_status.get("tap_error_message")
+                        # )
+
+                        # New error message if random selection method is used
+                        # PROHIBITED_SEGMENT_WITH_METRIC_IN_SELECT_OR_WHERE_CLAUSE
 
                         # TODO additional assertions?
 

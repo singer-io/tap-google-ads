@@ -45,7 +45,7 @@ class BookmarksTest(GoogleAdsBase):
         conn_id = connections.ensure_connection(self)
 
         streams_under_test = self.expected_streams() - {
-            'audience_performance_report',
+            'ad_group_audience_performance_report',
             'display_keyword_performance_report',
             'display_topics_performance_report',
             'expanded_landing_page_report',
@@ -57,7 +57,7 @@ class BookmarksTest(GoogleAdsBase):
             'shopping_performance_report',
             'user_location_performance_report',
             'video_performance_report',
-            'ad_group_audience_performance_report',
+            'campaign_audience_performance_report',
         }
 
         # Run a discovery job
@@ -90,7 +90,7 @@ class BookmarksTest(GoogleAdsBase):
         data_set_state_value_1 = '2022-01-24T00:00:00.000000Z'
         data_set_state_value_2 = '2021-12-30T00:00:00.000000Z'
         injected_state_by_stream = {
-            'adgroup_performance_report':data_set_state_value_1,
+            'ad_group_performance_report':data_set_state_value_1,
             'geo_performance_report':data_set_state_value_1,
             'gender_performance_report':data_set_state_value_1,
             'placeholder_feed_item_report':data_set_state_value_2,

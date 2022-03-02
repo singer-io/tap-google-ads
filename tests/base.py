@@ -578,7 +578,7 @@ class GoogleAdsBase(unittest.TestCase):
                 'impressions',  # 'Impr.',
                 'view_through_conversions',  # 'View-through conv.',
             },
-            "adgroup_performance_report": {
+            "ad_group_performance_report": {
                 'average_cpc',  # Avg. CPC,
                 'clicks',  # Clicks,
                 'conversions',  # Conversions,
@@ -588,7 +588,7 @@ class GoogleAdsBase(unittest.TestCase):
                 'impressions',  # Impr.,
                 'view_through_conversions',  # View-through conv.,
             },
-            "audience_performance_report": {
+            "ad_group_audience_performance_report": {
                 'average_cpc',  # Avg. CPC,
                 'average_cpm',  # Avg. CPM
                 'clicks',  # Clicks,

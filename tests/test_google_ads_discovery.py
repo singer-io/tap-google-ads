@@ -189,9 +189,9 @@ class DiscoveryTest(GoogleAdsBase):
             # Report objects
             "age_range_performance_report": {  # "age_range_view"
             },
-            "audience_performance_report": {  # "campaign_audience_view"
+            "ad_group_audience_performance_report": {  # "ad_group_audience_view"
             },
-            "campaign_performance_report": {  # "campaign_audience_view"
+            "campaign_performance_report": {  # "campaign"
             },
             "call_metrics_call_details_report": {  # "call_view"
             },
@@ -227,7 +227,7 @@ class DiscoveryTest(GoogleAdsBase):
             },
             "account_performance_report": { # accounts
             },
-            "adgroup_performance_report": {  # ad_group
+            "ad_group_performance_report": {  # ad_group
             },
             "ad_performance_report": {  # ads
             },

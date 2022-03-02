@@ -204,9 +204,6 @@ def create_resource_schema(config):
                 if (
                     field_name != compared_field
                     and not compared_field.startswith(f"{field_root_resource}.")
-                ) and (
-                    fields[compared_field]["field_details"]["category"] == "METRIC"
-                    or fields[compared_field]["field_details"]["category"] == "SEGMENT"
                 ):
 
                     field_to_check = field_root_resource or field_name

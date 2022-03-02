@@ -793,7 +793,7 @@ DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS = [
     "ad_group_criterion.status",
     "ad_group_criterion.tracking_url_template",
     "ad_group_criterion.url_custom_parameters",
-    "bidding_strategy.name", # bidding_strategy.name must be selected with the resources bidding_strategy and campaign.
+    "bidding_strategy.name",
     "campaign.base_campaign",
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",
@@ -882,7 +882,7 @@ DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS = [
     "ad_group_criterion.topic.topic_constant",
     "ad_group_criterion.tracking_url_template",
     "ad_group_criterion.url_custom_parameters",
-    "bidding_strategy.name",  # bidding_strategy.name must be selected with the resources bidding_strategy and campaign.
+    "bidding_strategy.name",
     "campaign.base_campaign",
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",

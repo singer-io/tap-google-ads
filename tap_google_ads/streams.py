@@ -94,6 +94,11 @@ retryable_errors = [
 
 
 def should_give_up(ex):
+    if isinstance(ex, AttributeError):
+        if str(ex) == "'NoneType' object has no attribute 'Call'":
+            return False
+        return True
+
     for googleads_error in ex.failure.errors:
         quota_error = str(googleads_error.error_code.quota_error)
         internal_error = str(googleads_error.error_code.internal_error)
@@ -110,7 +115,8 @@ def on_giveup_func(err):
 
 
 @backoff.on_exception(backoff.expo,
-                      GoogleAdsException,
+                      [GoogleAdsException,
+                       AttributeError],
                       max_tries=5,
                       jitter=None,
                       giveup=should_give_up,

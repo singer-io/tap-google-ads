@@ -154,12 +154,12 @@ class StartDateTest1(StartDateTest):
         "keywords_performance_report",  # no test data available
         "keywordless_query_report",  # no test data available
         "video_performance_report",  # no test data available
-        'audience_performance_report',
+        'ad_group_audience_performance_report',
         "shopping_performance_report",
         'landing_page_report',
         'expanded_landing_page_report',
         'user_location_performance_report',
-        'ad_group_audience_performance_report',
+        'campaign_audience_performance_report',
     }
 
     def setUp(self):

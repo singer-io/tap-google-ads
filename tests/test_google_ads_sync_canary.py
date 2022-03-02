@@ -1,4 +1,3 @@
-"""Test tap discovery mode and metadata."""
 import re
 
 from tap_tester import menagerie, connections, runner
@@ -6,7 +5,7 @@ from tap_tester import menagerie, connections, runner
 from base import GoogleAdsBase
 
 
-class DiscoveryTest(GoogleAdsBase):
+class SyncCanaryTest(GoogleAdsBase):
     """
     Test tap's sync mode can extract records for all streams
     with standard table and field selection.

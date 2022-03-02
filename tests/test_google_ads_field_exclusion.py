@@ -78,7 +78,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
             'display_keyword_performance_report',
         }
 
-        #streams_to_test = {'gender_performance_report', 'placeholder_report',}
+        streams_to_test = {'gender_performance_report', 'placeholder_report',}
 
         random_order_of_exclusion_fields = {}
         conn_id = connections.ensure_connection(self)
@@ -183,6 +183,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                             'keywords_performance_report',
                             'keywordless_query_report',
                             'geo_performance_report',
+                            #'gender_performance_report',  # BUG - The rest of these are no data, this one is a bug
                             }
 
                         if stream not in streams_unlikely_to_replicate_records:

@@ -25,6 +25,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         """
 
         # Build random set of fields with exclusions.  Select as many as possible
+        all_fields = input_fields_with_exclusions + self.fields_without_exclusions
         randomly_selected_list_of_fields_with_exclusions = []
         remaining_available_fields_with_exclusions = input_fields_with_exclusions
         #print(f"Starting with {len(remaining_available_fields_with_exclusions)} exclusion fields")
@@ -46,11 +47,28 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
 
         # Now add one more exclusion field to make the selection invalid
         # Select a field from our list and random
-        invalid_field_partner = randomly_selected_list_of_fields_with_exclusions[
-            random.randrange(len(randomly_selected_list_of_fields_with_exclusions))]
-        # Select a field from that fields exclusion list
-        invalid_field = self.field_exclusions[invalid_field_partner][
-            random.randrange(len(self.field_exclusions[invalid_field_partner]))]
+        found_invalid_field = False
+        while found_invalid_field == False:
+            invalid_field_partner = randomly_selected_list_of_fields_with_exclusions[
+                random.randrange(len(randomly_selected_list_of_fields_with_exclusions))]
+            # Select a field from that fields exclusion list
+            invalid_field_pool = self.field_exclusions[invalid_field_partner]
+            for field in reversed(invalid_field_pool):
+                if field not in all_fields:
+                    invalid_field_pool.remove(field)
+
+            if len(invalid_field_pool) == 0:
+                continue
+            
+            for field in invalid_field_pool:
+                if field not in all_fields:
+                    self.assertTrue(False, msg="\n*** Pool removal logic broken ***\n")
+            
+            invalid_field = invalid_field_pool[random.randrange(len(invalid_field_pool))]
+            found_invalid_field = True
+            if invalid_field not in all_fields:
+                self.assertTrue(False, msg="\n***The extra field logic is broken ***\n")
+                
         # Add the invalid field to the lists
         self.random_order_of_exclusion_fields[self.stream].append(invalid_field,)
         randomly_selected_list_of_fields_with_exclusions.append(invalid_field)
@@ -121,6 +139,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                 for field, values in field_exclusions.items():
                     if values == []:
                         fields_without_exclusions.append(field)
+                self.fields_without_exclusions = fields_without_exclusions
 
                 # gather fields with exclusions as input to randomly build maximum length selection set
                 fields_with_exclusions = []

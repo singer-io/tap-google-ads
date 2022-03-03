@@ -96,6 +96,7 @@ retryable_errors = [
 def should_give_up(ex):
     if isinstance(ex, AttributeError):
         if str(ex) == "'NoneType' object has no attribute 'Call'":
+            LOGGER.info('Retrying request due to AttributeError')
             return False
         return True
 
@@ -104,6 +105,7 @@ def should_give_up(ex):
         internal_error = str(googleads_error.error_code.internal_error)
         for err in [quota_error, internal_error]:
             if err in retryable_errors:
+                LOGGER.info(f'Retrying request due to {err}')
                 return False
     return True
 

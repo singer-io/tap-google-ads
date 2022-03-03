@@ -612,13 +612,8 @@ class GoogleAdsBase(unittest.TestCase):
                 'view_through_conversions',  # View-through conv.,
             },
             "ad_group_audience_performance_report": {
-                'average_cpc',  # Avg. CPC,
-                'average_cpm',  # Avg. CPM
-                'clicks',  # Clicks,
-                'ctr',  # CTR,
-                'customer_id',  # Customer ID,
-                'impressions',  # Impr.,
-                'ad_group_targeting_setting',  # Targeting Setting,
+                'ad_group_name',
+                'user_list_name',
             },
             "campaign_performance_report": {
                 'average_cpc',  # Avg. CPC,
@@ -651,16 +646,17 @@ class GoogleAdsBase(unittest.TestCase):
                 'user_list',
             },
             "display_keyword_performance_report": { # TODO NO DATA AVAILABLE
-                'average_cpc',  # Avg. CPC,
-                'average_cpm',  # Avg. CPM,
-                'average_cpv',  # Avg. CPV,
+                'ad_group_name',
+                # 'average_cpc',  # Avg. CPC,
+                # 'average_cpm',  # Avg. CPM,
+                # 'average_cpv',  # Avg. CPV,
                 'clicks',  # Clicks,
-                'conversions',  # Conversions,
-                'cost_per_conversion',  # Cost / conv.,
+                # 'conversions',  # Conversions,
+                # 'cost_per_conversion',  # Cost / conv.,
                 'impressions',  # Impr.,
-                'interaction_rate',  # Interaction rate,
-                'interactions',  # Interactions,
-                'view_through_conversions',  # View-through conv.,
+                # 'interaction_rate',  # Interaction rate,
+                # 'interactions',  # Interactions,
+                # 'view_through_conversions',  # View-through conv.,
             },
             "display_topics_performance_report": { # TODO NO DATA AVAILABLE
                 'ad_group_name', # 'ad_group',  # Ad group,
@@ -693,7 +689,7 @@ class GoogleAdsBase(unittest.TestCase):
             "video_performance_report": {
                 'campaign_name',
                 'clicks',
-                'video_quartile_p25_rate',
+                # 'video_views',
             },
             # NOTE AFTER THIS POINT COULDN"T FIND IN UI
             "account_performance_report": {
@@ -767,6 +763,24 @@ class GoogleAdsBase(unittest.TestCase):
                 'clicks',
                 'geo_target_region',
             },
-            # 'landing_page_report': set(), # TODO
-            # 'expanded_landing_page_report': set(), # TODO
+            'landing_page_report': {
+                'ad_group_name',
+                'campaign_name',
+                'clicks',
+                'average_cpc',
+                'unexpanded_final_url',
+            },
+            'expanded_landing_page_report': {
+                'ad_group_name',
+                'campaign_name',
+                'clicks',
+                'average_cpc',
+                'expanded_final_url',
+            },
+            'campaign_audience_performance_report': {
+                'campaign_name',
+                'click_type',
+                'clicks',
+                'interactions',
+            },
         }

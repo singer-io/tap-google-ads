@@ -651,10 +651,21 @@ class GoogleAdsBase(unittest.TestCase):
             },
             "placement_performance_report": { # TODO NO DATA AVAILABLE
                 'clicks',
-                'impressions',  # Impr.,
+                'impressions',
+                'ad_group_id',
                 'ad_group_criterion_placement',  # 'placement_group', 'placement_type',
             },
-            # "keywords_performance_report": set(),
+            "keywords_performance_report": { # TODO NO DATA AVAILABLE
+                'campaign_id',
+                'clicks',
+                'impressions',
+                'ad_group_criterion_keyword',
+            },
+            "keywordless_query_report": {
+                'campaign_id',
+                'clicks',
+                'impressions',
+            },
             # "shopping_performance_report": set(),
             "video_performance_report": {
                 'campaign_name',
@@ -727,6 +738,11 @@ class GoogleAdsBase(unittest.TestCase):
                 'cost_micros',
                 'interactions',
                 'placeholder_type',
+            },
+            'user_location_performance_report': {
+                'campaign_id',
+                'clicks',
+                'geo_target_region',
             },
             # 'landing_page_report': set(), # TODO
             # 'expanded_landing_page_report': set(), # TODO

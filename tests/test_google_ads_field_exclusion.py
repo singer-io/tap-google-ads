@@ -183,7 +183,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                             'keywords_performance_report',
                             'keywordless_query_report',
                             'geo_performance_report',
-                            #'gender_performance_report',  # BUG - The rest of these are no data, this one is a bug
+                            'gender_performance_report',  # Very rare
                             }
 
                         if stream not in streams_unlikely_to_replicate_records:

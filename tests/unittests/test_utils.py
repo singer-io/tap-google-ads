@@ -2,6 +2,7 @@ import unittest
 from tap_google_ads.streams import generate_hash
 from tap_google_ads.streams import get_query_date
 from tap_google_ads.streams import create_nested_resource_schema
+from tap_google_ads.sync import shuffle
 from singer import metadata
 from singer.utils import strptime_to_utc
 
@@ -211,6 +212,94 @@ class TestGetQueryDate(unittest.TestCase):
         )
         expected = strptime_to_utc("2022-01-14T00:00:00Z")
         self.assertEqual(expected, actual)
+
+
+class TestShuffleStreams(unittest.TestCase):
+    selected_streams = [
+        {"tap_stream_id": "stream1"},
+        {"tap_stream_id": "stream2"},
+        {"tap_stream_id": "stream3"},
+        {"tap_stream_id": "stream4"},
+        {"tap_stream_id": "stream5"},
+    ]
+
+    def test_shuffle_first_stream(self):
+        actual = shuffle(self.selected_streams, "tap_stream_id", "stream1")
+        expected = [
+            {"tap_stream_id": "stream1"},
+            {"tap_stream_id": "stream2"},
+            {"tap_stream_id": "stream3"},
+            {"tap_stream_id": "stream4"},
+            {"tap_stream_id": "stream5"},
+        ]
+        self.assertListEqual(expected, actual)
+
+
+    def test_shuffle_middle_stream(self):
+        actual = shuffle(self.selected_streams, "tap_stream_id", "stream3")
+        expected = [
+            {"tap_stream_id": "stream3"},
+            {"tap_stream_id": "stream4"},
+            {"tap_stream_id": "stream5"},
+            {"tap_stream_id": "stream1"},
+            {"tap_stream_id": "stream2"},
+        ]
+        self.assertListEqual(expected, actual)
+
+    def test_shuffle_last_stream(self):
+        actual = shuffle(self.selected_streams, "tap_stream_id", "stream5")
+        expected = [
+            {"tap_stream_id": "stream5"},
+            {"tap_stream_id": "stream1"},
+            {"tap_stream_id": "stream2"},
+            {"tap_stream_id": "stream3"},
+            {"tap_stream_id": "stream4"},
+        ]
+        self.assertListEqual(expected, actual)
+
+
+class TestShuffleCustomers(unittest.TestCase):
+
+    customers = [
+        {"customerId": "customer1"},
+        {"customerId": "customer2"},
+        {"customerId": "customer3"},
+        {"customerId": "customer4"},
+        {"customerId": "customer5"},
+    ]
+
+    def test_shuffle_first_customer(self):
+        actual = shuffle(self.customers, "customerId", "customer1")
+        expected = [
+            {"customerId": "customer1"},
+            {"customerId": "customer2"},
+            {"customerId": "customer3"},
+            {"customerId": "customer4"},
+            {"customerId": "customer5"},
+        ]
+        self.assertListEqual(expected, actual)
+
+    def test_shuffle_middle_customer(self):
+        actual = shuffle(self.customers, "customerId", "customer3")
+        expected = [
+            {"customerId": "customer3"},
+            {"customerId": "customer4"},
+            {"customerId": "customer5"},
+            {"customerId": "customer1"},
+            {"customerId": "customer2"},
+        ]
+        self.assertListEqual(expected, actual)
+
+    def test_shuffle_last_customer(self):
+        actual = shuffle(self.customers, "customerId", "customer5")
+        expected = [
+            {"customerId": "customer5"},
+            {"customerId": "customer1"},
+            {"customerId": "customer2"},
+            {"customerId": "customer3"},
+            {"customerId": "customer4"},
+        ]
+        self.assertListEqual(expected, actual)
 
 if __name__ == '__main__':
     unittest.main()

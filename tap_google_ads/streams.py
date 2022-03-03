@@ -129,6 +129,9 @@ def make_request(gas, query, customer_id):
     return response
 
 
+def get_state_key(stream_name, customer_id):
+    return stream_name + customer_id
+
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
@@ -446,9 +449,12 @@ class ReportStream(BaseStream):
         )
         conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
 
+        bookmark_key = get_state_key(stream_name, customer['customerId'])
+        bookmark_value = singer.get_bookmark(state, bookmark_key, replication_key)
+
         query_date = get_query_date(
             start_date=config["start_date"],
-            bookmark=singer.get_bookmark(state, stream_name, replication_key),
+            bookmark=bookmark_value,
             conversion_window_date=singer.utils.strftime(conversion_window_date)
         )
         end_date = utils.now()
@@ -484,7 +490,7 @@ class ReportStream(BaseStream):
 
                     singer.write_record(stream_name, record)
 
-            singer.write_bookmark(state, stream_name, replication_key, utils.strftime(query_date))
+            singer.write_bookmark(state, bookmark_key, replication_key, utils.strftime(query_date))
 
             singer.write_state(state)
 

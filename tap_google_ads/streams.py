@@ -291,7 +291,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
-        state = singer.set_currently_syncing(state, stream_name)
+        state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
+        singer.write_state(state)
 
         query = create_core_stream_query(resource_name, selected_fields)
         try:
@@ -310,7 +311,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 singer.write_record(stream_name, record)
 
         state = singer.bookmarks.set_currently_syncing(state, None)
-
+        singer.write_state(state)
 
 def get_query_date(start_date, bookmark, conversion_window_date):
     """Return a date within the conversion window and after start date
@@ -437,7 +438,9 @@ class ReportStream(BaseStream):
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
         replication_key = "date"
-        state = singer.set_currently_syncing(state, stream_name)
+        state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
+        singer.write_state(state)
+
         conversion_window = timedelta(
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
@@ -455,8 +458,6 @@ class ReportStream(BaseStream):
             query_date = max(query_date, cutoff)
             if query_date == cutoff:
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
-
-        singer.write_state(state)
 
         if selected_fields == {'segments.date'}:
             raise Exception(f"Selected fields is currently limited to {', '.join(selected_fields)}. Please select at least one attribute and metric in order to replicate {stream_name}.")

@@ -34,18 +34,7 @@ class SyncCanaryTest(GoogleAdsBase):
             'campaign_audience_performance_report', # no test data available
             'ad_group_audience_performance_report',  # Potential BUG see above
         }
-        # Working
-        # 'user_location_performance_report',
-        # 'keywordless_query_report',
-        # streams_to_test = {
-            # Need to adjust ads for data
-            # 'keywords_performance_report',
-            # 'placement_performance_report',
-            # TODO
-            # 'video_performance_report',
-            # 'display_topics_performance_report',
-            # 'display_keyword_performance_report',
-        # }
+
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
         test_catalogs = [catalog for catalog in found_catalogs if catalog['stream_name'] in streams_to_test]

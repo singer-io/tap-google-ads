@@ -8,6 +8,23 @@ from tap_google_ads.streams import initialize_core_streams, initialize_reports
 LOGGER = singer.get_logger()
 
 
+def get_currently_syncing(state):
+    resuming_stream, resuming_customer = state.get("currently_syncing")
+    return resuming_stream, resuming_customer
+
+
+def shuffle(shuffle_list, shuffle_key, current_value):
+
+    matching_index = 0
+    for i, key in enumerate(shuffle_list):
+        if key[shuffle_key] == current_value:
+            matching_index = i
+            break
+    top_half = shuffle_list[matching_index:]
+    bottom_half = shuffle_list[:matching_index]
+    return top_half + bottom_half
+
+
 def do_sync(config, catalog, resource_schema, state):
     # QA ADDED WORKAROUND [START]
     try:
@@ -24,6 +41,13 @@ def do_sync(config, catalog, resource_schema, state):
 
     core_streams = initialize_core_streams(resource_schema)
     report_streams = initialize_reports(resource_schema)
+    resuming_stream, resuming_customer = get_currently_syncing(state)
+
+    if resuming_stream:
+        selected_streams = shuffle(selected_streams, "tap_stream_id", resuming_stream)
+
+    if resuming_customer:
+        customers = shuffle(customers, "customerId", resuming_customer)
 
     for catalog_entry in selected_streams:
         stream_name = catalog_entry["stream"]

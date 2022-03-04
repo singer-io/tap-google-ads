@@ -131,7 +131,7 @@ class BookmarksTest(GoogleAdsBase):
             self.assertIsNotNone(bookmarks_1)
 
             # Verify sync is not interrupted by checking currently_syncing in state for sync 2
-            self.assertIsNone(currently_syncing_2)
+            self.assertEqual([None, None], currently_syncing_2)
             # Verify bookmarks are saved
             self.assertIsNotNone(bookmarks_2)
 

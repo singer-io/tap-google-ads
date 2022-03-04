@@ -491,7 +491,8 @@ class ReportStream(BaseStream):
 
                     singer.write_record(stream_name, record)
 
-            singer.write_bookmark(state, bookmark_key, replication_key, utils.strftime(query_date))
+            new_bookmark_value = {replication_key: utils.strftime(query_date)}
+            singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], new_bookmark_value)
 
             singer.write_state(state)
 

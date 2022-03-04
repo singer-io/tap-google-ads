@@ -130,7 +130,7 @@ def make_request(gas, query, customer_id):
 
 
 def get_state_key(stream_name, customer_id):
-    return stream_name + customer_id
+    return stream_name + "_" + customer_id
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 

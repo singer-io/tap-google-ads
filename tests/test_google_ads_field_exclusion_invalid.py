@@ -121,6 +121,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         for stream in streams_to_test:
             with self.subTest(stream=stream):
 
+                # TODO Spike on running more than one sync per stream to increase the number of invalid field combos tested (Rushi)
                 catalogs_to_test = [catalog
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]

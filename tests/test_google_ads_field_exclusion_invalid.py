@@ -46,12 +46,11 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         all_fields = input_fields_with_exclusions + self.fields_without_exclusions
         randomly_selected_list_of_fields_with_exclusions = []
         remaining_available_fields_with_exclusions = input_fields_with_exclusions
-        #print(f"Starting with {len(remaining_available_fields_with_exclusions)} exclusion fields")
         while len(remaining_available_fields_with_exclusions) > 0:
-            # randomly select one field that has exclusions
+            # Randomly select one field that has exclusions
             newly_added_field = remaining_available_fields_with_exclusions[
                 random.randrange(len(remaining_available_fields_with_exclusions))]
-            # save list for debug incase test fails
+            # Save list for debug incase test fails
             self.random_order_of_exclusion_fields[self.stream].append(newly_added_field,)
             randomly_selected_list_of_fields_with_exclusions.append(newly_added_field)
             # Update remaining_available_fields_with_exclusinos based on random selection
@@ -127,14 +126,14 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]
 
-                # select all fields for core streams and...
+                # Select all fields for core streams and...
                 self.select_all_streams_and_fields(
                     conn_id,
                     catalogs_to_test,
                     select_all_fields=False
                 )
 
-                # make second call to get field metadata
+                # Make second call to get field metadata
                 schema = menagerie.get_annotated_schema(conn_id, catalogs_to_test[0]['stream_id'])
                 field_exclusions = {
                     rec['breadcrumb'][1]: rec['metadata']['fieldExclusions']
@@ -150,14 +149,14 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                         self.assertEqual(rec['metadata']['selected'], False,
                                         msg="Expected selection for field {} = 'False'".format(rec['breadcrumb'][1]))
 
-                # gather fields with no exclusions so they can all be added to selection set
+                # Gather fields with no exclusions so they can all be added to selection set
                 fields_without_exclusions = []
                 for field, values in field_exclusions.items():
                     if values == []:
                         fields_without_exclusions.append(field)
                 self.fields_without_exclusions = fields_without_exclusions
 
-                # gather fields with exclusions as input to randomly build maximum length selection set
+                # Gather fields with exclusions as input to randomly build maximum length selection set
                 fields_with_exclusions = []
                 for field, values in field_exclusions.items():
                     if values != []:
@@ -182,7 +181,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
 
                 with self.subTest(order_of_fields_selected=self.random_order_of_exclusion_fields[stream]):
 
-                    # select fields and re-pull annotated_schema.
+                    # Select fields and re-pull annotated_schema.
                     self.select_stream_and_specified_fields(conn_id, catalogs_to_test[0], field_selection_set)
 
                     try:

@@ -27,12 +27,11 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
         # Build random set of fields with exclusions.  Select as many as possible
         randomly_selected_list_of_fields_with_exclusions = []
         remaining_available_fields_with_exclusions = input_fields_with_exclusions
-        #print(f"Starting with {len(remaining_available_fields_with_exclusions)} exclusion fields")
         while len(remaining_available_fields_with_exclusions) > 0:
-            # randomly select one field that has exclusions
+            # Randomly select one field that has exclusions
             newly_added_field = remaining_available_fields_with_exclusions[
                 random.randrange(len(remaining_available_fields_with_exclusions))]
-            # save list for debug incase test fails
+            # Save list for debug incase test fails
             self.random_order_of_exclusion_fields[self.stream].append(newly_added_field,)
             randomly_selected_list_of_fields_with_exclusions.append(newly_added_field)
             # Update remaining_available_fields_with_exclusinos based on random selection
@@ -45,7 +44,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                     remaining_available_fields_with_exclusions.remove(field)
 
         exclusion_fields_to_select = randomly_selected_list_of_fields_with_exclusions
-        #print(f"random_order_of_exclusion_fields: {self.random_order_of_exclusion_fields}")
 
         return exclusion_fields_to_select
 
@@ -93,14 +91,14 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]
 
-                # select all fields for core streams and...
+                # Select all fields for core streams and...
                 self.select_all_streams_and_fields(
                     conn_id,
                     catalogs_to_test,
                     select_all_fields=False
                 )
 
-                # make second call to get field level metadata
+                # Make second call to get field level metadata
                 schema = menagerie.get_annotated_schema(conn_id, catalogs_to_test[0]['stream_id'])
                 field_exclusions = {
                     rec['breadcrumb'][1]: rec['metadata']['fieldExclusions']
@@ -108,7 +106,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                     if rec['breadcrumb'] != [] and rec['breadcrumb'][1] != "_sdc_record_hash"
                 }
 
-                self.field_exclusions = field_exclusions  # expose filed_exclusions globally
+                self.field_exclusions = field_exclusions  # expose filed_exclusions globally so other methods can use it
 
                 print(f"Perform assertions for stream: {stream}")
 
@@ -118,18 +116,18 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                         self.assertEqual(rec['metadata']['selected'], False,
                                         msg="Expected selection for field {} = 'False'".format(rec['breadcrumb'][1]))
 
-                # gather fields with no exclusions so they can all be added to selection set
+                # Gather fields with no exclusions so they can all be added to selection set
                 fields_without_exclusions = []
                 for field, values in field_exclusions.items():
                     if values == []:
                         fields_without_exclusions.append(field)
 
-                # gather fields with exclusions as input to randomly build maximum length selection set
+                # Gather fields with exclusions as input to randomly build maximum length selection set
                 fields_with_exclusions = []
                 for field, values in field_exclusions.items():
                     if values != []:
                        fields_with_exclusions.append(field)
-                #print("Count exclusion_list = {}".format(len(fields_with_exclusions)))
+
                 if len(fields_with_exclusions) == 0:
                     raise AssertionError(f"Skipping assertions. No field exclusions for stream: {stream}")
 
@@ -142,7 +140,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
 
                 with self.subTest(order_of_fields_selected=self.random_order_of_exclusion_fields[stream]):
 
-                    # select fields and re-pull annotated_schema.
+                    # Select fields and re-pull annotated_schema.
                     self.select_stream_and_specified_fields(conn_id, catalogs_to_test[0], field_selection_set)
 
                     try:
@@ -162,7 +160,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                                                      msg="Expected selection for field {} = 'False'".format(rec['breadcrumb'][1]))
 
                         # Run a sync
-                        #sync_job_name = self.run_and_verify_sync(conn_id)
                         sync_job_name = runner.run_sync_mode(self, conn_id)
                         exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
 

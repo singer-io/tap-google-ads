@@ -1,5 +1,4 @@
 """Test tap field exclusions with random field selection."""
-import re
 import random
 
 from tap_tester import menagerie, connections, runner
@@ -10,7 +9,9 @@ from base import GoogleAdsBase
 class FieldExclusionGoogleAds(GoogleAdsBase):
     """
     Test tap's field exclusion logic for all streams
-    TODO Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manual case)
+
+    NOTE: Manual test case must be run at least once any time this feature changes or is updated.
+          Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manually)
     """
 
     @staticmethod
@@ -91,13 +92,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]
 
-                # Select all fields for core streams and...
-                self.select_all_streams_and_fields(
-                    conn_id,
-                    catalogs_to_test,
-                    select_all_fields=False
-                )
-
                 # Make second call to get field level metadata
                 schema = menagerie.get_annotated_schema(conn_id, catalogs_to_test[0]['stream_id'])
                 field_exclusions = {
@@ -109,12 +103,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                 self.field_exclusions = field_exclusions  # expose filed_exclusions globally so other methods can use it
 
                 print(f"Perform assertions for stream: {stream}")
-
-                # Verify all fields start with 'selected' = False
-                for rec in schema['metadata']:
-                    if rec['breadcrumb'] != [] and rec['breadcrumb'][1] != "_sdc_record_hash":
-                        self.assertEqual(rec['metadata']['selected'], False,
-                                        msg="Expected selection for field {} = 'False'".format(rec['breadcrumb'][1]))
 
                 # Gather fields with no exclusions so they can all be added to selection set
                 fields_without_exclusions = []
@@ -162,11 +150,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                         # Run a sync
                         sync_job_name = runner.run_sync_mode(self, conn_id)
                         exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
-
-                        self.assertEqual(0, exit_status.get('tap_exit_status'))
-                        self.assertEqual(0, exit_status.get('target_exit_status'))
-                        self.assertEqual(0, exit_status.get('discovery_exit_status'))
-                        self.assertIsNone(exit_status.get('check_exit_status'))
+                        menagerie.verify_sync_exit_status(self, exit_status, sync_job_name)
 
                         # These streams likely replicate records using the default field selection but may not produce any
                         # records when selecting this many fields with exclusions.

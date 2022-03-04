@@ -1,5 +1,4 @@
 """Test tap field exclusions for invalid selection sets."""
-import re
 import random
 import pprint
 
@@ -11,7 +10,9 @@ from base import GoogleAdsBase
 class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
     """
     Test tap's field exclusion logic with invalid selection for all streams
-    TODO Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manual case)
+
+    NOTE: Manual test case must be run at least once any time this feature changes or is updated.
+          Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manually)
     """
 
     @staticmethod
@@ -88,7 +89,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         randomly_selected_list_of_fields_with_exclusions.append(invalid_field)
 
         exclusion_fields_to_select = randomly_selected_list_of_fields_with_exclusions
-        #print(f"random_order_of_exclusion_fields: {self.random_order_of_exclusion_fields}")
 
         return exclusion_fields_to_select
 
@@ -106,10 +106,9 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         # --- Test report streams --- #
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
+                           if self.is_report(stream)} - {'click_performance_report'}  # No exclusions. TODO remove dynamically
 
-        #streams_to_test = {'gender_performance_report', 'placeholder_report',}
-        #streams_to_test = {'placement_performance_report', 'placeholder_report', 'placeholder_feed_item_report',}
+        #streams_to_test = {'search_query_performance_report', 'placeholder_report',}
 
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
@@ -126,13 +125,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]
 
-                # Select all fields for core streams and...
-                self.select_all_streams_and_fields(
-                    conn_id,
-                    catalogs_to_test,
-                    select_all_fields=False
-                )
-
                 # Make second call to get field metadata
                 schema = menagerie.get_annotated_schema(conn_id, catalogs_to_test[0]['stream_id'])
                 field_exclusions = {
@@ -142,12 +134,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                 }
 
                 self.field_exclusions = field_exclusions
-
-                # Verify all fields start with 'selected' = False
-                for rec in schema['metadata']:
-                    if rec['breadcrumb'] != [] and rec['breadcrumb'][1] != "_sdc_record_hash":
-                        self.assertEqual(rec['metadata']['selected'], False,
-                                        msg="Expected selection for field {} = 'False'".format(rec['breadcrumb'][1]))
 
                 # Gather fields with no exclusions so they can all be added to selection set
                 fields_without_exclusions = []

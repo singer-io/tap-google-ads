@@ -1,6 +1,7 @@
 """Test tap field exclusions for invalid selection sets."""
 import re
 import random
+import pprint
 
 from tap_tester import menagerie, connections, runner
 
@@ -109,7 +110,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                            if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
 
         #streams_to_test = {'gender_performance_report', 'placeholder_report',}
-        streams_to_test = {'placement_performance_report', 'placeholder_report', 'placeholder_feed_item_report',}
+        #streams_to_test = {'placement_performance_report', 'placeholder_report', 'placeholder_feed_item_report',}
 
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
@@ -161,18 +162,22 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                 for field, values in field_exclusions.items():
                     if values != []:
                        fields_with_exclusions.append(field)
-                #print("Count exclusion_list = {}".format(len(fields_with_exclusions)))
                 if len(fields_with_exclusions) == 0:
                     raise AssertionError(f"Skipping assertions. No field exclusions for stream: {stream}")
 
-                self.stream = stream
+                # Add new key to existing dicts
                 random_order_of_exclusion_fields[stream] = []
                 exclusion_errors[stream] = {}
+
+                # Expose variables globally
+                self.stream = stream
                 self.random_order_of_exclusion_fields = random_order_of_exclusion_fields
 
+                # Build random lists
                 random_exclusion_field_selection_list = self.random_field_gather(fields_with_exclusions)
                 field_selection_set = set(random_exclusion_field_selection_list + fields_without_exclusions)
 
+                # Collect any errors if they occur
                 exclusion_errors[stream] = self.perform_exclusion_verification(field_exclusions)
 
                 with self.subTest(order_of_fields_selected=self.random_order_of_exclusion_fields[stream]):
@@ -230,10 +235,12 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                         # PROHIBITED_SEGMENT_WITH_METRIC_IN_SELECT_OR_WHERE_CLAUSE
 
                         # TODO additional assertions?
+                        # self.assertEqual(len(exclusion_erros[stream], 0)
 
                     finally:
                         # deselect stream once it's been tested
                         self.deselect_streams(conn_id, catalogs_to_test)
 
-            print("Streams tested: {}\ntap_exit_status_by_stream: {}".format(len(streams_to_test), tap_exit_status_by_stream))
-            print(f"exclusion errors: {exclusion_errors}")
+        print("Streams tested: {}\ntap_exit_status_by_stream: {}".format(len(streams_to_test), tap_exit_status_by_stream))
+        print("Exclusion errors:")
+        pprint.pprint(exclusion_errors)

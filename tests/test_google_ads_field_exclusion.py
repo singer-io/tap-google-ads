@@ -78,7 +78,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
             'display_keyword_performance_report',
         }
 
-        streams_to_test = {'gender_performance_report', 'placeholder_report',}
+        #streams_to_test = {'gender_performance_report', 'placeholder_report',}
 
         random_order_of_exclusion_fields = {}
         conn_id = connections.ensure_connection(self)
@@ -184,6 +184,9 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                             'keywordless_query_report',
                             'geo_performance_report',
                             'gender_performance_report',  # Very rare
+                            'ad_group_audience_performance_report',
+                            'age_range_performance_report',
+                            'campaign_audience_performance_report',
                             }
 
                         if stream not in streams_unlikely_to_replicate_records:

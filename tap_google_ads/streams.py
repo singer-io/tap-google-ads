@@ -449,8 +449,9 @@ class ReportStream(BaseStream):
         )
         conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
 
-        bookmark_key = get_state_key(stream_name, customer['customerId'])
-        bookmark_value = singer.get_bookmark(state, bookmark_key, replication_key)
+        bookmark_object = singer.get_bookmark(state, stream["tap_stream_id"], customer["customerId"], default={})
+
+        bookmark_value = bookmark_object.get(replication_key)
 
         query_date = get_query_date(
             start_date=config["start_date"],

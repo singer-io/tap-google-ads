@@ -41,12 +41,15 @@ class GoogleAdsBase(unittest.TestCase):
         """the expected url route ending"""
         return "platform.google-ads"
 
+    def get_customer_ids(self):
+        return ["5548074409", "2728292456"]
+
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
             'start_date':   '2021-12-01T00:00:00Z',
             'user_id':      'not used?', # TODO ?
-            'customer_ids': '5548074409,2728292456',
+            'customer_ids': ','.join(self.get_customer_ids()),
             # 'conversion_window_days': '30',
             'login_customer_ids': [{"customerId": "5548074409", "loginCustomerId": "2728292456",}],
         }

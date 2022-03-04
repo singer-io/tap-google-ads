@@ -313,7 +313,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                 singer.write_record(stream_name, record)
 
-        state = singer.bookmarks.set_currently_syncing(state, None)
+        state = singer.bookmarks.set_currently_syncing(state, (None, None))
         singer.write_state(state)
 
 def get_query_date(start_date, bookmark, conversion_window_date):
@@ -496,7 +496,7 @@ class ReportStream(BaseStream):
 
             query_date += timedelta(days=1)
 
-        state = singer.bookmarks.set_currently_syncing(state, None)
+        state = singer.bookmarks.set_currently_syncing(state, (None, None))
         singer.write_state(state)
 
 

@@ -187,6 +187,8 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                             'ad_group_audience_performance_report',
                             'age_range_performance_report',
                             'campaign_audience_performance_report',
+                            'user_location_performance_report',
+                            'ad_group_performance_report',
                             }
 
                         if stream not in streams_unlikely_to_replicate_records:

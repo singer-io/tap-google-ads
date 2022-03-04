@@ -219,9 +219,6 @@ class BookmarksTest(GoogleAdsBase):
                     self.assertIsNone(stream_bookmark_1)
                     self.assertIsNone(stream_bookmark_2)
 
-                    # Verify full table streams replicate the same number of records on each sync
-                    self.assertEqual(record_count_1, record_count_2)
-
                     # Verify full tables streams replicate the exact same set of records on each sync
                     for record in records_1:
                         self.assertIn(record, records_2)

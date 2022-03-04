@@ -165,49 +165,55 @@ class BookmarksTest(GoogleAdsBase):
 
                     # gather expectations
                     expected_replication_key = list(self.expected_replication_keys()[stream])[0]  # assumes 1 value
-                    manipulated_bookmark = manipulated_state['bookmarks'][stream]
-                    manipulated_state_formatted = dt.strptime(manipulated_bookmark.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
+                    testable_customer_ids = set(self.get_customer_ids()) - {'2728292456'}
+                    for customer in testable_customer_ids:
+                        with self.subTest(customer_id=customer):
+                            manipulated_bookmark = manipulated_state['bookmarks'][stream]
+                            manipulated_state_formatted = dt.strptime(
+                                manipulated_bookmark.get(customer, {}).get(expected_replication_key),
+                                self.REPLICATION_KEY_FORMAT
+                            )
 
-                    # Verify bookmarks saved match formatting standards for sync 1
-                    self.assertIsNotNone(stream_bookmark_1)
-                    bookmark_value_1 = stream_bookmark_1.get(expected_replication_key)
-                    self.assertIsNotNone(bookmark_value_1)
-                    self.assertIsInstance(bookmark_value_1, str)
-                    self.assertIsDateFormat(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
+                            # Verify bookmarks saved match formatting standards for sync 1
+                            self.assertIsNotNone(stream_bookmark_1)
+                            bookmark_value_1 = stream_bookmark_1.get(customer, {}).get(expected_replication_key)
+                            self.assertIsNotNone(bookmark_value_1)
+                            self.assertIsInstance(bookmark_value_1, str)
+                            self.assertIsDateFormat(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
 
-                    # Verify bookmarks saved match formatting standards for sync 2
-                    self.assertIsNotNone(stream_bookmark_2)
-                    bookmark_value_2 = stream_bookmark_2.get(expected_replication_key)
-                    self.assertIsNotNone(bookmark_value_2)
-                    self.assertIsInstance(bookmark_value_2, str)
-                    self.assertIsDateFormat(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
+                            # Verify bookmarks saved match formatting standards for sync 2
+                            self.assertIsNotNone(stream_bookmark_2)
+                            bookmark_value_2 = stream_bookmark_2.get(customer, {}).get(expected_replication_key)
+                            self.assertIsNotNone(bookmark_value_2)
+                            self.assertIsInstance(bookmark_value_2, str)
+                            self.assertIsDateFormat(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
 
-                    # Verify the bookmark is set based on sync end date (today) for sync 1
-                    # (The tap replicaates from the start date through to today)
-                    parsed_bookmark_value_1 = dt.strptime(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
-                    self.assertEqual(parsed_bookmark_value_1, today_datetime)
+                            # Verify the bookmark is set based on sync end date (today) for sync 1
+                            # (The tap replicaates from the start date through to today)
+                            parsed_bookmark_value_1 = dt.strptime(bookmark_value_1, self.REPLICATION_KEY_FORMAT)
+                            self.assertEqual(parsed_bookmark_value_1, today_datetime)
 
-                    # Verify the bookmark is set based on sync execution time for sync 2
-                    # (The tap replicaates from the manipulated state through to todayf)
-                    parsed_bookmark_value_2 = dt.strptime(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
-                    self.assertEqual(parsed_bookmark_value_2, today_datetime)
+                            # Verify the bookmark is set based on sync execution time for sync 2
+                            # (The tap replicaates from the manipulated state through to todayf)
+                            parsed_bookmark_value_2 = dt.strptime(bookmark_value_2, self.REPLICATION_KEY_FORMAT)
+                            self.assertEqual(parsed_bookmark_value_2, today_datetime)
 
-                    # Verify 2nd sync only replicates records newer than manipulated_state_formatted
-                    for record in records_2:
-                        rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
-                        self.assertGreaterEqual(rec_time, manipulated_state_formatted, \
-                            msg="record time cannot be less than reference time: {}".format(manipulated_state_formatted)
-                        )
+                            # Verify 2nd sync only replicates records newer than manipulated_state_formatted
+                            for record in records_2:
+                                rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
+                                self.assertGreaterEqual(rec_time, manipulated_state_formatted, \
+                                    msg="record time cannot be less than reference time: {}".format(manipulated_state_formatted)
+                                )
 
-                    # Verify  the number of records in records_1 where sync >= manipulated_state_formatted
-                    # matches the number of records in records_2
-                    records_1_after_manipulated_bookmark = 0
-                    for record in records_1:
-                        rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
-                        if rec_time >= manipulated_state_formatted:
-                            records_1_after_manipulated_bookmark += 1
-                    self.assertEqual(records_1_after_manipulated_bookmark, record_count_2, \
-                                     msg="Expected {} records in each sync".format(records_1_after_manipulated_bookmark))
+                            # Verify  the number of records in records_1 where sync >= manipulated_state_formatted
+                            # matches the number of records in records_2
+                            records_1_after_manipulated_bookmark = 0
+                            for record in records_1:
+                                rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
+                                if rec_time >= manipulated_state_formatted:
+                                    records_1_after_manipulated_bookmark += 1
+                            self.assertEqual(records_1_after_manipulated_bookmark, record_count_2, \
+                                             msg="Expected {} records in each sync".format(records_1_after_manipulated_bookmark))
 
                 elif expected_replication_method == self.FULL_TABLE:
                     # Verify full table streams replicate the same number of records on each sync

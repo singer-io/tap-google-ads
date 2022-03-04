@@ -159,6 +159,8 @@ class BookmarksTest(GoogleAdsBase):
                 records_2 = [message['data'] for message in synced_records_2[stream]['messages']]
                 record_count_1 = len(records_1)
                 record_count_2 = len(records_2)
+                stream_bookmark_1 = bookmarks_1.get(stream)
+                stream_bookmark_2 = bookmarks_2.get(stream)
 
                 if expected_replication_method == self.INCREMENTAL:
 
@@ -209,9 +211,6 @@ class BookmarksTest(GoogleAdsBase):
                                      msg="Expected {} records in each sync".format(records_1_after_manipulated_bookmark))
 
                 elif expected_replication_method == self.FULL_TABLE:
-                    stream_bookmark_1 = bookmarks_1.get(stream)
-                    stream_bookmark_2 = bookmarks_2.get(stream)
-
                     # Verify full table streams replicate the same number of records on each sync
                     self.assertEqual(record_count_1, record_count_2)
 

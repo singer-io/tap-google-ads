@@ -101,10 +101,15 @@ class BookmarksTest(GoogleAdsBase):
             'landing_page_report': data_set_state_value_1,
             'user_location_performance_report': data_set_state_value_1,
         }
+
         manipulated_state = {
-            'currently_syncing': 'None',
-            'bookmarks': {stream: {'date': injected_state_by_stream[stream]}
-                          for stream in streams_under_test if self.is_report(stream)}
+            'currently_syncing': (None, None),
+            'bookmarks': {
+                f"{stream}_{customer}": {'date': injected_state_by_stream[stream]}
+                for customer in self.get_customer_ids()
+                for stream in streams_under_test
+                if self.is_report(stream)
+            }
         }
         menagerie.set_state(conn_id, manipulated_state)
 

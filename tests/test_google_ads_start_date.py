@@ -152,13 +152,13 @@ class StartDateTest1(StartDateTest):
         'display_topics_performance_report',  # no test data available
         'placement_performance_report',  # no test data available
         "keywords_performance_report",  # no test data available
-        "keywordless_query_report",  # no test data available
+        # "keywordless_query_report",  # no test data available
         "video_performance_report",  # no test data available
         'ad_group_audience_performance_report',
         "shopping_performance_report",
-        'landing_page_report',
-        'expanded_landing_page_report',
-        'user_location_performance_report',
+        # 'landing_page_report',
+        # 'expanded_landing_page_report',
+        # 'user_location_performance_report',
         'campaign_audience_performance_report',
     }
 
@@ -169,6 +169,9 @@ class StartDateTest1(StartDateTest):
             'search_query_performance_report', # Covered in other start date test
         } - self.missing_coverage_streams # TODO
 
+        self.streams_to_test = {
+            "keywordless_query_report",
+        }
     @staticmethod
     def name():
         return "tt_google_ads_start_date"

@@ -113,7 +113,10 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
         exclusion_errors = {}
-        conn_id = connections.ensure_connection(self)
+
+        # bump start date from default
+        self.start_date = dt.strftime(dt.today() - timedelta(days=3), self.START_DATE_FORMAT)
+        conn_id = connections.ensure_connection(self, original_properties=False)
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)

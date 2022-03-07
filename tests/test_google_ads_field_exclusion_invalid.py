@@ -1,6 +1,8 @@
 """Test tap field exclusions for invalid selection sets."""
 import random
 import pprint
+from datetime import datetime as dt
+from datetime import timedelta
 
 from tap_tester import menagerie, connections, runner
 

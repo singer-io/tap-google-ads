@@ -1,8 +1,11 @@
 """Test tap field exclusions for invalid selection sets."""
 import random
 import pprint
+<<<<<<< HEAD
 from datetime import datetime as dt
 from datetime import timedelta
+=======
+>>>>>>> Qa/exclusion completion (#26)
 
 from tap_tester import menagerie, connections, runner
 
@@ -115,10 +118,14 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
         exclusion_errors = {}
+<<<<<<< HEAD
 
         # bump start date from default
         self.start_date = dt.strftime(dt.today() - timedelta(days=3), self.START_DATE_FORMAT)
         conn_id = connections.ensure_connection(self, original_properties=False)
+=======
+        conn_id = connections.ensure_connection(self)
+>>>>>>> Qa/exclusion completion (#26)
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)

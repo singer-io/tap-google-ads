@@ -117,8 +117,8 @@ def on_giveup_func(err):
 
 
 @backoff.on_exception(backoff.expo,
-                      [GoogleAdsException,
-                       AttributeError],
+                      (GoogleAdsException,
+                       AttributeError),
                       max_tries=5,
                       jitter=None,
                       giveup=should_give_up,

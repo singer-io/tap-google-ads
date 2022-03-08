@@ -9,7 +9,12 @@ LOGGER = singer.get_logger()
 
 
 def get_currently_syncing(state):
-    resuming_stream, resuming_customer = state.get("currently_syncing", (None, None))
+    currently_syncing = state.get("currently_syncing")
+
+    if not currently_syncing or currently_syncing == 'None':
+        currently_syncing = (None, None)
+
+    resuming_stream, resuming_customer = currently_syncing
     return resuming_stream, resuming_customer
 
 

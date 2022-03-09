@@ -98,6 +98,12 @@ class InterruptedSyncTest(GoogleAdsBase):
         # select 'default' fields for report streams
         self.select_all_streams_and_default_fields(conn_id, report_catalogs_1)
 
+        # Run a sync
+        full_sync = self.run_and_verify_sync(conn_id)
+
+        # acquire records from target output
+        full_sync_records = runner.get_records_from_target_output()
+
         # NB | Set state such that all but two streams have 'completed' a sync. The final stream ('user_location_performance_report') should
         #      have no bookmark value while the interrupted stream ('search_query_performance_report') should have a bookmark value prior to the
         #      'completed' streams.
@@ -124,10 +130,10 @@ class InterruptedSyncTest(GoogleAdsBase):
         menagerie.set_state(conn_id, interrupted_state)
 
         # Run another sync
-        _ = self.run_and_verify_sync(conn_id)
+        interrupted_sync = self.run_and_verify_sync(conn_id)
 
         # acquire records from target output
-        synced_records = runner.get_records_from_target_output()
+        interrupted_sync_records = runner.get_records_from_target_output()
         final_state = menagerie.get_state(conn_id)
         currently_syncing = final_state.get('currently_syncing', 'KEY NOT SAVED IN STATE')
 
@@ -150,8 +156,10 @@ class InterruptedSyncTest(GoogleAdsBase):
                 today_datetime = dt.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
                 # gather results
-                records = [message['data'] for message in synced_records[stream]['messages']]
-                record_count = len(records)
+                full_records = [message['data'] for message in full_sync_records[stream]['messages']]
+                full_record_count = len(full_records)
+                interrupted_records = [message['data'] for message in interrupted_sync_records[stream]['messages']]
+                interrupted_record_count = len(interrupted_records)
              
                 if expected_replication_method == self.INCREMENTAL:
 
@@ -164,7 +172,7 @@ class InterruptedSyncTest(GoogleAdsBase):
 
                             # gather results
                             start_date_datetime = dt.strptime(self.start_date, self.START_DATE_FORMAT)
-                            oldest_record_datetime = dt.strptime(records[0].get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
+                            oldest_record_datetime = dt.strptime(interrupted_records[0].get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
                             final_stream_bookmark = final_state['bookmarks'][stream]
                             final_bookmark = final_stream_bookmark.get(customer, {}).get(expected_replication_key)
                             final_bookmark_datetime = dt.strptime(final_bookmark, self.REPLICATION_KEY_FORMAT)
@@ -186,7 +194,7 @@ class InterruptedSyncTest(GoogleAdsBase):
 
                                 # Verify resuming sync only replicates records with replication key values greater or equal to
                                 # the interrupted_state for streams that completed were replicated during the interrupted sync.
-                                for record in records:
+                                for record in interrupted_records:
                                     with self.subTest(record_primary_key=record[expected_primary_key]):
                                         rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
                                         self.assertGreaterEqual(rec_time, interrupted_bookmark_datetime)
@@ -208,6 +216,6 @@ class InterruptedSyncTest(GoogleAdsBase):
                     self.assertIsNone(stream_bookmark_2)
 
                 # Verify at least 1 record was replicated for each stream
-                self.assertGreater(record_count, 0)
+                self.assertGreater(interrupted_record_count, 0)
 
-                print(f"{stream} resumed sync records replicated: {record_count}")
+                print(f"{stream} resumed sync records replicated: {interrupted_record_count}")

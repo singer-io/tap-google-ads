@@ -11,7 +11,7 @@ LOGGER = singer.get_logger()
 def get_currently_syncing(state):
     currently_syncing = state.get("currently_syncing")
 
-    if not currently_syncing or currently_syncing == 'None':
+    if not currently_syncing:
         currently_syncing = (None, None)
 
     resuming_stream, resuming_customer = currently_syncing
@@ -75,5 +75,5 @@ def do_sync(config, catalog, resource_schema, state):
 
             stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
 
-    state = singer.bookmarks.set_currently_syncing(state, (None, None))
+    state.pop("currently_syncing")
     singer.write_state(state)

@@ -103,7 +103,7 @@ class BookmarksTest(GoogleAdsBase):
         }
 
         manipulated_state = {
-            'currently_syncing': (None, None),
+            'currently_syncing': (None, None),  # ('stream_name', 'customer_id')
             'bookmarks': {
                 stream: {'5548074409': {'date': injected_state_by_stream[stream]}}
                 for stream in streams_under_test

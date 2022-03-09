@@ -17,7 +17,7 @@ resource_schema = {
 
 class TestEndDate(unittest.TestCase):
 
-    def run_test(self, start_date, end_date, fake_make_request):
+    def do_thing(self, start_date, end_date, fake_make_request):
 
         # Create the stream so we can call sync
         my_report_stream = ReportStream(
@@ -75,13 +75,13 @@ class TestEndDate(unittest.TestCase):
     def test_no_end_date(self, fake_make_request):
         start_date = datetime(2022, 1, 1, 0, 0, 0)
         end_date = None
-        self.run_test(start_date, end_date, fake_make_request)
+        self.do_thing(start_date, end_date, fake_make_request)
 
     @patch('tap_google_ads.streams.make_request')
     def test_end_date_one_day_after_start(self, fake_make_request):
         start_date = datetime(2022, 3, 5, 0, 0, 0)
         end_date = datetime(2022, 3, 6, 0, 0, 0)
-        self.run_test(start_date, end_date, fake_make_request)
+        self.do_thing(start_date, end_date, fake_make_request)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,5 @@
 """Test tap bookmarks and converstion window."""
+import os
 import re
 from datetime import datetime as dt
 from datetime import timedelta

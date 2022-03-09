@@ -37,14 +37,14 @@ def do_sync(config, catalog, resource_schema, state):
     except TypeError:  # falling back to raw value
         customers = config["login_customer_ids"]
     # QA ADDED WORKAROUND [END]
-    customers = sorted(customers)
+    customers = sorted(customers, key=lambda x: x["customerId"])
 
     selected_streams = [
         stream
         for stream in catalog["streams"]
         if singer.metadata.to_map(stream["metadata"])[()].get("selected")
     ]
-    selected_streams = sorted(selected_streams)
+    selected_streams = sorted(selected_streams, key=lambda x: x["tap_stream_id"])
 
     core_streams = initialize_core_streams(resource_schema)
     report_streams = initialize_reports(resource_schema)

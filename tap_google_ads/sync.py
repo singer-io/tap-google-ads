@@ -72,3 +72,6 @@ def do_sync(config, catalog, resource_schema, state):
                 stream_obj = report_streams[stream_name]
 
             stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
+
+    state = singer.bookmarks.set_currently_syncing(state, (None, None))
+    singer.write_state(state)

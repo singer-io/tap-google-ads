@@ -57,6 +57,7 @@ class GoogleAdsBase(unittest.TestCase):
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
         }
+
         # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
@@ -558,6 +559,26 @@ class GoogleAdsBase(unittest.TestCase):
             connections.select_catalog_and_fields_via_metadata(
                 conn_id, catalog, schema_and_metadata, [], non_selected_properties
             )
+
+    def select_stream_and_specified_fields(self, conn_id, catalog, fields_to_select: set()):
+        """
+        Select the specified stream and it's fields.
+        Intended only for report streams.
+        """
+        if not self.is_report(catalog['tap_stream_id']):
+            raise RuntimeError("Method intended for report streams only.")
+
+        schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
+        metadata = schema_and_metadata['metadata']
+        properties = {md['breadcrumb'][-1]
+                      for md in metadata
+                      if len(md['breadcrumb']) > 0 and md['breadcrumb'][0] == 'properties'}
+        self.assertTrue(fields_to_select.issubset(properties),
+                        msg=f"{catalog['stream_name']} missing {fields_to_select.difference(properties)}")
+        non_selected_properties = properties.difference(fields_to_select)
+        connections.select_catalog_and_fields_via_metadata(
+            conn_id, catalog, schema_and_metadata, [], non_selected_properties
+        )
 
     def is_report(self, stream):
         return stream.endswith('_report')

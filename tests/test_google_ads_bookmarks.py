@@ -105,7 +105,7 @@ class BookmarksTest(GoogleAdsBase):
         manipulated_state = {
             'currently_syncing': (None, None),
             'bookmarks': {
-                stream: {'5548074409': {'date': injected_state_by_stream[stream]}}
+                stream: {os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'): {'date': injected_state_by_stream[stream]}}
                 for stream in streams_under_test
                 if self.is_report(stream)
             }

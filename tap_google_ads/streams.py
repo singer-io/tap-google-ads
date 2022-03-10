@@ -386,7 +386,8 @@ class ReportStream(BaseStream):
                 "valid-replication-keys": ["date"]
             },
             ("properties", "_sdc_record_hash"): {
-                "inclusion": "automatic"
+                "inclusion": "automatic",
+                "behavior": "PRIMARY KEY"
             },
         }
         for report_field in self.fields:

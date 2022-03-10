@@ -1,5 +1,5 @@
 """Test tap configurable properties. Specifically the conversion_window"""
-import re
+import os
 from datetime import datetime as dt
 from datetime import timedelta
 
@@ -80,11 +80,12 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         self.select_all_streams_and_default_fields(conn_id, report_catalogs)
 
         # set state to ensure conversion window is used
-        today_datetime = dt.strftime(dt.utcnow() - timedelta(days=1), self.REPLICATION_KEY_FORMAT)
+        today_datetime = dt.strftime(dt.utcnow(), self.REPLICATION_KEY_FORMAT)
         # today_datetime = dt.strftime(dt.utcnow(), self.REPLICATION_KEY_FORMAT)
+        customer_id = os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID')
         initial_state = {
-            'currently_syncing': None,
-            'bookmarks': {stream: {'date': today_datetime}
+            'currently_syncing': [None, None],
+            'bookmarks': {stream: {customer_id: {'date': today_datetime}}
                           for stream in streams_to_test
                           if self.is_report(stream)}
         }
@@ -98,19 +99,19 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         menagerie.verify_sync_exit_status(self, exit_status, sync_job_name)
 
         # Verify tap replicates through today by check state
-        # final_state = menagerie.get_state(conn_id)
-        # self.assertDictEqual(final_state, initial_state)
+        final_state = menagerie.get_state(conn_id)
+        self.assertDictEqual(final_state, initial_state)
 
         # for stream in stream_to_test:
         #     with self.subTest(stream=stream):
         #         self.assertEqual
         
-# class ConversionWindowTestOne(ConversionWindowBaseTest):
+class ConversionWindowTestOne(ConversionWindowBaseTest):
 
-#     conversion_window = '1'
+    conversion_window = '1'
 
-#     def test_run(self):
-#         self.run_test()
+    def test_run(self):
+        self.run_test()
 
 # class ConversionWindowTestThirty(ConversionWindowBaseTest):
 
@@ -126,9 +127,9 @@ class ConversionWindowBaseTest(GoogleAdsBase):
 #     def test_run(self):
 #         self.run_test()
 
-class ConversionWindowTestNinety(ConversionWindowBaseTest):
+# class ConversionWindowTestNinety(ConversionWindowBaseTest):
 
-    conversion_window = '90'
+#     conversion_window = '90'
 
-    def test_run(self):
-        self.run_test()
+#     def test_run(self):
+#         self.run_test()

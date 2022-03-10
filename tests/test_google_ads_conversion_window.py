@@ -102,10 +102,6 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         final_state = menagerie.get_state(conn_id)
         self.assertDictEqual(final_state, initial_state)
 
-        # for stream in stream_to_test:
-        #     with self.subTest(stream=stream):
-        #         self.assertEqual
-        
 class ConversionWindowTestOne(ConversionWindowBaseTest):
 
     conversion_window = '1'

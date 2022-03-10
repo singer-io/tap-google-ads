@@ -172,7 +172,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         self.field_exclusions = defaultdict(set)
         self.schema = {}
         self.behavior = {}
-        self.selectable = {}
 
         for resource_name in self.google_ads_resource_names:
 
@@ -188,7 +187,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     self.behavior[field_name] = field["field_details"]["category"]
 
-                    self.selectable[field_name] = field["field_details"]["selectable"]
             self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
 

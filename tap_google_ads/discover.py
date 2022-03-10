@@ -205,6 +205,11 @@ def create_resource_schema(config):
                     field_to_check = field_root_resource or field_name
                     compared_field_to_check = compared_field_root_resource or compared_field
 
+                    # The `selectable_with` for any given metric will not include
+                    # any other metrics despite compatibility, so don't check those
+                    if field_name.startswith("metrics.") and compared_field.startswith("metrics."):
+                        continue
+
                     # If a resource is selectable with another resource they should be in
                     # each other's 'selectable_with' list, but Google is missing some of
                     # these so we have to check both ways
@@ -215,6 +220,7 @@ def create_resource_schema(config):
                         field["incompatible_fields"].append(compared_field)
 
         report_object["fields"] = fields
+
     return resource_schema
 
 

@@ -40,8 +40,6 @@ class TestEndDate(unittest.TestCase):
 
         if end_date:
             config["end_date"] = str(end_date)
-        else:
-            end_date = datetime.now()
 
         my_report_stream.sync(
             Mock(),

@@ -220,7 +220,6 @@ def create_resource_schema(config):
                         field["incompatible_fields"].append(compared_field)
 
         report_object["fields"] = fields
-
     return resource_schema
 
 

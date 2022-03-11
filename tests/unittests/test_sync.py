@@ -17,7 +17,7 @@ resource_schema = {
 
 class TestEndDate(unittest.TestCase):
 
-    def do_thing(self, start_date, end_date, fake_make_request):
+    def run_sync(self, start_date, end_date, fake_make_request):
 
         # Create the stream so we can call sync
         my_report_stream = ReportStream(

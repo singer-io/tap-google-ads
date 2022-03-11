@@ -17,6 +17,14 @@ resource_schema = {
 
 class TestEndDate(unittest.TestCase):
 
+    def get_queries_from_sync(self, fake_make_request):
+        all_queries_requested = []
+        for request_sent in fake_make_request.call_args_list:
+            # The function signature is gas, query, customer_id
+            _, query, _ = request_sent.args
+            all_queries_requested.append(query)
+        return all_queries_requested
+
     def run_sync(self, start_date, end_date, fake_make_request):
 
         # Create the stream so we can call sync
@@ -46,11 +54,6 @@ class TestEndDate(unittest.TestCase):
             {}
         )
 
-        all_queries_requested = []
-        for request_sent in fake_make_request.call_args_list:
-            # The function signature is gas, query, customer_id
-            _, query, _ = request_sent.args
-            all_queries_requested.append(query)
 
         delta_days = end_date - start_date
         expected_days = [start_date]

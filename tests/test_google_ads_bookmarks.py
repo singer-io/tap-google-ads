@@ -85,7 +85,7 @@ class BookmarksTest(GoogleAdsBase):
         synced_records_1 = runner.get_records_from_target_output()
         state_1 = menagerie.get_state(conn_id)
         bookmarks_1 = state_1.get('bookmarks')
-        currently_syncing_1 = state_1.get('currently_syncing', 'KEY NOT SAVED IN STATE')
+        currently_syncing_1 = state_1.get('currently_syncing')
 
         # inject a simulated state value for each report stream under test
         data_set_state_value_1 = '2022-01-24T00:00:00.000000Z'
@@ -104,7 +104,6 @@ class BookmarksTest(GoogleAdsBase):
         }
 
         manipulated_state = {
-            'currently_syncing': (None, None),
             'bookmarks': {
                 stream: {os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'): {'date': injected_state_by_stream[stream]}}
                 for stream in streams_under_test
@@ -120,18 +119,18 @@ class BookmarksTest(GoogleAdsBase):
         synced_records_2 = runner.get_records_from_target_output()
         state_2 = menagerie.get_state(conn_id)
         bookmarks_2 = state_2.get('bookmarks')
-        currently_syncing_2 = state_2.get('currently_syncing', 'KEY NOT SAVED IN STATE')
+        currently_syncing_2 = state_2.get('currently_syncing')
 
         # Checking syncs were successful prior to stream-level assertions
         with self.subTest():
 
             # Verify sync is not interrupted by checking currently_syncing in state for sync 1
-            self.assertEqual([None, None], currently_syncing_1)
+            self.assertIsNone(currently_syncing_1)
             # Verify bookmarks are saved
             self.assertIsNotNone(bookmarks_1)
 
             # Verify sync is not interrupted by checking currently_syncing in state for sync 2
-            self.assertEqual([None, None], currently_syncing_2)
+            self.assertIsNone(currently_syncing_2)
             # Verify bookmarks are saved
             self.assertIsNotNone(bookmarks_2)
 

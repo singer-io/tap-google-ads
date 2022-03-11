@@ -18,13 +18,28 @@ def get_currently_syncing(state):
     return resuming_stream, resuming_customer
 
 
-def shuffle(shuffle_list, shuffle_key, current_value):
 def sort_customers(customers):
     return sorted(customers, key=lambda x: x["customerId"])
 
 def sort_selected_streams(sort_list):
     return sorted(sort_list, key=lambda x: x["tap_stream_id"])
 
+
+def shuffle(shuffle_list, shuffle_key, current_value, sort_function):
+    """Return `shuffle_list` with `current_value` at the front of the list
+
+    In the scenario where `current_value` is not in `shuffle_list`:
+    - Assume that we have a consistent ordering to `shuffle_list`
+    - Insert the `current_value` into `shuffle_list`
+    - Sort the new list
+    - Do the normal logic to shuffle the list
+    - Return the new shuffled list without the `current_value` we inserted"""
+
+    fallback = False
+    if current_value not in [item[shuffle_key] for item in shuffle_list]:
+        fallback = True
+        shuffle_list.append({shuffle_key: current_value})
+        shuffle_list = sort_function(shuffle_list)
 
     matching_index = 0
     for i, key in enumerate(shuffle_list):
@@ -33,6 +48,10 @@ def sort_selected_streams(sort_list):
             break
     top_half = shuffle_list[matching_index:]
     bottom_half = shuffle_list[:matching_index]
+
+    if fallback:
+        return top_half[1:] + bottom_half
+
     return top_half + bottom_half
 
 
@@ -57,10 +76,20 @@ def do_sync(config, catalog, resource_schema, state):
     resuming_stream, resuming_customer = get_currently_syncing(state)
 
     if resuming_stream:
-        selected_streams = shuffle(selected_streams, "tap_stream_id", resuming_stream)
+        selected_streams = shuffle(
+            selected_streams,
+            "tap_stream_id",
+            resuming_stream,
+            sort_function=sort_selected_streams
+        )
 
     if resuming_customer:
-        customers = shuffle(customers, "customerId", resuming_customer)
+        customers = shuffle(
+            customers,
+            "customerId",
+            resuming_customer,
+            sort_function=sort_customers
+        )
 
     for catalog_entry in selected_streams:
         stream_name = catalog_entry["stream"]

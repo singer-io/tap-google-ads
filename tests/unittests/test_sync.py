@@ -38,6 +38,7 @@ class TestEndDate(unittest.TestCase):
         # Create a config that maybe has an end date
         config = {"start_date": str(start_date),}
 
+        # If end_date exists, write it to the config
         if end_date:
             config["end_date"] = str(end_date)
 
@@ -52,37 +53,51 @@ class TestEndDate(unittest.TestCase):
             {}
         )
 
-
-        delta_days = end_date - start_date
-        expected_days = [start_date]
-        for i in range(delta_days.days):
-            expected_days.append(
-                start_date + timedelta(days=1)
-            )
-
-
-        for day in expected_days:
-            # YYYY-MM-DD
-            date_portion = str(day)[:10]
-
-            self.assertTrue(
-                any(
-                    date_portion in query for query in all_queries_requested
-                )
-            )
-
-
     @patch('tap_google_ads.streams.make_request')
     def test_no_end_date(self, fake_make_request):
         start_date = datetime(2022, 1, 1, 0, 0, 0)
-        end_date = None
-        self.do_thing(start_date, end_date, fake_make_request)
+        end_date = datetime.now()
+        # Don't pass in end_date to test the tap's fallback to today
+        self.run_sync(start_date, None, fake_make_request)
+        all_queries_requested = self.get_queries_from_sync(fake_make_request)
+
+        date_delta = end_date - start_date
+
+        # Add one to make it inclusive of the end date
+        days_between_start_and_end = date_delta.days + 1
+
+        # Compute the range of expected days, because end_date will always shift
+        expected_days = []
+        for i in range(days_between_start_and_end):
+            expected_datetime = start_date + timedelta(days=i)
+            expected_day = str(expected_datetime)[:10]
+            expected_days.append(expected_day)
+
+        for day in expected_days:
+            self.assertTrue(
+                any(
+                    day in query for query in all_queries_requested
+                )
+            )
 
     @patch('tap_google_ads.streams.make_request')
     def test_end_date_one_day_after_start(self, fake_make_request):
         start_date = datetime(2022, 3, 5, 0, 0, 0)
         end_date = datetime(2022, 3, 6, 0, 0, 0)
-        self.do_thing(start_date, end_date, fake_make_request)
+        self.run_sync(start_date, end_date, fake_make_request)
+        all_queries_requested = self.get_queries_from_sync(fake_make_request)
+
+        expected_days = [
+            "2022-03-05",
+            "2022-03-06",
+        ]
+
+        for day in expected_days:
+            self.assertTrue(
+                any(
+                    day in query for query in all_queries_requested
+                )
+            )
 
 if __name__ == '__main__':
     unittest.main()

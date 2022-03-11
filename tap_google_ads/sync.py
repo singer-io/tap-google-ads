@@ -19,6 +19,12 @@ def get_currently_syncing(state):
 
 
 def shuffle(shuffle_list, shuffle_key, current_value):
+def sort_customers(customers):
+    return sorted(customers, key=lambda x: x["customerId"])
+
+def sort_selected_streams(sort_list):
+    return sorted(sort_list, key=lambda x: x["tap_stream_id"])
+
 
     matching_index = 0
     for i, key in enumerate(shuffle_list):
@@ -37,14 +43,14 @@ def do_sync(config, catalog, resource_schema, state):
     except TypeError:  # falling back to raw value
         customers = config["login_customer_ids"]
     # QA ADDED WORKAROUND [END]
-    customers = sorted(customers, key=lambda x: x["customerId"])
+    customers = sort_customers(customers)
 
     selected_streams = [
         stream
         for stream in catalog["streams"]
         if singer.metadata.to_map(stream["metadata"])[()].get("selected")
     ]
-    selected_streams = sorted(selected_streams, key=lambda x: x["tap_stream_id"])
+    selected_streams = sort_selected_streams(selected_streams)
 
     core_streams = initialize_core_streams(resource_schema)
     report_streams = initialize_reports(resource_schema)

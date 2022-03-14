@@ -1,9 +1,6 @@
 """Test tap field exclusions with random field selection."""
-<<<<<<< HEAD
 from datetime import datetime as dt
 from datetime import timedelta
-=======
->>>>>>> Qa/exclusion completion (#26)
 import random
 
 from tap_tester import menagerie, connections, runner
@@ -18,10 +15,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
     NOTE: Manual test case must be run at least once any time this feature changes or is updated.
           Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manually)
     """
-<<<<<<< HEAD
-=======
-
->>>>>>> Qa/exclusion completion (#26)
     @staticmethod
     def name():
         return "tt_google_ads_field_exclusion"
@@ -68,8 +61,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
 
         streams_to_test = {stream for stream in self.expected_streams()
                            if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
-<<<<<<< HEAD
-         # TODO Determine value in syncing records for this test
 
         # streams_to_test = streams_to_test - {
         #     # These streams missing from expected_default_fields() method TODO unblocked due to random? Test them now
@@ -88,29 +79,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
         # bump start date from default
         self.start_date = dt.strftime(dt.today() - timedelta(days=3), self.START_DATE_FORMAT)
         conn_id = connections.ensure_connection(self, original_properties=False)
-=======
-
-        streams_to_test = streams_to_test - {
-            # These streams missing from expected_default_fields() method TODO unblocked due to random? Test them now
-            # 'expanded_landing_page_report',
-            # 'shopping_performance_report',
-            # 'user_location_performance_report',
-            # 'keywordless_query_report',
-            # 'keywords_performance_report',
-            # 'landing_page_report',
-            # TODO These streams have no data to replicate and fail the last assertion
-            'video_performance_report',
-            'audience_performance_report',
-            'placement_performance_report',
-            'display_topics_performance_report',
-            'display_keyword_performance_report',
-        }
-
-        #streams_to_test = {'gender_performance_report', 'placeholder_report',}
-
-        random_order_of_exclusion_fields = {}
-        conn_id = connections.ensure_connection(self)
->>>>>>> Qa/exclusion completion (#26)
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
@@ -184,7 +152,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
 
                         # These streams likely replicate records using the default field selection but may not produce any
                         # records when selecting this many fields with exclusions.
-<<<<<<< HEAD
                         # streams_unlikely_to_replicate_records = {
                         #     'ad_performance_report',
                         #     'account_performance_report',
@@ -211,34 +178,6 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
                         #         msg="failed to replicate any data: {}".format(sync_record_count)
                         #     )
                         #     print("total replicated row count: {}".format(sum(sync_record_count.values())))
-=======
-                        streams_unlikely_to_replicate_records = {
-                            'ad_performance_report',
-                            'account_performance_report',
-                            'shopping_performance_report',
-                            'search_query_performance_report',
-                            'placeholder_feed_item_report',
-                            'placeholder_report',
-                            'keywords_performance_report',
-                            'keywordless_query_report',
-                            'geo_performance_report',
-                            'gender_performance_report',  # Very rare
-                            'ad_group_audience_performance_report',
-                            'age_range_performance_report',
-                            'campaign_audience_performance_report',
-                            'user_location_performance_report',
-                            'ad_group_performance_report',
-                            }
-
-                        if stream not in streams_unlikely_to_replicate_records:
-                            sync_record_count = runner.examine_target_output_file(
-                                self, conn_id, self.expected_streams(), self.expected_primary_keys())
-                            self.assertGreater(
-                                sum(sync_record_count.values()), 0,
-                                msg="failed to replicate any data: {}".format(sync_record_count)
-                            )
-                            print("total replicated row count: {}".format(sum(sync_record_count.values())))
->>>>>>> Qa/exclusion completion (#26)
 
                         # TODO additional assertions?
 

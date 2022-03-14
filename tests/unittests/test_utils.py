@@ -3,6 +3,8 @@ from tap_google_ads.streams import generate_hash
 from tap_google_ads.streams import get_query_date
 from tap_google_ads.streams import create_nested_resource_schema
 from tap_google_ads.sync import shuffle
+from tap_google_ads.sync import sort_selected_streams
+from tap_google_ads.sync import sort_customers
 from singer import metadata
 from singer.utils import strptime_to_utc
 
@@ -224,7 +226,12 @@ class TestShuffleStreams(unittest.TestCase):
     ]
 
     def test_shuffle_first_stream(self):
-        actual = shuffle(self.selected_streams, "tap_stream_id", "stream1")
+        actual = shuffle(
+            self.selected_streams,
+            "tap_stream_id",
+            "stream1",
+            sort_function=sort_selected_streams
+        )
         expected = [
             {"tap_stream_id": "stream1"},
             {"tap_stream_id": "stream2"},
@@ -236,7 +243,12 @@ class TestShuffleStreams(unittest.TestCase):
 
 
     def test_shuffle_middle_stream(self):
-        actual = shuffle(self.selected_streams, "tap_stream_id", "stream3")
+        actual = shuffle(
+            self.selected_streams,
+            "tap_stream_id",
+            "stream3",
+            sort_function=sort_selected_streams
+        )
         expected = [
             {"tap_stream_id": "stream3"},
             {"tap_stream_id": "stream4"},
@@ -247,13 +259,39 @@ class TestShuffleStreams(unittest.TestCase):
         self.assertListEqual(expected, actual)
 
     def test_shuffle_last_stream(self):
-        actual = shuffle(self.selected_streams, "tap_stream_id", "stream5")
+        actual = shuffle(
+            self.selected_streams,
+            "tap_stream_id",
+            "stream5",
+            sort_function=sort_selected_streams
+        )
         expected = [
             {"tap_stream_id": "stream5"},
             {"tap_stream_id": "stream1"},
             {"tap_stream_id": "stream2"},
             {"tap_stream_id": "stream3"},
             {"tap_stream_id": "stream4"},
+        ]
+        self.assertListEqual(expected, actual)
+
+    def test_shuffle_deselect_currently_syncing(self):
+        actual = shuffle(
+            [
+                {"tap_stream_id": "stream1"},
+                {"tap_stream_id": "stream2"},
+                {"tap_stream_id": "stream4"},
+                {"tap_stream_id": "stream5"},
+            ],
+            "tap_stream_id",
+            "stream3",
+            sort_function=sort_selected_streams
+        )
+        expected = [
+            {"tap_stream_id": "stream4"},
+            {"tap_stream_id": "stream5"},            
+            {"tap_stream_id": "stream1"},
+            {"tap_stream_id": "stream2"},
+
         ]
         self.assertListEqual(expected, actual)
 
@@ -269,7 +307,12 @@ class TestShuffleCustomers(unittest.TestCase):
     ]
 
     def test_shuffle_first_customer(self):
-        actual = shuffle(self.customers, "customerId", "customer1")
+        actual = shuffle(
+            self.customers,
+            "customerId",
+            "customer1",
+            sort_function=sort_customers
+        )
         expected = [
             {"customerId": "customer1"},
             {"customerId": "customer2"},
@@ -280,7 +323,12 @@ class TestShuffleCustomers(unittest.TestCase):
         self.assertListEqual(expected, actual)
 
     def test_shuffle_middle_customer(self):
-        actual = shuffle(self.customers, "customerId", "customer3")
+        actual = shuffle(
+            self.customers,
+            "customerId",
+            "customer3",
+            sort_function=sort_customers
+        )
         expected = [
             {"customerId": "customer3"},
             {"customerId": "customer4"},
@@ -291,7 +339,12 @@ class TestShuffleCustomers(unittest.TestCase):
         self.assertListEqual(expected, actual)
 
     def test_shuffle_last_customer(self):
-        actual = shuffle(self.customers, "customerId", "customer5")
+        actual = shuffle(
+            self.customers,
+            "customerId",
+            "customer5",
+            sort_function=sort_customers
+        )
         expected = [
             {"customerId": "customer5"},
             {"customerId": "customer1"},

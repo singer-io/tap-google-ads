@@ -42,7 +42,10 @@ class GoogleAdsBase(unittest.TestCase):
         return "platform.google-ads"
 
     def get_customer_ids(self):
-        return [os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'), os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID')]
+        return [
+            os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
+            os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),
+        ]
 
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""
@@ -53,7 +56,6 @@ class GoogleAdsBase(unittest.TestCase):
             # 'conversion_window_days': '30',
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
-
         }
 
         # TODO_TDL-17911 Add a test around conversion_window_days

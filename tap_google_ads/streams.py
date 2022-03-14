@@ -117,8 +117,8 @@ def on_giveup_func(err):
 
 
 @backoff.on_exception(backoff.expo,
-                      [GoogleAdsException,
-                       AttributeError],
+                      (GoogleAdsException,
+                       AttributeError),
                       max_tries=5,
                       jitter=None,
                       giveup=should_give_up,
@@ -313,8 +313,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                 singer.write_record(stream_name, record)
 
-        state = singer.bookmarks.set_currently_syncing(state, (None, None))
-        singer.write_state(state)
 
 def get_query_date(start_date, bookmark, conversion_window_date):
     """Return a date within the conversion window and after start date
@@ -458,7 +456,12 @@ class ReportStream(BaseStream):
             bookmark=bookmark_value,
             conversion_window_date=singer.utils.strftime(conversion_window_date)
         )
-        end_date = utils.now()
+
+        end_date = config.get("end_date")
+        if end_date:
+            end_date = utils.strptime_to_utc(end_date)
+        else:
+            end_date = utils.now()
 
         if stream_name in REPORTS_WITH_90_DAY_MAX:
             cutoff = end_date.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=90)
@@ -469,7 +472,7 @@ class ReportStream(BaseStream):
         if selected_fields == {'segments.date'}:
             raise Exception(f"Selected fields is currently limited to {', '.join(selected_fields)}. Please select at least one attribute and metric in order to replicate {stream_name}.")
 
-        while query_date < end_date:
+        while query_date <= end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
 
@@ -497,9 +500,6 @@ class ReportStream(BaseStream):
             singer.write_state(state)
 
             query_date += timedelta(days=1)
-
-        state = singer.bookmarks.set_currently_syncing(state, (None, None))
-        singer.write_state(state)
 
 
 def initialize_core_streams(resource_schema):

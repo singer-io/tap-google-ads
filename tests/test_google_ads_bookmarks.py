@@ -1,4 +1,5 @@
 """Test tap bookmarks and converstion window."""
+import os
 import re
 from datetime import datetime as dt
 from datetime import timedelta
@@ -80,7 +81,7 @@ class BookmarksTest(GoogleAdsBase):
         synced_records_1 = runner.get_records_from_target_output()
         state_1 = menagerie.get_state(conn_id)
         bookmarks_1 = state_1.get('bookmarks')
-        currently_syncing_1 = state_1.get('currently_syncing', 'KEY NOT SAVED IN STATE')
+        currently_syncing_1 = state_1.get('currently_syncing')
 
         # inject a simulated state value for each report stream under test
         data_set_state_value_1 = '2022-01-24T00:00:00.000000Z'
@@ -103,9 +104,8 @@ class BookmarksTest(GoogleAdsBase):
         }
 
         manipulated_state = {
-            'currently_syncing': (None, None),  # ('stream_name', 'customer_id')
             'bookmarks': {
-                stream: {'5548074409': {'date': injected_state_by_stream[stream]}}
+                stream: {os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'): {'date': injected_state_by_stream[stream]}}
                 for stream in streams_under_test
                 if self.is_report(stream)
             }
@@ -119,7 +119,7 @@ class BookmarksTest(GoogleAdsBase):
         synced_records_2 = runner.get_records_from_target_output()
         state_2 = menagerie.get_state(conn_id)
         bookmarks_2 = state_2.get('bookmarks')
-        currently_syncing_2 = state_2.get('currently_syncing', 'KEY NOT SAVED IN STATE')
+        currently_syncing_2 = state_2.get('currently_syncing')
 
         # Checking syncs were successful prior to stream-level assertions
         with self.subTest():

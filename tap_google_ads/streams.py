@@ -96,6 +96,7 @@ retryable_errors = [
 def should_give_up(ex):
     if isinstance(ex, AttributeError):
         if str(ex) == "'NoneType' object has no attribute 'Call'":
+            LOGGER.info('Retrying request due to AttributeError')
             return False
         return True
 
@@ -104,6 +105,7 @@ def should_give_up(ex):
         internal_error = str(googleads_error.error_code.internal_error)
         for err in [quota_error, internal_error]:
             if err in retryable_errors:
+                LOGGER.info(f'Retrying request due to {err}')
                 return False
     return True
 
@@ -115,8 +117,8 @@ def on_giveup_func(err):
 
 
 @backoff.on_exception(backoff.expo,
-                      [GoogleAdsException,
-                       AttributeError],
+                      (GoogleAdsException,
+                       AttributeError),
                       max_tries=5,
                       jitter=None,
                       giveup=should_give_up,
@@ -289,7 +291,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
-        state = singer.set_currently_syncing(state, stream_name)
+        state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
+        singer.write_state(state)
 
         query = create_core_stream_query(resource_name, selected_fields)
         try:
@@ -306,8 +309,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
 
                 singer.write_record(stream_name, record)
-
-        state = singer.bookmarks.set_currently_syncing(state, None)
 
 
 def get_query_date(start_date, bookmark, conversion_window_date):
@@ -435,18 +436,29 @@ class ReportStream(BaseStream):
         stream_mdata = stream["metadata"]
         selected_fields = get_selected_fields(stream_mdata)
         replication_key = "date"
-        state = singer.set_currently_syncing(state, stream_name)
+        state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
+        singer.write_state(state)
+
         conversion_window = timedelta(
             days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
         )
         conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
 
+        bookmark_object = singer.get_bookmark(state, stream["tap_stream_id"], customer["customerId"], default={})
+
+        bookmark_value = bookmark_object.get(replication_key)
+
         query_date = get_query_date(
             start_date=config["start_date"],
-            bookmark=singer.get_bookmark(state, stream_name, replication_key),
+            bookmark=bookmark_value,
             conversion_window_date=singer.utils.strftime(conversion_window_date)
         )
-        end_date = utils.now()
+
+        end_date = config.get("end_date")
+        if end_date:
+            end_date = utils.strptime_to_utc(end_date)
+        else:
+            end_date = utils.now()
 
         if stream_name in REPORTS_WITH_90_DAY_MAX:
             cutoff = end_date.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=90)
@@ -454,12 +466,10 @@ class ReportStream(BaseStream):
             if query_date == cutoff:
                 LOGGER.info(f"Stream: {stream_name} supports only 90 days of data. Setting query date to {utils.strftime(query_date, '%Y-%m-%d')}.")
 
-        singer.write_state(state)
-
         if selected_fields == {'segments.date'}:
             raise Exception(f"Selected fields is currently limited to {', '.join(selected_fields)}. Please select at least one attribute and metric in order to replicate {stream_name}.")
 
-        while query_date < end_date:
+        while query_date <= end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
 
@@ -481,14 +491,12 @@ class ReportStream(BaseStream):
 
                     singer.write_record(stream_name, record)
 
-            singer.write_bookmark(state, stream_name, replication_key, utils.strftime(query_date))
+            new_bookmark_value = {replication_key: utils.strftime(query_date)}
+            singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], new_bookmark_value)
 
             singer.write_state(state)
 
             query_date += timedelta(days=1)
-
-        state = singer.bookmarks.set_currently_syncing(state, None)
-        singer.write_state(state)
 
 
 def initialize_core_streams(resource_schema):

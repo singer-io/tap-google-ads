@@ -158,5 +158,75 @@ class TestBookmarkOnConversionWindow(unittest.TestCase):
         self.assertEqual(len(all_queries_requested), conversion_window + 1) # inclusive
 
 
+class TestStartDateWithinConversionWindow(unittest.TestCase):
+
+    @patch('tap_google_ads.streams.make_request')
+    def test_bookmark_on_1_day_conversion_window(self, fake_make_request):
+        conversion_window = 1
+        self.execute(conversion_window, fake_make_request)
+
+    @patch('tap_google_ads.streams.make_request')
+    def test_bookmark_on_default_conversion_window(self, fake_make_request):
+        conversion_window = 30
+        self.execute(conversion_window, fake_make_request)
+
+    @patch('tap_google_ads.streams.make_request')
+    def test_bookmark_on_60_day_conversion_window(self, fake_make_request):
+        conversion_window = 60
+        self.execute(conversion_window, fake_make_request)
+
+    @patch('tap_google_ads.streams.make_request')
+    def test_bookmark_on_90_day_conversion_window(self, fake_make_request):
+        conversion_window = 90
+        self.execute(conversion_window, fake_make_request)
+
+    def execute(self, conversion_window, fake_make_request):
+
+        # Set config using conversion_window under test
+        start_date = datetime.now().replace(hour=0, minute=0, second=0)
+        config = {
+            "start_date": str(start_date),
+            "conversion_window": str(conversion_window),
+        }
+        end_date = datetime.now()
+
+        # Set state to empty
+        state = {}
+
+        # Create the stream so we can call sync
+        my_report_stream = ReportStream(
+            fields=[],
+            google_ads_resource_names=['accessible_bidding_strategy'],
+            resource_schema=resource_schema,
+            primary_keys=['foo']
+        )
+
+        # Execute sync directly and record requests made for stream
+        my_report_stream.sync(
+            Mock(),
+            {"customerId": "123",
+             "loginCustomerId": "456"},
+            {"tap_stream_id": "hi",
+             "stream": "hi",
+             "metadata": []},
+            config,
+            state,
+        )
+        all_queries_requested = []
+        for request_sent in fake_make_request.call_args_list:
+            # The function signature is gas, query, customer_id
+            _, query, _ = request_sent.args
+            all_queries_requested.append(query)
+
+
+        # Verify the first date queried is the conversion window date (not the bookmark)
+        expected_first_query_date = str(start_date)[:10]
+        actual_first_query_date = str(all_queries_requested[0])[-11:-1]
+        self.assertEqual(expected_first_query_date, actual_first_query_date)
+
+        # Verify the number of days queried is based off the start_date
+        self.assertEqual(len(all_queries_requested), 1)
+
+
 if __name__ == '__main__':
     unittest.main()

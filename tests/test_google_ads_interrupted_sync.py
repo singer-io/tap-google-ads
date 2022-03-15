@@ -60,28 +60,27 @@ class InterruptedSyncTest(GoogleAdsBase):
                 '<stream-name2>': {'<customer-id>': {'<replication-key>': <incomplete-bookmark-value>}},
 
         Test Cases:
-         - Verify an interrupted sync can resume based on the `currently_syncing` and stream level bookmark value
-         - Verify only records with replication-key values greater than or equal to the stream level bookmark are replicated on the resuming sync for the interrupted stream
+         - Verify an interrupted sync can resume based on the `currently_syncing` and stream level bookmark value.
+         - Verify only records with replication-key values greater than or equal to the stream level bookmark are
+           replicated on the resuming sync for the interrupted stream.
          - Verify the yet-to-be-synced streams are replicated following the interrupted stream in the resuming sync.
              (All yet-to-be-synced streams must replicate before streams that were already synced. - covered by unittests) TODO verify with devs
+
+        NOTE: The following streams all had records for the dates used in this test. If needed they can be used in
+              testing cases like this in the future.
+                'ad_group_performance_report', 'ad_performance_report', 'age_range_performance_report',
+                'campaign_performance_report', 'click_performance_report', 'expanded_landing_page_report',
+                'gender_performance_report', 'geo_performance_report', 'keywordless_query_report', 'landing_page_report',
+
         """
         print("Interrupted Sync Test for tap-google-ads")
 
         # the following streams are under test as they all have 4 consecutive days with records e.g.
         # ('2022-01-22T00:00:00.000000Z', '2022-01-23T00:00:00.000000Z', '2022-01-24T00:00:00.000000Z', '2022-01-25T00:00:00.000000Z')])}
-        streams_under_test = {'account_performance_report',
-                              # 'ad_group_performance_report',
-                              # 'ad_performance_report',
-                              # 'age_range_performance_report',
-                              # 'campaign_performance_report',
-                              # 'click_performance_report',
-                              # 'expanded_landing_page_report',
-                              # 'gender_performance_report',
-                              # 'geo_performance_report',
-                              # 'keywordless_query_report',
-                              # 'landing_page_report',
-                              'search_query_performance_report',
-                              'user_location_performance_report',
+        streams_under_test = {
+            'account_performance_report',
+            'search_query_performance_report',
+            'user_location_performance_report',
         }
 
         # Create connection using a recent start date
@@ -122,16 +121,6 @@ class InterruptedSyncTest(GoogleAdsBase):
             'currently_syncing': ('search_query_performance_report', '5548074409'),
             'bookmarks': {
                 'account_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'ad_group_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'ad_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'age_range_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'campaign_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'click_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'expanded_landing_page_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'gender_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'geo_performance_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'keywordless_query_report': {'5548074409': {'date': completed_bookmark_value}},
-                # 'landing_page_report': {'5548074409': {'date': completed_bookmark_value}},
                 'search_query_performance_report': {'5548074409': {'date': interrupted_bookmark_value}},
            },
          }
@@ -143,14 +132,13 @@ class InterruptedSyncTest(GoogleAdsBase):
         # acquire records from target output
         interrupted_sync_records = runner.get_records_from_target_output()
         final_state = menagerie.get_state(conn_id)
-        # TODO modify curretly_syncing and state logic to deal with dynamic structure of state
-        currently_syncing = final_state.get('currently_syncing', 'KEY NOT SAVED IN STATE')
+        currently_syncing = final_state.get('currently_syncing')
 
         # Checking resuming sync resulted in successfully saved state
         with self.subTest():
 
             # Verify sync is not interrupted by checking currently_syncing in state for sync
-            self.assertEqual([None, None], currently_syncing)
+            self.assertIsNone(currently_syncing)
 
             # Verify bookmarks are saved
             self.assertIsNotNone(final_state.get('bookmarks'))

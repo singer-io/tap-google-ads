@@ -129,9 +129,6 @@ def make_request(gas, query, customer_id):
     return response
 
 
-def get_state_key(stream_name, customer_id):
-    return stream_name + "_" + customer_id
-
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):

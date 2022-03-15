@@ -1,4 +1,3 @@
-import re
 import os
 from datetime import datetime as dt
 from datetime import timedelta
@@ -18,34 +17,19 @@ class InterruptedSyncTest(GoogleAdsBase):
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
-            'start_date':   '2021-12-01T00:00:00Z',
+            'start_date':   '2022-01-22T00:00:00Z',
             'user_id':      'not used?', # TODO ?
-            'conversion_window': '1',  # days
             'customer_ids': ','.join(self.get_customer_ids()),
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
-
         }
 
         # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
 
-        return_value["start_date"] = self.start_date
+        self.start_date = return_value['start_date']
         return return_value
-
-
-    def assertIsDateFormat(self, value, str_format):
-        """
-        Assertion Method that verifies a string value is a formatted datetime with
-        the specified format.
-        """
-        try:
-            _ = dt.strptime(value, str_format)
-        except ValueError as err:
-            raise AssertionError(
-                f"Value does not conform to expected format: {str_format}"
-            ) from err
 
 
     def test_run(self):
@@ -71,8 +55,8 @@ class InterruptedSyncTest(GoogleAdsBase):
                 'ad_group_performance_report', 'ad_performance_report', 'age_range_performance_report',
                 'campaign_performance_report', 'click_performance_report', 'expanded_landing_page_report',
                 'gender_performance_report', 'geo_performance_report', 'keywordless_query_report', 'landing_page_report',
-
         """
+
         print("Interrupted Sync Test for tap-google-ads")
 
         # the following streams are under test as they all have 4 consecutive days with records e.g.
@@ -84,7 +68,6 @@ class InterruptedSyncTest(GoogleAdsBase):
         }
 
         # Create connection using a recent start date
-        self.start_date = '2022-01-22T00:00:00Z'
         conn_id = connections.ensure_connection(self, original_properties=False)
 
         # Run a discovery job
@@ -111,10 +94,12 @@ class InterruptedSyncTest(GoogleAdsBase):
         full_sync_records = runner.get_records_from_target_output()
         full_sync_state = menagerie.get_state(conn_id)
 
-        # NB | Set state such that all but two streams have 'completed' a sync. The final stream ('user_location_performance_report') should
-        #      have no bookmark value while the interrupted stream ('search_query_performance_report') should have a bookmark value prior to the
-        #      'completed' streams.
-        #      (These dates are the most recent where data exists before and after the manipulated bookmarks for each stream.)
+        """
+          NB | Set state such that all but two streams have 'completed' a sync. The final stream ('user_location_performance_report') should
+               have no bookmark value while the interrupted stream ('search_query_performance_report') should have a bookmark value prior to the
+               'completed' streams.
+               (These dates are the most recent where data exists before and after the manipulated bookmarks for each stream.)
+        """
         completed_bookmark_value = '2022-01-24T00:00:00.000000Z'
         interrupted_bookmark_value = '2022-01-23T00:00:00.000000Z'
         interrupted_state = {
@@ -124,6 +109,7 @@ class InterruptedSyncTest(GoogleAdsBase):
                 'search_query_performance_report': {'5548074409': {'date': interrupted_bookmark_value}},
            },
          }
+
         menagerie.set_state(conn_id, interrupted_state)
 
         # Run another sync
@@ -223,7 +209,6 @@ class InterruptedSyncTest(GoogleAdsBase):
                             # Verify the bookmark is set based on sync end date (today) for resuming sync
                             self.assertEqual(final_bookmark_datetime, today_datetime)
 
-
                 elif expected_replication_method == self.FULL_TABLE:
 
                     # Verify full table streams do not save bookmarked values at the conclusion of a succesful sync
@@ -234,7 +219,6 @@ class InterruptedSyncTest(GoogleAdsBase):
                     self.assertEqual(full_record_count, interrupted_record_count)
                     for rec in interrupted_records:
                         self.assertIn(rec, full_records, msg='full table record in interrupted sync not found in full sync')
-
 
                 # Verify at least 1 record was replicated for each stream
                 self.assertGreater(interrupted_record_count, 0)

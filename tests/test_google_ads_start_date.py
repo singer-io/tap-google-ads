@@ -165,9 +165,6 @@ class StartDateTest1(StartDateTest):
             'search_query_performance_report', # Covered in other start date test
         } - self.missing_coverage_streams # TODO
 
-        self.streams_to_test = {
-            "keywordless_query_report",
-        }
     @staticmethod
     def name():
         return "tt_google_ads_start_date"

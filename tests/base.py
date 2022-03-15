@@ -789,3 +789,14 @@ class GoogleAdsBase(unittest.TestCase):
                 'interactions',
             },
         }
+    def assertIsDateFormat(self, value, str_format):
+        """
+        Assertion Method that verifies a string value is a formatted datetime with
+        the specified format.
+        """
+        try:
+            _ = dt.strptime(value, str_format)
+        except ValueError as err:
+            raise AssertionError(
+                f"Value does not conform to expected format: {str_format}"
+            ) from err

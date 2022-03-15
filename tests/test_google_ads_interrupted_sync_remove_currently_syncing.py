@@ -1,4 +1,3 @@
-import re
 import os
 from datetime import datetime as dt
 from datetime import timedelta
@@ -18,34 +17,19 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
-            'start_date':   '2021-12-01T00:00:00Z',
+            'start_date':   '2022-01-22T00:00:00Z',
             'user_id':      'not used?', # TODO ?
-            'conversion_window': '1',  # days
             'customer_ids': ','.join(self.get_customer_ids()),
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
-
         }
 
         # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
 
-        return_value["start_date"] = self.start_date
+        self.start_date = return_value["start_date"]
         return return_value
-
-
-    def assertIsDateFormat(self, value, str_format): # TODO needed in this test?
-        """
-        Assertion Method that verifies a string value is a formatted datetime with
-        the specified format.
-        """
-        try:
-            _ = dt.strptime(value, str_format)
-        except ValueError as err:
-            raise AssertionError(
-                f"Value does not conform to expected format: {str_format}"
-            ) from err
 
 
     def test_run(self):
@@ -75,7 +59,6 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
         }
 
         # Create connection using a recent start date
-        self.start_date = '2022-01-22T00:00:00Z'
         conn_id = connections.ensure_connection(self, original_properties=False)
 
         # Run a discovery job
@@ -102,18 +85,14 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
         full_sync_records = runner.get_records_from_target_output()
         full_sync_state = menagerie.get_state(conn_id)
 
-        # Add a stream between syncs
+        # Remove the currently_syncing stream between syncs
         removed_stream = 'search_query_performance_report'
         streams_under_test.remove(removed_stream)
+        deselect_catalog = [catalog for catalog in test_catalogs_1
+                             if catalog.get('stream_name') == removed_stream]
 
-        test_catalogs_1 = [catalog for catalog in found_catalogs_1
-                           if catalog.get('stream_name') in streams_under_test]
-
-        report_catalogs_1 = [catalog for catalog in test_catalogs_1
-                             if self.is_report(catalog['stream_name'])]
-
-        # select 'default' fields for report streams
-        self.select_all_streams_and_default_fields(conn_id, report_catalogs_1)
+        # de-select desired stream
+        self.deselect_streams(conn_id, deselect_catalog)
 
         # NB | Set state such that all but two streams have 'completed' a sync. The final stream ('user_location_performance_report') should
         #      have no bookmark value while the interrupted stream ('search_query_performance_report') should have a bookmark value prior to the
@@ -137,14 +116,13 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
         # acquire records from target output
         interrupted_sync_records = runner.get_records_from_target_output()
         final_state = menagerie.get_state(conn_id)
-        # TODO modify curretly_syncing and state logic to deal with dynamic structure of state
-        currently_syncing = final_state.get('currently_syncing', 'KEY NOT SAVED IN STATE')
+        currently_syncing = final_state.get('currently_syncing')
 
         # Checking resuming sync resulted in successfully saved state
         with self.subTest():
 
             # Verify sync is not interrupted by checking currently_syncing in state for sync 1
-            self.assertEqual([None, None], currently_syncing)
+            self.assertIsNone(currently_syncing)
 
             # Verify bookmarks are saved
             self.assertIsNotNone(final_state.get('bookmarks'))
@@ -159,7 +137,6 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                 today_datetime = dt.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
                 # gather results
-
                 full_records = [message['data'] for message in full_sync_records[stream]['messages']]
                 full_record_count = len(full_records)
                 if stream != removed_stream:
@@ -172,6 +149,7 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                     expected_primary_key = list(self.expected_primary_keys()[stream])[0]
                     expected_replication_key = list(self.expected_replication_keys()[stream])[0]  # assumes 1 value
                     testable_customer_ids = set(self.get_customer_ids()) - {'2728292456'}
+
                     for customer in testable_customer_ids:
                         with self.subTest(customer_id=customer):
 
@@ -192,9 +170,6 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                                 full_sync_stream_bookmark = full_sync_state['bookmarks'][stream]
                                 full_sync_bookmark = full_sync_stream_bookmark.get(customer, {}).get(expected_replication_key)
                                 full_sync_bookmark_datetime = dt.strptime(full_sync_bookmark, self.REPLICATION_KEY_FORMAT)
-                                final_stream_bookmark = final_state['bookmarks'][stream]
-                                final_bookmark = final_stream_bookmark.get(customer, {}).get(expected_replication_key)
-                                final_bookmark_datetime = dt.strptime(final_bookmark, self.REPLICATION_KEY_FORMAT)
 
                             if stream in interrupted_state['bookmarks'].keys():
 
@@ -244,7 +219,6 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                             # Verify the bookmark is set based on sync end date (today) for resuming sync
                             self.assertEqual(final_bookmark_datetime, today_datetime)
 
-
                 elif expected_replication_method == self.FULL_TABLE:
 
                     # Verify full table streams do not save bookmarked values at the conclusion of a succesful sync
@@ -260,5 +234,3 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                 self.assertGreater(interrupted_record_count, 0)
 
                 print(f"{stream} resumed sync records replicated: {interrupted_record_count}")
-
-                # TODO why is user perf stream replicating all rows in both syncs?

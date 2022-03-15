@@ -30,14 +30,14 @@ class ConversionWindowBaseTest(GoogleAdsBase):
 
     def get_properties(self):
         """Configurable properties, with a switch to override the 'start_date' property"""
-        return_value = {
-            'start_date':dt.strftime(dt.utcnow() - timedelta(days=91), self.START_DATE_FORMAT),
-            'user_id':      'not used?', # TODO ?
-            'customer_ids': '5548074409,2728292456',
+        return {
+            'start_date': dt.strftime(dt.utcnow() - timedelta(days=91), self.START_DATE_FORMAT),
+            'user_id': 'not used?', # TODO ?
+            'customer_ids': ','.join(self.get_customer_ids()),
             'conversion_window': self.conversion_window,
-            'login_customer_ids': [{"customerId": "5548074409", "loginCustomerId": "2728292456",}],
+            'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
+                                    "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
         }
-        return return_value
 
     def run_test(self):
         """
@@ -46,23 +46,13 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         """
         print("Configurable Properties Test (conversion_window)")
 
-        conn_id = connections.ensure_connection(self)
-
-        streams_to_test = self.expected_streams() - {
-            # TODO_TDL-17885 the following are not yet implemented
-            'display_keyword_performance_report', # no test data available
-            'display_topics_performance_report',  # no test data available
-            'audience_performance_report',  # Potential BUG see above
-            'placement_performance_report',  # no test data available
-            "keywords_performance_report",  # no test data available
-            "keywordless_query_report",  # no test data available
-            "shopping_performance_report",  # cannot find this in GoogleUI
-            "video_performance_report",  # no test data available
-            "user_location_performance_report",  # no test data available
-            'landing_page_report',  # not attempted 
-            'expanded_landing_page_report', # not attempted 
+        streams_to_test = {
+            'campagins',
+            'account_performance_report',
         }
-        streams_to_test = {'account_performance_report'}
+
+        # Create a connection
+        conn_id = connections.ensure_connection(self)
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
@@ -81,10 +71,8 @@ class ConversionWindowBaseTest(GoogleAdsBase):
 
         # set state to ensure conversion window is used
         today_datetime = dt.strftime(dt.utcnow(), self.REPLICATION_KEY_FORMAT)
-        # today_datetime = dt.strftime(dt.utcnow(), self.REPLICATION_KEY_FORMAT)
         customer_id = os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID')
         initial_state = {
-            'currently_syncing': [None, None],
             'bookmarks': {stream: {customer_id: {'date': today_datetime}}
                           for stream in streams_to_test
                           if self.is_report(stream)}
@@ -102,6 +90,7 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         final_state = menagerie.get_state(conn_id)
         self.assertDictEqual(final_state, initial_state)
 
+
 class ConversionWindowTestOne(ConversionWindowBaseTest):
 
     conversion_window = '1'
@@ -109,23 +98,23 @@ class ConversionWindowTestOne(ConversionWindowBaseTest):
     def test_run(self):
         self.run_test()
 
-# class ConversionWindowTestThirty(ConversionWindowBaseTest):
+class ConversionWindowTestThirty(ConversionWindowBaseTest):
 
-#     conversion_window = '30'
+    conversion_window = '30'
 
-#     def test_run(self):
-#         self.run_test()
+    def test_run(self):
+        self.run_test()
 
-# class ConversionWindowTestSixty(ConversionWindowBaseTest):
+class ConversionWindowTestSixty(ConversionWindowBaseTest):
 
-#     conversion_window = '60'
+    conversion_window = '60'
 
-#     def test_run(self):
-#         self.run_test()
+    def test_run(self):
+        self.run_test()
 
-# class ConversionWindowTestNinety(ConversionWindowBaseTest):
+class ConversionWindowTestNinety(ConversionWindowBaseTest):
 
-#     conversion_window = '90'
+    conversion_window = '90'
 
-#     def test_run(self):
-#         self.run_test()
+    def test_run(self):
+        self.run_test()

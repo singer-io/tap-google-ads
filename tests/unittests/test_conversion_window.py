@@ -149,7 +149,7 @@ class TestBookmarkOnConversionWindow(unittest.TestCase):
             all_queries_requested.append(query)
 
 
-        # Verify the first date queried is the conversion window date (not the bookmark)
+        # Verify the first date queried is the conversion window date / bookmark
         expected_first_query_date = str(bookmark_value)[:10]
         actual_first_query_date = str(all_queries_requested[0])[-11:-1]
         self.assertEqual(expected_first_query_date, actual_first_query_date)

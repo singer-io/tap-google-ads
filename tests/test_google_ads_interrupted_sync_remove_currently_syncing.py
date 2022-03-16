@@ -53,7 +53,8 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
 
         # the following streams are under test as they all have 4 consecutive days with records e.g.
         # ('2022-01-23T00:00:00.000000Z', '2022-01-23T00:00:00.000000Z', '2022-01-24T00:00:00.000000Z', '2022-01-25T00:00:00.000000Z')])}
-        streams_under_test = {'account_performance_report',
+        streams_under_test = {'ads',
+                              'account_performance_report',
                               'search_query_performance_report',
                               'user_location_performance_report',
         }
@@ -87,7 +88,6 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
 
         # Remove the currently_syncing stream between syncs
         removed_stream = 'search_query_performance_report'
-        streams_under_test.remove(removed_stream)
         deselect_catalog = [catalog for catalog in test_catalogs_1
                              if catalog.get('stream_name') == removed_stream]
 
@@ -142,6 +142,9 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                 if stream != removed_stream:
                     interrupted_records = [message['data'] for message in interrupted_sync_records[stream]['messages']]
                     interrupted_record_count = len(interrupted_records)
+                else:
+                    # Verify resuming sync does not sync records for removed_stream
+                    self.assertNotIn(removed_stream, interrupted_sync_records.keys())
 
                 if expected_replication_method == self.INCREMENTAL:
 
@@ -155,7 +158,8 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
 
                             # gather results
                             start_date_datetime = dt.strptime(self.start_date, self.START_DATE_FORMAT)
-                            oldest_record_datetime = dt.strptime(interrupted_records[0].get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
+                            if stream != removed_stream:
+                                oldest_record_datetime = dt.strptime(interrupted_records[0].get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
                             final_stream_bookmark = final_state['bookmarks'][stream]
                             final_bookmark = final_stream_bookmark.get(customer, {}).get(expected_replication_key)
                             final_bookmark_datetime = dt.strptime(final_bookmark, self.REPLICATION_KEY_FORMAT)
@@ -165,11 +169,9 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                             self.assertIsInstance(final_bookmark, str)
                             self.assertIsDateFormat(final_bookmark, self.REPLICATION_KEY_FORMAT)
 
-                            if stream in full_sync_state['bookmarks'].keys():
-
-                                full_sync_stream_bookmark = full_sync_state['bookmarks'][stream]
-                                full_sync_bookmark = full_sync_stream_bookmark.get(customer, {}).get(expected_replication_key)
-                                full_sync_bookmark_datetime = dt.strptime(full_sync_bookmark, self.REPLICATION_KEY_FORMAT)
+                            full_sync_stream_bookmark = full_sync_state['bookmarks'][stream]
+                            full_sync_bookmark = full_sync_stream_bookmark.get(customer, {}).get(expected_replication_key)
+                            full_sync_bookmark_datetime = dt.strptime(full_sync_bookmark, self.REPLICATION_KEY_FORMAT)
 
                             if stream in interrupted_state['bookmarks'].keys():
 
@@ -177,30 +179,27 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                                 interrupted_bookmark = interrupted_stream_bookmark.get(customer, {}).get(expected_replication_key)
                                 interrupted_bookmark_datetime = dt.strptime(interrupted_bookmark, self.REPLICATION_KEY_FORMAT)
 
-                                # Verify state ends with the same value for common streams after both full and interrupted syncs
                                 if stream != removed_stream:
+                                    # Verify state ends with the same value for common streams after both full and interrupted syncs
                                     self.assertEqual(full_sync_bookmark_datetime, final_bookmark_datetime)
-                                else:
-                                    self.assertEqual(full_sync_bookmark_datetime, today_datetime)
 
-                                # Verify resuming sync replicates records inclusively
-                                # by comparing the replication key-values to the interrupted state.
-                                self.assertEqual(oldest_record_datetime, interrupted_bookmark_datetime)
+                                    # Verify resuming sync replicates records inclusively
+                                    # by comparing the replication key-values to the interrupted state.
+                                    self.assertEqual(oldest_record_datetime, interrupted_bookmark_datetime)
 
-                                # Verify resuming sync only replicates records with replication key values greater or equal to
-                                # the interrupted_state for streams that completed were replicated during the interrupted sync.
-                                for record in interrupted_records:
-                                    with self.subTest(record_primary_key=record[expected_primary_key]):
-                                        rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
-                                        self.assertGreaterEqual(rec_time, interrupted_bookmark_datetime)
+                                    # Verify resuming sync only replicates records with replication key values greater or equal to
+                                    # the interrupted_state for streams that completed were replicated during the interrupted sync.
+                                    for record in interrupted_records:
+                                        with self.subTest(record_primary_key=record[expected_primary_key]):
+                                            rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
+                                            self.assertGreaterEqual(rec_time, interrupted_bookmark_datetime)
 
-                                # Verify the interrupted sync replicates the expected record set
-                                # All interrupted recs are in full recs
-                                for record in interrupted_records:
-                                    self.assertIn(record, full_records, msg='incremental table record in interrupted sync not found in full sync')
+                                    # Verify the interrupted sync replicates the expected record set
+                                    # All interrupted recs are in full recs
+                                    for record in interrupted_records:
+                                        self.assertIn(record, full_records, msg='incremental table record in interrupted sync not found in full sync')
 
-                                # Record count for all streams of interrupted sync match expectations
-                                if stream != removed_stream:
+                                    # Record count for all streams of interrupted sync match expectations
                                     full_records_after_interrupted_bookmark = 0
                                     for record in full_records:
                                         rec_time = dt.strptime(record.get(expected_replication_key), self.REPLICATION_KEY_FORMAT)
@@ -208,7 +207,7 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                                         if rec_time >= interrupted_bookmark_datetime:
                                             full_records_after_interrupted_bookmark += 1
                                     self.assertEqual(full_records_after_interrupted_bookmark, len(interrupted_records), \
-                                                                     msg="Expected {} records in each sync".format(full_records_after_interrupted_bookmark))
+                                                     msg="Expected {} records in each sync".format(full_records_after_interrupted_bookmark))
 
                             else:
 
@@ -216,14 +215,19 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                                 # by comparing the replication key-values to the interrupted state.
                                 self.assertEqual(oldest_record_datetime, start_date_datetime)
 
-                            # Verify the bookmark is set based on sync end date (today) for resuming sync
-                            self.assertEqual(final_bookmark_datetime, today_datetime)
+                            if stream != removed_stream:
+                                # Verify the bookmark is set based on sync end date (today) for resuming sync
+                                self.assertEqual(final_bookmark_datetime, today_datetime)
+                            else:
+                                # Verify the bookmark has not advance for the removed stream
+                                self.assertEqual(final_bookmark_datetime, interrupted_bookmark_datetime)
+
 
                 elif expected_replication_method == self.FULL_TABLE:
 
                     # Verify full table streams do not save bookmarked values at the conclusion of a succesful sync
-                    self.assertIsNone(stream_bookmark_1)
-                    self.assertIsNone(stream_bookmark_2)
+                    self.assertNotIn(stream, full_sync_state['bookmarks'].keys())
+                    self.assertNotIn(stream, final_state['bookmarks'].keys())
 
                     # Verify first and second sync have the same records
                     self.assertEqual(full_record_count, interrupted_record_count)
@@ -231,6 +235,7 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                         self.assertIn(rec, full_records, msg='full table record in interrupted sync not found in full sync')
 
                 # Verify at least 1 record was replicated for each stream
-                self.assertGreater(interrupted_record_count, 0)
+                if stream != removed_stream:
+                    self.assertGreater(interrupted_record_count, 0)
 
                 print(f"{stream} resumed sync records replicated: {interrupted_record_count}")

@@ -62,6 +62,7 @@ class InterruptedSyncTest(GoogleAdsBase):
         # the following streams are under test as they all have 4 consecutive days with records e.g.
         # ('2022-01-22T00:00:00.000000Z', '2022-01-23T00:00:00.000000Z', '2022-01-24T00:00:00.000000Z', '2022-01-25T00:00:00.000000Z')])}
         streams_under_test = {
+            'ads',
             'account_performance_report',
             'search_query_performance_report',
             'user_location_performance_report',
@@ -212,8 +213,8 @@ class InterruptedSyncTest(GoogleAdsBase):
                 elif expected_replication_method == self.FULL_TABLE:
 
                     # Verify full table streams do not save bookmarked values at the conclusion of a succesful sync
-                    self.assertIsNone(stream_bookmark_1)
-                    self.assertIsNone(stream_bookmark_2)
+                    self.assertNotIn(stream, full_sync_state['bookmarks'].keys())
+                    self.assertNotIn(stream, final_state['bookmarks'].keys())
 
                     # Verify first and second sync have the same records
                     self.assertEqual(full_record_count, interrupted_record_count)

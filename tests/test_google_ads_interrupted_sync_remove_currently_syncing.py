@@ -12,7 +12,7 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
 
     @staticmethod
     def name():
-        return "tt_google_ads_interruption_remove"
+        return "tt_google_ads_remove_currently_syncing"
 
     def get_properties(self, original: bool = True):
         """Configurable properties, with a switch to override the 'start_date' property"""

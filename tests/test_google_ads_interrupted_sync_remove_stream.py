@@ -215,6 +215,15 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                                 # by comparing the replication key-values to the interrupted state.
                                 self.assertEqual(oldest_record_datetime, start_date_datetime)
 
+                                # Verify resuming sync replicates all records that were found in the full sync (uninterupted)
+                                for record in interrupted_records:
+                                    with self.subTest(record_primary_key=record[expected_primary_key]):
+                                        self.assertIn(record, full_records, msg='Unexpected record replicated in resuming sync.')
+                                for record in full_records:
+                                    with self.subTest(record_primary_key=record[expected_primary_key]):
+                                        self.assertIn(record, interrupted_records, msg='Record missing from resuming sync.' )
+
+
                             # Verify the bookmark is set based on sync end date (today) for resuming sync
                             if stream != removed_stream:
                                 self.assertEqual(final_bookmark_datetime, today_datetime)

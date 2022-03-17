@@ -197,23 +197,23 @@ class InterruptedSyncAddStreamTest(GoogleAdsBase):
                                 self.assertEqual(full_records_after_interrupted_bookmark, len(interrupted_records), \
                                                  msg="Expected {} records in each sync".format(full_records_after_interrupted_bookmark))
                             else:
+
                                 self.assertGreater(len(interrupted_records), 0)
 
-                            # Verify state ends with the same value for common streams after both full and interrupted syncs
                             if stream != added_stream:
+
+                                # Verify state ends with the same value for common streams after both full and interrupted syncs
                                 self.assertEqual(full_sync_bookmark_datetime, final_bookmark_datetime)
 
-                            # Verify the interrupted sync replicates the expected record set
-                            # All interrupted recs are in full recs
-                            if stream != added_stream:
+                                # Verify the interrupted sync replicates the expected record set
+                                # All interrupted recs are in full recs
                                 for record in interrupted_records:
                                     self.assertIn(record, full_records, msg='incremental table record in interrupted sync not found in full sync')
-                            else:
-                                self.assertNotIn(added_stream, full_sync_records.keys())
 
-                            # Verify resuming sync replicates records starting with start date for streams that were yet-to-be-synced
-                            # by comparing the replication key-values to the interrupted state.
-                            if stream == added_stream:
+                            else:
+
+                                # Verify resuming sync replicates records starting with start date for streams that were yet-to-be-synced
+                                # by comparing the replication key-values to the interrupted state.
                                 self.assertEqual(oldest_record_datetime, start_date_datetime)
 
                             # Verify the bookmark is set based on sync end date (today) for resuming sync

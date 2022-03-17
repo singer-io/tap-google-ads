@@ -117,8 +117,6 @@ class ConversionWindowTestZeroInteger(ConversionWindowInvalidTest):
 
     conversion_window = 0
 
-    @unittest.skip("https://jira.talendforge.org/browse/TDL-18168"
-                   "[tap-google-ads] Invalid conversion_window values can be set when running tap directly")
     def test_run(self):
         self.run_test()
 

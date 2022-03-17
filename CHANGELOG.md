@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0 [#31](https://github.com/singer-io/tap-google-ads/pull/31)
+  * Add ability for the tap to use `currently_syncing` [#24](https://github.com/singer-io/tap-google-ads/pull/24)
+  * Add `end_date` as a configurable property to end a sync at a certain date [#28](https://github.com/singer-io/tap-google-ads/pull/28)
+  * Fix a field exculsion bug introduced in `v0.1.0` around metric compatibility [#29](https://github.com/singer-io/tap-google-ads/pull/29)
+
 ## v0.1.0 [#23](https://github.com/singer-io/tap-google-ads/pull/23)
   * Update bookmarks to only be written with a midnight time value
   * Fix error logging to more concise

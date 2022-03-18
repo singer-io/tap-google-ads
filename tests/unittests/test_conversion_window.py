@@ -1,3 +1,4 @@
+import re
 import unittest
 from datetime import datetime
 from datetime import timedelta
@@ -78,7 +79,7 @@ class TestBookmarkWithinConversionWindow(unittest.TestCase):
 
         # Verify the first date queried is the conversion window date (not the bookmark)
         expected_first_query_date = str(end_date - timedelta(days=conversion_window))[:10]
-        actual_first_query_date = str(all_queries_requested[0])[-11:-1]
+        actual_first_query_date = re.search(r'\d\d\d\d-\d\d-\d\d', all_queries_requested[0]).group()
         self.assertEqual(expected_first_query_date, actual_first_query_date)
 
         # Verify the number of days queried is based off the conversion window.
@@ -152,7 +153,7 @@ class TestBookmarkOnConversionWindow(unittest.TestCase):
 
         # Verify the first date queried is the conversion window date / bookmark
         expected_first_query_date = str(bookmark_value)[:10]
-        actual_first_query_date = str(all_queries_requested[0])[-11:-1]
+        actual_first_query_date = re.search(r'\d\d\d\d-\d\d-\d\d', all_queries_requested[0]).group()
         self.assertEqual(expected_first_query_date, actual_first_query_date)
 
         # Verify the number of days queried is based off the conversion window.
@@ -222,7 +223,7 @@ class TestStartDateWithinConversionWindow(unittest.TestCase):
 
         # Verify the first date queried is the conversion window date (not the bookmark)
         expected_first_query_date = str(start_date)[:10]
-        actual_first_query_date = str(all_queries_requested[0])[-11:-1]
+        actual_first_query_date = re.search(r'\d\d\d\d-\d\d-\d\d', all_queries_requested[0]).group()
         self.assertEqual(expected_first_query_date, actual_first_query_date)
 
         # Verify the number of days queried is based off the start_date

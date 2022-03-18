@@ -8,16 +8,13 @@ from tap_tester import menagerie, connections, runner
 from base import GoogleAdsBase
 
 
-class FieldExclusionGoogleAds(GoogleAdsBase):
+class FieldExclusionGoogleAdsBase(GoogleAdsBase):
     """
     Test tap's field exclusion logic for all streams
 
     NOTE: Manual test case must be run at least once any time this feature changes or is updated.
           Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manually)
     """
-    @staticmethod
-    def name():
-        return "tt_google_ads_field_exclusion"
 
     def random_field_gather(self, input_fields_with_exclusions):
         """
@@ -50,30 +47,22 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
         return exclusion_fields_to_select
 
 
-    def test_default_case(self):
+    def run_test(self):
         """
         Verify tap can perform sync for random combinations of fields that do not violate exclusion rules.
         Established randomization for valid field selection using new method to select specific fields.
         """
-        print("Field Exclusion Test with random field selection for tap-google-ads report streams")
+
+        print(
+            "Field Exclusion Test with random field selection for tap-google-ads report streams.\n"
+            f"Streams Under Test: {self.streams_to_test}"
+        )
 
         # --- Test report streams --- #
 
-        streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
+        # streams_to_test = {stream for stream in self.expected_streams()
+        #                    if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
 
-        # streams_to_test = streams_to_test - {
-        #     # These streams missing from expected_default_fields() method TODO unblocked due to random? Test them now
-        #     # 'shopping_performance_report',
-        #     # 'keywords_performance_report',
-        #     # TODO These streams have no data to replicate and fail the last assertion
-        #     'video_performance_report',
-        #     'audience_performance_report',
-        #     'placement_performance_report',
-        #     'display_topics_performance_report',
-        #     'display_keyword_performance_report',
-        # }
-        # streams_to_test = {'gender_performance_report', 'placeholder_report',}
         random_order_of_exclusion_fields = {}
 
         # bump start date from default
@@ -83,7 +72,7 @@ class FieldExclusionGoogleAds(GoogleAdsBase):
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
-        for stream in streams_to_test:
+        for stream in self.streams_to_test:
             with self.subTest(stream=stream):
 
                 catalogs_to_test = [catalog

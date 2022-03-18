@@ -110,14 +110,14 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         streams_to_test = {stream for stream in self.expected_streams()
                            if self.is_report(stream)} - {'click_performance_report'}  # No exclusions. TODO remove dynamically
 
-        #streams_to_test = {'search_query_performance_report', 'placeholder_report',}
+        # streams_to_test = {'search_query_performance_report'} # , 'placeholder_report',}
 
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
         exclusion_errors = {}
 
         # bump start date from default
-        self.start_date = dt.strftime(dt.today() - timedelta(days=3), self.START_DATE_FORMAT)
+        self.start_date = dt.strftime(dt.today() - timedelta(days=1), self.START_DATE_FORMAT)
         conn_id = connections.ensure_connection(self, original_properties=False)
 
         # Run a discovery job

@@ -247,4 +247,4 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                 if stream != removed_stream:
                     self.assertGreater(interrupted_record_count, 0)
 
-                print(f"{stream} resumed sync records replicated: {interrupted_record_count}")
+                    print(f"{stream} resumed sync records replicated: {interrupted_record_count}")

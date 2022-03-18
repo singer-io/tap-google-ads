@@ -15,7 +15,9 @@ class FieldExlusionCoverage(FieldExclusionGoogleAdsBase):
         The report streams are spread out across several test classes for parallelism. This extra
         step is required as we hardcode the streams under test in each of the four classes. 
         """
-        report_streams = {stream for stream in self.expected_streams() if self.is_report(stream)}
+        report_streams = {stream for stream in self.expected_streams()
+                          if self.is_report(stream)
+                          and stream != "click_performance_report"}
 
         from test_google_ads_field_exclusion_1 import FieldExclusion1
         from test_google_ads_field_exclusion_2 import FieldExclusion2

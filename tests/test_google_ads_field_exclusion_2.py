@@ -16,7 +16,7 @@ class FieldExclusion2(FieldExclusionGoogleAdsBase):
 
     streams_to_test = {
         "campaign_performance_report",
-        "click_performance_report",
+        # "click_performance_report", # NO EXCLUSIONS, SKIPPED INTENTIONALLY
         "display_keyword_performance_report",
         "display_topics_performance_report",
         "expanded_landing_page_report",

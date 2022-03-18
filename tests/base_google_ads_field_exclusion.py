@@ -58,11 +58,6 @@ class FieldExclusionGoogleAdsBase(GoogleAdsBase):
             f"Streams Under Test: {self.streams_to_test}"
         )
 
-        # --- Test report streams --- #
-
-        # streams_to_test = {stream for stream in self.expected_streams()
-        #                    if self.is_report(stream)} - {'click_performance_report'}  #  No exclusions
-
         random_order_of_exclusion_fields = {}
 
         # bump start date from default
@@ -138,37 +133,9 @@ class FieldExclusionGoogleAdsBase(GoogleAdsBase):
                         sync_job_name = runner.run_sync_mode(self, conn_id)
                         exit_status = menagerie.get_exit_status(conn_id, sync_job_name)
                         menagerie.verify_sync_exit_status(self, exit_status, sync_job_name)
+                        state = menagerie.get_state(conn_id)
 
-                        # These streams likely replicate records using the default field selection but may not produce any
-                        # records when selecting this many fields with exclusions.
-                        # streams_unlikely_to_replicate_records = {
-                        #     'ad_performance_report',
-                        #     'account_performance_report',
-                        #     'shopping_performance_report',
-                        #     'search_query_performance_report',
-                        #     'placeholder_feed_item_report',
-                        #     'placeholder_report',
-                        #     'keywords_performance_report',
-                        #     'keywordless_query_report',
-                        #     'geo_performance_report',
-                        #     'gender_performance_report',  # Very rare
-                        #     'ad_group_audience_performance_report',
-                        #     'age_range_performance_report',
-                        #     'campaign_audience_performance_report',
-                        #     'user_location_performance_report',
-                        #     'ad_group_performance_report',
-                        #     }
-
-                        # if stream not in streams_unlikely_to_replicate_records:
-                        #     sync_record_count = runner.examine_target_output_file(
-                        #         self, conn_id, self.expected_streams(), self.expected_primary_keys())
-                        #     self.assertGreater(
-                        #         sum(sync_record_count.values()), 0,
-                        #         msg="failed to replicate any data: {}".format(sync_record_count)
-                        #     )
-                        #     print("total replicated row count: {}".format(sum(sync_record_count.values())))
-
-                        # TODO additional assertions?
+                        self.assertIn(stream, state['bookmark'].keys())
 
                     finally:
                         # deselect stream once it's been tested

@@ -12,7 +12,7 @@ from . import report_definitions
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v9"
+API_VERSION = "v10"
 
 REPORTS_WITH_90_DAY_MAX = frozenset(
     [

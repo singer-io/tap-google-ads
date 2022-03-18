@@ -7,8 +7,6 @@ from tap_google_ads.client import create_sdk_client
 from tap_google_ads.streams import initialize_core_streams
 from tap_google_ads.streams import initialize_reports
 
-API_VERSION = "v9"
-
 LOGGER = singer.get_logger()
 
 REPORTS = [

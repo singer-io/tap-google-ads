@@ -49,14 +49,10 @@ class BookmarksTest(GoogleAdsBase):
             'ad_group_audience_performance_report',
             'display_keyword_performance_report',
             'display_topics_performance_report',
-            'expanded_landing_page_report',
-            'keywordless_query_report',
             'keywords_performance_report',
-            'landing_page_report',
             'placement_performance_report',
             'search_query_performance_report',
             'shopping_performance_report',
-            'user_location_performance_report',
             'video_performance_report',
             'campaign_audience_performance_report',
         }
@@ -91,16 +87,20 @@ class BookmarksTest(GoogleAdsBase):
         data_set_state_value_1 = '2022-01-24T00:00:00.000000Z'
         data_set_state_value_2 = '2021-12-30T00:00:00.000000Z'
         injected_state_by_stream = {
-            'ad_group_performance_report':data_set_state_value_1,
-            'geo_performance_report':data_set_state_value_1,
-            'gender_performance_report':data_set_state_value_1,
-            'placeholder_feed_item_report':data_set_state_value_2,
-            'age_range_performance_report':data_set_state_value_1,
-            'account_performance_report':data_set_state_value_1,
-            'click_performance_report':data_set_state_value_1,
-            'campaign_performance_report':data_set_state_value_1,
-            'placeholder_report':data_set_state_value_2,
-            'ad_performance_report':data_set_state_value_1,
+            'ad_group_performance_report': data_set_state_value_1,
+            'geo_performance_report': data_set_state_value_1,
+            'gender_performance_report': data_set_state_value_1,
+            'placeholder_feed_item_report': data_set_state_value_2,
+            'age_range_performance_report': data_set_state_value_1,
+            'account_performance_report': data_set_state_value_1,
+            'click_performance_report': data_set_state_value_1,
+            'campaign_performance_report': data_set_state_value_1,
+            'placeholder_report': data_set_state_value_2,
+            'ad_performance_report': data_set_state_value_1,
+            'expanded_landing_page_report': data_set_state_value_1,
+            'keywordless_query_report': data_set_state_value_1,
+            'landing_page_report': data_set_state_value_1,
+            'user_location_performance_report': data_set_state_value_1,
         }
 
         manipulated_state = {

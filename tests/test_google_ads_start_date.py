@@ -147,18 +147,14 @@ class StartDateTest(GoogleAdsBase):
 
 class StartDateTest1(StartDateTest):
 
-    missing_coverage_streams = {  # end result
-        'display_keyword_performance_report', # no test data available
-        'display_topics_performance_report',  # no test data available
-        'placement_performance_report',  # no test data available
-        "keywords_performance_report",  # no test data available
-        "keywordless_query_report",  # no test data available
-        "video_performance_report",  # no test data available
+    missing_coverage_streams = { # no test data available
+        'display_keyword_performance_report',
+        'display_topics_performance_report',
+        'placement_performance_report',
+        "keywords_performance_report",
+        "video_performance_report",
         'ad_group_audience_performance_report',
         "shopping_performance_report",
-        'landing_page_report',
-        'expanded_landing_page_report',
-        'user_location_performance_report',
         'campaign_audience_performance_report',
     }
 

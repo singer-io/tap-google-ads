@@ -542,7 +542,6 @@ AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    "user_list.name",
 ]
 CAMPAIGN_AUDIENCE_PERFORMANCE_REPORT_FIELDS = [
     "bidding_strategy.name",
@@ -614,7 +613,6 @@ CAMPAIGN_AUDIENCE_PERFORMANCE_REPORT_FIELDS = [
     "segments.slot",
     "segments.week",
     "segments.year",
-    "user_list.name",
 ]
 CAMPAIGN_PERFORMANCE_REPORT_FIELDS = [
     "bidding_strategy.name",

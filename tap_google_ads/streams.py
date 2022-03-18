@@ -14,6 +14,10 @@ LOGGER = singer.get_logger()
 
 API_VERSION = "v10"
 
+API_PARAMETERS = {
+    "omit_unselected_resource_names": "true"
+}
+
 REPORTS_WITH_90_DAY_MAX = frozenset(
     [
         "click_performance_report",
@@ -72,8 +76,13 @@ def get_selected_fields(stream_mdata):
     return selected_fields
 
 
+def build_parameters():
+    param_str = ",".join(f"{k}={v}" for k, v in API_PARAMETERS.items())
+    return f"PARAMETERS {param_str}"
+
+
 def create_core_stream_query(resource_name, selected_fields):
-    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name}"
+    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {build_parameters()}"
     return core_query
 
 
@@ -81,7 +90,7 @@ def create_report_query(resource_name, selected_fields, query_date):
 
     format_str = "%Y-%m-%d"
     query_date = utils.strftime(query_date, format_str=format_str)
-    report_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date = '{query_date}'"
+    report_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date = '{query_date}' {build_parameters()}"
 
     return report_query
 

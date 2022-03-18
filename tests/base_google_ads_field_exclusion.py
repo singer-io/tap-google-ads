@@ -135,7 +135,7 @@ class FieldExclusionGoogleAdsBase(GoogleAdsBase):
                         menagerie.verify_sync_exit_status(self, exit_status, sync_job_name)
                         state = menagerie.get_state(conn_id)
 
-                        self.assertIn(stream, state['bookmark'].keys())
+                        self.assertIn(stream, state['bookmarks'].keys())
 
                     finally:
                         # deselect stream once it's been tested

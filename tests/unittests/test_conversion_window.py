@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 from unittest.mock import Mock
 from unittest.mock import patch
+from tap_google_ads.streams import get_conversion_window
 from tap_google_ads.streams import ReportStream
 from tap_google_ads.streams import make_request
 
@@ -226,6 +227,49 @@ class TestStartDateWithinConversionWindow(unittest.TestCase):
 
         # Verify the number of days queried is based off the start_date
         self.assertEqual(len(all_queries_requested), 1)
+
+
+class TestGetConversionWindow(unittest.TestCase):
+    def test_int_conversion_date_in_allowable_range(self):
+        actual = get_conversion_window({"conversion_window": 12})
+        expected = 12
+        self.assertEqual(expected, actual)
+
+    def test_str_conversion_date_in_allowable_range(self):
+        actual = get_conversion_window({"conversion_window": "12"})
+        expected = 12
+        self.assertEqual(expected, actual)
+
+    def test_conversion_date_outside_allowable_range(self):
+        with self.assertRaises(RuntimeError):
+            get_conversion_window({"conversion_window": 42})
+
+        with self.assertRaises(RuntimeError):
+            get_conversion_window({"conversion_window": "42"})
+
+    def test_non_int_or_str_conversion_date(self):
+        with self.assertRaises(RuntimeError):
+            get_conversion_window({"conversion_window": {"12": 12}})
+
+        with self.assertRaises(RuntimeError):
+            get_conversion_window({"conversion_window": [12]})
+
+    def test_empty_data_types_conversion_date_returns_default(self):
+        expected = 30
+
+        actual = get_conversion_window({"conversion_window": ""})
+        self.assertEqual(expected, actual)
+
+        actual = get_conversion_window({"conversion_window": {}})
+        self.assertEqual(expected, actual)
+
+        actual = get_conversion_window({"conversion_window": []})
+        self.assertEqual(expected, actual)
+
+    def test_None_conversion_date_returns_default(self):
+        actual = get_conversion_window({"conversion_window": None})
+        expected = 30
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':

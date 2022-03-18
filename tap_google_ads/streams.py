@@ -23,6 +23,20 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 DEFAULT_CONVERSION_WINDOW = 30
 
 
+def get_conversion_window(config):
+    """Fetch the conversion window from the config and error on invalid values"""
+    conversion_window = config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW
+
+    try:
+        conversion_window = int(conversion_window)
+    except (ValueError, TypeError) as err:
+        raise RuntimeError("Conversion Window must be an int or string") from err
+
+    if conversion_window in set(range(1,31)) or conversion_window in {60, 90}:
+        return conversion_window
+
+    raise RuntimeError("Conversion Window must be between 1 - 30 inclusive, 60, or 90")
+
 def create_nested_resource_schema(resource_schema, fields):
     new_schema = {
         "type": ["null", "object"],
@@ -440,7 +454,7 @@ class ReportStream(BaseStream):
         singer.write_state(state)
 
         conversion_window = timedelta(
-            days=int(config.get("conversion_window") or DEFAULT_CONVERSION_WINDOW)
+            days=get_conversion_window(config)
         )
         conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
 

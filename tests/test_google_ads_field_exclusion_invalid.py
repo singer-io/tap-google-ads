@@ -21,22 +21,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
     def name():
         return "tt_google_ads_field_exclusion_invalid"
 
-    def perform_exclusion_verification(self, field_exclusion_dict):
-        """
-        Verify for a pair of fields that if field_1 is in field_2's exclusion list then field_2 must be in field_1's exclusion list
-        """
-        error_dict = {}
-        for field, values in field_exclusion_dict.items():
-            if values != []:
-                for value in values:
-                    if value in field_exclusion_dict.keys():
-                        if field not in field_exclusion_dict[value]:
-                            if field not in error_dict.keys():
-                                error_dict[field] = [value]
-                            else:
-                                error_dict[field] += [value]
-
-        return error_dict
 
     def random_field_gather(self, input_fields_with_exclusions):
         """
@@ -110,7 +94,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         streams_to_test = {stream for stream in self.expected_streams()
                            if self.is_report(stream)} - {'click_performance_report'}  # No exclusions. TODO remove dynamically
 
-        # streams_to_test = {'search_query_performance_report'} # , 'placeholder_report',}
+        streams_to_test = {'search_query_performance_report'} # , 'placeholder_report',}
 
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
@@ -158,7 +142,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
 
                 # Add new key to existing dicts
                 random_order_of_exclusion_fields[stream] = []
-                exclusion_errors[stream] = {}
 
                 # Expose variables globally
                 self.stream = stream
@@ -167,9 +150,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                 # Build random lists
                 random_exclusion_field_selection_list = self.random_field_gather(fields_with_exclusions)
                 field_selection_set = set(random_exclusion_field_selection_list + fields_without_exclusions)
-
-                # Collect any errors if they occur
-                exclusion_errors[stream] = self.perform_exclusion_verification(field_exclusions)
 
                 with self.subTest(order_of_fields_selected=self.random_order_of_exclusion_fields[stream]):
 
@@ -233,5 +213,5 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                         self.deselect_streams(conn_id, catalogs_to_test)
 
         print("Streams tested: {}\ntap_exit_status_by_stream: {}".format(len(streams_to_test), tap_exit_status_by_stream))
-        print("Exclusion errors:")
-        pprint.pprint(exclusion_errors)
+
+

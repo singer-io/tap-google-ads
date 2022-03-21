@@ -42,7 +42,7 @@ class SyncCanaryTest(GoogleAdsBase):
         # Perform table and field selection...
         core_catalogs = [catalog for catalog in test_catalogs
                          if not self.is_report(catalog['stream_name'])
-                         catalog['stream_name'] == 'click_performance_report']
+                         or catalog['stream_name'] == 'click_performance_report']
         report_catalogs = [catalog for catalog in test_catalogs
                            if self.is_report(catalog['stream_name'])
                            and catalog['stream_name'] != 'click_performance_report']

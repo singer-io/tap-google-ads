@@ -183,6 +183,9 @@ def create_resource_schema(config):
         for field in attributes + metrics + segments:
             field_schema = dict(resource_schema[field])
 
+            if field_schema["name"] in segments:
+                field_schema["category"] = "SEGMENT"
+
             fields[field_schema["name"]] = {
                 "field_details": field_schema,
                 "incompatible_fields": [],
@@ -192,6 +195,8 @@ def create_resource_schema(config):
         metrics_and_segments = set(metrics + segments)
 
         for field_name, field in fields.items():
+            if field["field_details"]["category"] == "ATTRIBUTE":
+                continue
             for compared_field in metrics_and_segments:
                 field_root_resource = get_root_resource_name(field_name)
                 compared_field_root_resource = get_root_resource_name(compared_field)

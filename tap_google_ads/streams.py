@@ -404,16 +404,15 @@ class ReportStream(BaseStream):
         for report_field in self.fields:
             # Transform the field name to match the schema
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
-            if (not is_metric_or_segment
-                and report_field.split(".")[0] not in self.google_ads_resource_names
-            ):
-                transformed_field_name = "_".join(report_field.split(".")[:2])
             # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
-            elif report_field.startswith("ad_group_ad.ad."):
+            if report_field.startswith("ad_group_ad.ad."):
                 transformed_field_name = report_field.split(".")[2]
+            elif not is_metric_or_segment:
+                transformed_field_name = "_".join(report_field.split(".")[:2])
             else:
                 transformed_field_name = report_field.split(".")[1]
-
+            # TODO: Maybe refactor this
+            # metadata_key = ("properties", transformed_field_name)
             # Base metadata for every field
             if ("properties", transformed_field_name) not in self.stream_metadata:
                 self.stream_metadata[("properties", transformed_field_name)] = {
@@ -424,9 +423,7 @@ class ReportStream(BaseStream):
                 # Transform field exclusion names so they match the schema
                 for field_name in self.field_exclusions[report_field]:
                     is_metric_or_segment = field_name.startswith("metrics.") or field_name.startswith("segments.")
-                    if (not is_metric_or_segment
-                        and field_name.split(".")[0] not in self.google_ads_resource_names
-                    ):
+                    if not is_metric_or_segment:
                         new_field_name = field_name.replace(".", "_")
                     else:
                         new_field_name = field_name.split(".")[1]

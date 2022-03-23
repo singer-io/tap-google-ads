@@ -618,7 +618,6 @@ class GoogleAdsBase(unittest.TestCase):
             },
             "ad_group_audience_performance_report": {
                 'ad_group_name',
-                'user_list_name',
             },
             "campaign_performance_report": {
                 'average_cpc',  # Avg. CPC,
@@ -636,19 +635,19 @@ class GoogleAdsBase(unittest.TestCase):
                 'ad_group_name',
                 'ad_group_status',
                 'ad_network_type',
-                'area_of_interest',
+                'click_view_area_of_interest',
                 'campaign_location_target',
                 'click_type',
                 'clicks',
                 'customer_descriptive_name',
                 'customer_id',
                 'device',
-                'gclid',
-                'location_of_presence',
+                'click_view_gclid',
+                'click_view_location_of_presence',
                 'month_of_year',
-                'page_number',
+                'click_view_page_number',
                 'slot',
-                'user_list',
+                'click_view_user_list',
             },
             "display_keyword_performance_report": { # TODO NO DATA AVAILABLE
                 'ad_group_name',
@@ -755,7 +754,7 @@ class GoogleAdsBase(unittest.TestCase):
             'placeholder_feed_item_report': {
                 'clicks',
                 'impressions',
-                'placeholder_type',
+                'feed_placeholder_view_placeholder_type',
             },
             'placeholder_report': {
                 'clicks',

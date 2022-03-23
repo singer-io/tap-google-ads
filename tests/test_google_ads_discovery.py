@@ -285,7 +285,7 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_method = self.expected_replication_method()[stream]
                 # expected_fields = self.expected_fields()[stream] # TODO_TDL-17909
                 is_report = self.is_report(stream)
-                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
+                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE', 'PRIMARY KEY'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
 
                 # collecting actual values from the catalog
                 schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
@@ -365,8 +365,6 @@ class DiscoveryTest(GoogleAdsBase):
                     msg="Not all non key properties are set to available in metadata")
 
                 # verify 'behavior' is present in metadata for all streams
-                if is_report:
-                    actual_fields.remove('_sdc_record_hash')
                 self.assertEqual(fields_with_behavior, set(actual_fields))
 
                 # verify 'behavior' falls into expected set of behaviors (based on stream type)

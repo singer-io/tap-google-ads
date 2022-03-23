@@ -379,13 +379,12 @@ class ReportStream(BaseStream):
         """
         for resource_name, schema in self.full_schema["properties"].items():
             for field_name, data_type in schema["properties"].items():
-                # Ensure that attributed resource fields have the resource name as a prefix, eg campaign_id under the ad_groups stream
-                if resource_name not in {"metrics", "segments"} and resource_name not in self.google_ads_resource_names:
-                    self.stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
                 # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
-                elif resource_name == "ad_group_ad" and field_name == "ad":
+                if resource_name == "ad_group_ad" and field_name == "ad":
                     for ad_field_name, ad_field_schema in data_type["properties"].items():
                         self.stream_schema["properties"][ad_field_name] = ad_field_schema
+                elif resource_name not in {"metrics", "segments"}:
+                    self.stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
                 else:
                     self.stream_schema["properties"][field_name] = data_type
 

@@ -449,13 +449,22 @@ class ReportStream(BaseStream):
         transformed_obj = {}
 
         for resource_name, value in obj.items():
-            if resource_name == "ad_group_ad":
-                transformed_obj.update(value["ad"])
-            else:
+            if resource_name in {"metrics", "segments"}:
                 transformed_obj.update(value)
-
-        if "type_" in transformed_obj:
-            transformed_obj["type"] = transformed_obj.pop("type_")
+            elif resource_name == "ad_group_ad":
+                for key, sub_value in value.items():
+                    if key == 'ad':
+                        transformed_obj.update(sub_value)
+                    else:
+                        transformed_obj.update({f"{resource_name}_{key}": sub_value})
+            else:
+                # value = {"a": 1, "b":2}
+                # turns into
+                # {"resource_a": 1, "resource_b": 2}
+                transformed_obj.update(
+                    {f"{resource_name}_{key}": sub_value
+                     for key, sub_value in value.items()}
+                )
 
         return transformed_obj
 

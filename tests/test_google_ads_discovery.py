@@ -373,20 +373,20 @@ class DiscoveryTest(GoogleAdsBase):
                         self.assertIn(behavior, expected_behaviors)
 
                 # TODO put back when field exlusion changes are merged
-                # # verify for each report stream with exlusions, that all supported fields are mutually exlcusive
-                # if is_report and stream != "click_performance_report":
-                #     fields_to_exclusions = {md['breadcrumb'][-1]: md['metadata']['fieldExclusions']
-                #                            for md in metadata
-                #                            if md['breadcrumb'] != [] and
-                #                            md['metadata'].get('fieldExclusions')}
-                #     for field, exclusions in fields_to_exclusions.items():
-                #         for excluded_field in exclusions:
-                #             with self.subTest(field=field, excluded_field=excluded_field):
+                # verify for each report stream with exlusions, that all supported fields are mutually exlcusive
+                if is_report and stream != "click_performance_report":
+                    fields_to_exclusions = {md['breadcrumb'][-1]: md['metadata']['fieldExclusions']
+                                           for md in metadata
+                                           if md['breadcrumb'] != [] and
+                                           md['metadata'].get('fieldExclusions')}
+                    for field, exclusions in fields_to_exclusions.items():
+                        for excluded_field in exclusions:
+                            with self.subTest(field=field, excluded_field=excluded_field):
 
-                #                 if excluded_field in actual_fields: # some fields in the exclusion list are not supported
+                                if excluded_field in actual_fields: # some fields in the exclusion list are not supported
 
-                #                     # Verify the excluded field has it's own exclusion list
-                #                     self.assertIsNotNone(fields_to_exclusions.get(excluded_field))
+                                    # Verify the excluded field has it's own exclusion list
+                                    self.assertIsNotNone(fields_to_exclusions.get(excluded_field))
 
-                #                     # Verify the excluded field is excluding the original field (mutual exclusion)
-                #                     self.assertIn(field, fields_to_exclusions[excluded_field])
+                                    # Verify the excluded field is excluding the original field (mutual exclusion)
+                                    self.assertIn(field, fields_to_exclusions[excluded_field])

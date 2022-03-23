@@ -16,36 +16,35 @@ class FieldExclusionGoogleAdsBase(GoogleAdsBase):
           Verify when given field selected, `fieldExclusions` fields in metadata are grayed out and cannot be selected (Manually)
     """
 
+    def choose_randomly(self, collection):
+        return random.choice(list(collection))
+
     def random_field_gather(self, input_fields_with_exclusions):
         """
         Method takes list of fields with exclusions and generates a random set fields without conflicts as a result
         The set of fields with exclusions is generated in random order so that different combinations of fields can
         be tested over time.
         """
+        random_selection = []
 
-        # Build random set of fields with exclusions.  Select as many as possible
-        randomly_selected_list_of_fields_with_exclusions = []
-        remaining_available_fields_with_exclusions = input_fields_with_exclusions
-        while len(remaining_available_fields_with_exclusions) > 0:
-            # Randomly select one field that has exclusions
-            newly_added_field = remaining_available_fields_with_exclusions[
-                random.randrange(len(remaining_available_fields_with_exclusions))]
-            # Save list for debug incase test fails
-            self.random_order_of_exclusion_fields[self.stream].append(newly_added_field,)
-            randomly_selected_list_of_fields_with_exclusions.append(newly_added_field)
-            # Update remaining_available_fields_with_exclusinos based on random selection
-            newly_excluded_fields_to_remove = self.field_exclusions[newly_added_field]
-            # Remove newly selected field
-            remaining_available_fields_with_exclusions.remove(newly_added_field)
-            # Remove associated excluded fields
-            for field in newly_excluded_fields_to_remove:
-                if field in remaining_available_fields_with_exclusions:
-                    remaining_available_fields_with_exclusions.remove(field)
+        # Assemble a valid selection of fields with exclusions
+        remaining_fields = list(self.fields_with_exclusions)
+        while remaining_fields:
 
-        exclusion_fields_to_select = randomly_selected_list_of_fields_with_exclusions
+            # Choose randomly from the remaining fields
+            field_to_select = self.choose_randomly(remaining_fields)
+            random_selection.append(field_to_select)
 
-        return exclusion_fields_to_select
+            # Remove field and it's excluded fields from remaining
+            remaining_fields.remove(field_to_select)
+            for field in self.field_exclusions[field_to_select]:
+                if field in remaining_fields:
+                    remaining_fields.remove(field)
 
+             # Save list for debug in case test fails
+            self.random_order_of_exclusion_fields[self.stream].append(field_to_select)
+
+        return random_selection
 
     def run_test(self):
         """
@@ -58,10 +57,10 @@ class FieldExclusionGoogleAdsBase(GoogleAdsBase):
             f"Streams Under Test: {self.streams_to_test}"
         )
 
-        random_order_of_exclusion_fields = {}
+        self.random_order_of_exclusion_fields = {}
 
         # bump start date from default
-        self.start_date = dt.strftime(dt.today() - timedelta(days=3), self.START_DATE_FORMAT)
+        self.start_date = dt.strftime(dt.today() - timedelta(days=1), self.START_DATE_FORMAT)
         conn_id = connections.ensure_connection(self, original_properties=False)
 
         # Run a discovery job
@@ -76,37 +75,34 @@ class FieldExclusionGoogleAdsBase(GoogleAdsBase):
 
                 # Make second call to get field level metadata
                 schema = menagerie.get_annotated_schema(conn_id, catalogs_to_test[0]['stream_id'])
-                field_exclusions = {
+                self.field_exclusions = {
                     rec['breadcrumb'][1]: rec['metadata']['fieldExclusions']
                     for rec in schema['metadata']
                     if rec['breadcrumb'] != [] and rec['breadcrumb'][1] != "_sdc_record_hash"
                 }
 
-                self.field_exclusions = field_exclusions  # expose filed_exclusions globally so other methods can use it
-
                 print(f"Perform assertions for stream: {stream}")
 
                 # Gather fields with no exclusions so they can all be added to selection set
-                fields_without_exclusions = []
-                for field, values in field_exclusions.items():
+                self.fields_without_exclusions = []
+                for field, values in self.field_exclusions.items():
                     if values == []:
-                        fields_without_exclusions.append(field)
+                        self.fields_without_exclusions.append(field)
 
                 # Gather fields with exclusions as input to randomly build maximum length selection set
-                fields_with_exclusions = []
-                for field, values in field_exclusions.items():
+                self.fields_with_exclusions = []
+                for field, values in self.field_exclusions.items():
                     if values != []:
-                       fields_with_exclusions.append(field)
+                        self.fields_with_exclusions.append(field)
 
-                if len(fields_with_exclusions) == 0:
+                if len(self.fields_with_exclusions) == 0:
                     raise AssertionError(f"Skipping assertions. No field exclusions for stream: {stream}")
 
                 self.stream = stream
-                random_order_of_exclusion_fields[stream] = []
-                self.random_order_of_exclusion_fields = random_order_of_exclusion_fields
+                self.random_order_of_exclusion_fields[stream] = []
 
-                random_exclusion_field_selection_list = self.random_field_gather(fields_with_exclusions)
-                field_selection_set = set(random_exclusion_field_selection_list + fields_without_exclusions)
+                random_exclusion_field_selection_list = self.random_field_gather(self.fields_with_exclusions)
+                field_selection_set = set(random_exclusion_field_selection_list + self.fields_without_exclusions)
 
                 with self.subTest(order_of_fields_selected=self.random_order_of_exclusion_fields[stream]):
 

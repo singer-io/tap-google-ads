@@ -23,7 +23,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
 
     def choose_randomly(self, collection):
         return random.choice(list(collection))
-    
+
     def random_field_gather(self):
         """
         Method takes list of fields with exclusions and generates a random set fields without conflicts as a result
@@ -48,17 +48,20 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                     remaining_fields.remove(field)
 
              # Save list for debug incase test fails
-            self.random_order_of_exclusion_fields[self.stream].append(field_to_select,)
+            self.random_order_of_exclusion_fields[self.stream].append(field_to_select)
 
         # Now add one more exclusion field to make the selection invalid
-        # Choose randomly from the selected fields
-        random_field = self.choose_randomly(random_selection)
+        while True:
+            # Choose randomly from the selected fields
+            random_field = self.choose_randomly(random_selection)
 
-        # Choose randomly from that field's supported excluded fields
-        excluded_fields = set(self.field_exclusions[random_field])
-        supported_excluded_fields = {field for field in excluded_fields
+            # Choose randomly from that field's supported excluded fields
+            excluded_fields = set(self.field_exclusions[random_field])
+            supported_excluded_fields = {field for field in excluded_fields
                                      if field in self.fields_with_exclusions}
-        invalid_field = self.choose_randomly(supported_excluded_fields)
+            if supported_excluded_fields:
+                invalid_field = self.choose_randomly(supported_excluded_fields)
+                break
 
         # Add this invalid field to the selection
         random_selection.append(invalid_field)
@@ -82,7 +85,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         streams_to_test = {stream for stream in self.expected_streams()
                            if self.is_report(stream)} - {'click_performance_report'}  # No exclusions. TODO remove dynamically
 
-        streams_to_test = {'search_query_performance_report'} # , 'placeholder_report',}
+        # streams_to_test = {'search_query_performance_report'} # , 'placeholder_report',}
 
         random_order_of_exclusion_fields = {}
         tap_exit_status_by_stream = {}
@@ -175,24 +178,14 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
                         self.assertIsNone(exit_status.get('check_exit_status'))
 
                         # Verify error message tells user they must select an attribute/metric for the invalid stream
-                        # TODO build list of strings to test in future
-
-                        # Initial assertion group generated if all fields selelcted
-                        # self.assertIn(
-                        #     "PROHIBITED_FIELD_COMBINATION_IN_SELECT_CLAUSE",
-                        #     exit_status.get("tap_error_message")
-                        # )
-                        # self.assertIn(
-                        #     "The following pairs of fields may not be selected together",
-                        #     exit_status.get("tap_error_message")
-                        # )
-
-                        # New error message if random selection method is used
-                        # PROHIBITED_SEGMENT_WITH_METRIC_IN_SELECT_OR_WHERE_CLAUSE
-
-                        # TODO additional assertions?
-                        # self.assertEqual(len(exclusion_erros[stream], 0)
-
+                        error_messages = ["The following pairs of fields may not be selected together",
+                                          "Cannot select or filter on the following",
+                                          "Cannot select the following",]
+                        self.assertTrue(
+                            any([error_message in exit_status.get("tap_error_message")
+                                 for error_message in error_messages]),
+                            msg=f'Unexpected Error Message: {exit_status.get("tap_error_message")}')
+                        print(f"\n*** {stream} tap_error_message {exit_status.get('tap_error_message')} ***\n")
                     finally:
                         # deselect stream once it's been tested
                         self.deselect_streams(conn_id, catalogs_to_test)

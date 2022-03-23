@@ -152,6 +152,18 @@ def make_request(gas, query, customer_id):
     return response
 
 
+def google_message_to_json(message):
+    """
+    The proto field name for `type` is `type_` which will
+    get stripped by the Transformer. So we replace all
+    instances of the key `"type_"` before `json.loads`ing it
+    """
+
+    json_string = MessageToJson(message, preserving_proto_field_name=True)
+    json_string = json_string.replace('"type_":', '"type":')
+    return json.loads(json_string)
+
+
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
@@ -325,7 +337,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         with Transformer() as transformer:
             # Pages are fetched automatically while iterating through the response
             for message in response:
-                json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
+                json_message = google_message_to_json(message)
                 transformed_obj = self.transform_keys(json_message)
                 record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
 
@@ -506,7 +518,7 @@ class ReportStream(BaseStream):
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response
                 for message in response:
-                    json_message = json.loads(MessageToJson(message, preserving_proto_field_name=True))
+                    json_message = google_message_to_json(message)
                     transformed_obj = self.transform_keys(json_message)
                     record = transformer.transform(transformed_obj, stream["schema"])
                     record["_sdc_record_hash"] = generate_hash(record, stream_mdata)

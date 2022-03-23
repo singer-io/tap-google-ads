@@ -630,13 +630,13 @@ class GoogleAdsBase(unittest.TestCase):
                 'view_through_conversions',  # View-through conv.,
             },
             "click_performance_report": {
-                'ad_group_ad',
+                'click_view_ad_group_ad',
                 'ad_group_id',
                 'ad_group_name',
                 'ad_group_status',
                 'ad_network_type',
                 'click_view_area_of_interest',
-                'campaign_location_target',
+                'click_view_campaign_location_target',
                 'click_type',
                 'clicks',
                 'customer_descriptive_name',
@@ -754,7 +754,7 @@ class GoogleAdsBase(unittest.TestCase):
             'placeholder_feed_item_report': {
                 'clicks',
                 'impressions',
-                'feed_placeholder_view_placeholder_type',
+                'placeholder_type',
             },
             'placeholder_report': {
                 'clicks',

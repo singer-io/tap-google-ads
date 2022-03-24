@@ -123,7 +123,7 @@ class TestRecordHashing(unittest.TestCase):
         ('properties', 'date'): {'behavior': 'SEGMENT'},
     })
 
-    expected_hash = 'ade8240f134633fe125388e469e61ccf9e69033fd5e5f166b4b44766bc6376d3'
+    expected_hash = '38d95857633f1e04092f7a308f0d3777d965cba80a5593803dd2b7e4a484ce64'
 
     def test_record_hash_canary(self):
         self.assertEqual(self.expected_hash, generate_hash(self.test_record, self.test_metadata))

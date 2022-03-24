@@ -285,7 +285,7 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_method = self.expected_replication_method()[stream]
                 # expected_fields = self.expected_fields()[stream] # TODO_TDL-17909
                 is_report = self.is_report(stream)
-                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
+                expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE', 'PRIMARY KEY'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
 
                 # collecting actual values from the catalog
                 schema_and_metadata = menagerie.get_annotated_schema(conn_id, catalog['stream_id'])
@@ -365,8 +365,6 @@ class DiscoveryTest(GoogleAdsBase):
                     msg="Not all non key properties are set to available in metadata")
 
                 # verify 'behavior' is present in metadata for all streams
-                if is_report:
-                    actual_fields.remove('_sdc_record_hash')
                 self.assertEqual(fields_with_behavior, set(actual_fields))
 
                 # verify 'behavior' falls into expected set of behaviors (based on stream type)
@@ -374,20 +372,21 @@ class DiscoveryTest(GoogleAdsBase):
                     with self.subTest(field=field):
                         self.assertIn(behavior, expected_behaviors)
 
-                # NB | The following assertion is left commented with the assumption that this will be a valid
-                #      expectation by the time the tap moves to Beta. If this is not valid at that time it should
-                #      be removed. Or if work done in TDL-17910 results in this being an unnecessary check
+                # TODO put back when field exlusion changes are merged
+                # verify for each report stream with exlusions, that all supported fields are mutually exlcusive
+                if is_report and stream != "click_performance_report":
+                    fields_to_exclusions = {md['breadcrumb'][-1]: md['metadata']['fieldExclusions']
+                                           for md in metadata
+                                           if md['breadcrumb'] != [] and
+                                           md['metadata'].get('fieldExclusions')}
+                    for field, exclusions in fields_to_exclusions.items():
+                        for excluded_field in exclusions:
+                            with self.subTest(field=field, excluded_field=excluded_field):
 
-                # if is_report:
-                #     # verify each field in a report stream has a 'fieldExclusions' entry and that the fields listed
-                #     # in that set are present in elsewhere in the stream's catalog
-                #     fields_to_exclusions = {md['breadcrumb'][-1]: md['metadata']['fieldExclusions']
-                #                            for md in metadata
-                #                            if md['breadcrumb'] != [] and
-                #                            md['metadata'].get('fieldExclusions')}
-                #     for field, exclusions in fields_to_exclusions.items():
-                #         with self.subTest(field=field):
-                #             self.assertTrue(
-                #                 set(exclusions).issubset(set(actual_fields)),
-                #                 msg=f"'fieldExclusions' contain fields not accounted for by the catalog: {set(exclusions) - set(actual_fields)}"
-                #             )
+                                if excluded_field in actual_fields: # some fields in the exclusion list are not supported
+
+                                    # Verify the excluded field has it's own exclusion list
+                                    self.assertIsNotNone(fields_to_exclusions.get(excluded_field))
+
+                                    # Verify the excluded field is excluding the original field (mutual exclusion)
+                                    self.assertIn(field, fields_to_exclusions[excluded_field])

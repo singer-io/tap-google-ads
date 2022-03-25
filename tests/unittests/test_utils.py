@@ -96,6 +96,55 @@ class TestRecordHashing(unittest.TestCase):
         'invalid_clicks': 0,
         'date': '2022-01-19',
     }
+    
+    test_record_new_date = {
+        'id': 1234567890,
+        'currency_code': 'USD',
+        'time_zone': 'America/New_York',
+        'auto_tagging_enabled': False,
+        'manager': False,
+        'test_account': False,
+        'impressions': 0,
+        'interactions': 0,
+        'invalid_clicks': 0,
+        'date': '2022-01-20',
+    }
+    
+    test_record_euro = {
+        'id': 1234567890,
+        'currency_code': 'EUR',
+        'time_zone': 'Europe/Paris',
+        'auto_tagging_enabled': False,
+        'manager': False,
+        'test_account': False,
+        'impressions': 0,
+        'interactions': 0,
+        'invalid_clicks': 0,
+        'date': '2022-01-19',
+    }
+    
+    test_record_with_non_zero_metrics = {
+        'id': 1234567890,
+        'currency_code': 'USD',
+        'time_zone': 'America/New_York',
+        'auto_tagging_enabled': False,
+        'manager': False,
+        'test_account': False,
+        'impressions': 10,
+        'interactions': 10,
+        'invalid_clicks': 10,
+        'date': '2022-01-19',
+    }
+    
+    test_record_without_metrics = {
+        'id': 1234567890,
+        'currency_code': 'USD',
+        'time_zone': 'America/New_York',
+        'auto_tagging_enabled': False,
+        'manager': False,
+        'test_account': False,
+        'date': '2022-01-19',
+    }
 
     test_record_shuffled = {
         'currency_code': 'USD',
@@ -142,8 +191,27 @@ class TestRecordHashing(unittest.TestCase):
         test_diff_record = dict(self.test_record)
         test_diff_record['date'] = '2022-02-03'
         self.assertNotEqual(self.expected_hash, generate_hash(test_diff_record, self.test_metadata))
+        
+    def test_record_hash_is_same_with_metrics_selected_and_no_metrics_selected(self):
+        self.assertEqual(self.expected_hash, generate_hash(self.test_record_without_metrics, self.test_metadata))
+        self.assertEqual(self.expected_hash, generate_hash(self.test_record, self.test_metadata))
+        
+    def test_record_hash_is_same_with_metric_value_change(self):
+        hash_non_zero_metrics = generate_hash(self.test_record_with_non_zero_metrics, self.test_metadata)
+        hash_zero_metrics = generate_hash(self.test_record, self.test_metadata)
+        self.assertEqual(hash_zero_metrics, hash_non_zero_metrics)
 
-
+    def test_record_hash_is_different_with_different_segment_value(self):
+        hash_record_orignal_date = generate_hash(self.test_record, self.test_metadata)
+        hash_record_next_day = generate_hash(self.test_record_new_date, self.test_metadata)
+        self.assertNotEqual(hash_record_orignal_date, hash_record_next_day)
+        
+    def test_record_hash_is_different_with_different_attribute_value(self):
+        hash_record_usd = generate_hash(self.test_record, self.test_metadata)
+        hash_record_euro = generate_hash(self.test_record_euro, self.test_metadata)
+        self.assertNotEqual(hash_record_usd, hash_record_euro)
+        
+        
 class TestGetQueryDate(unittest.TestCase):
     def test_one(self):
         """Given:

@@ -18,13 +18,12 @@ class InterruptedSyncTest(GoogleAdsBase):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
             'start_date':   '2022-01-22T00:00:00Z',
-            'user_id':      'not used?', # TODO ?
+            'user_id':      'not used?',
             'customer_ids': ','.join(self.get_customer_ids()),
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
         }
 
-        # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
 
@@ -48,7 +47,7 @@ class InterruptedSyncTest(GoogleAdsBase):
          - Verify only records with replication-key values greater than or equal to the stream level bookmark are
            replicated on the resuming sync for the interrupted stream.
          - Verify the yet-to-be-synced streams are replicated following the interrupted stream in the resuming sync.
-             (All yet-to-be-synced streams must replicate before streams that were already synced. - covered by unittests) TODO verify with devs
+             (All yet-to-be-synced streams must replicate before streams that were already synced. - covered by unittests)
 
         NOTE: The following streams all had records for the dates used in this test. If needed they can be used in
               testing cases like this in the future.
@@ -154,7 +153,7 @@ class InterruptedSyncTest(GoogleAdsBase):
                     # gather expectations
                     expected_primary_key = list(self.expected_primary_keys()[stream])[0]
                     expected_replication_key = list(self.expected_replication_keys()[stream])[0]  # assumes 1 value
-                    testable_customer_ids = set(self.get_customer_ids()) - {'2728292456'} # TODO before finalizing all tests make a standard for ref these
+                    testable_customer_ids = set(self.get_customer_ids()) - {'2728292456'}
                     for customer in testable_customer_ids:
                         with self.subTest(customer_id=customer):
 

@@ -18,13 +18,12 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
             'start_date':   '2022-01-22T00:00:00Z',
-            'user_id':      'not used?', # TODO ?
+            'user_id':      'not used?',
             'customer_ids': ','.join(self.get_customer_ids()),
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
         }
 
-        # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
 

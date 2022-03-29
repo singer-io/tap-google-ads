@@ -12,12 +12,10 @@ class DiscoveryTest(GoogleAdsBase):
     def expected_fields(self):
         """
         The expected streams and metadata about the streams.
-
-        TODO's in this method will be picked up as part of TDL-17909
         """
         return {
             # Core Objects
-            "accounts": {  # TODO_TDL-17909 check with Brian on changes
+            "accounts": {
                 # OLD FIELDS (with mapping)
                 "currency_code",
                 "id", # "customer_id",
@@ -41,7 +39,7 @@ class DiscoveryTest(GoogleAdsBase):
                 'remarketing_setting.google_global_site_tag',
                 'tracking_url_template',
             },
-            "campaigns": {  # TODO_TDL-17909 check out nested keys once these are satisfied
+            "campaigns": {
                 # OLD FIELDS
                 "ad_serving_optimization_status",
                 "advertising_channel_type",
@@ -124,12 +122,12 @@ class DiscoveryTest(GoogleAdsBase):
                 "vanity_pharma.vanity_pharma_text",
                 "video_brand_safety_suitability",
             },
-            "ad_groups": {  # TODO_TDL-17909 check out nested keys once these are satisfied
+            "ad_groups": {
                 # OLD FIELDS (with mappings)
                 "type",  # ("ad_group_type")
                 "base_ad_group",  # ("base_ad_group_id")
                 # "bidding_strategy_configuration", # DNE
-                "campaign",  #("campaign_name", "campaign_id", "base_campaign_id") # TODO_TDL-17909 redo this
+                "campaign",
                 "id",
                 "labels",
                 "name",
@@ -161,7 +159,7 @@ class DiscoveryTest(GoogleAdsBase):
                 "target_cpa_micros",
                 "effective_target_roas",
             },
-            "ads": {  # TODO_TDL-17909 check out nested keys once these are satisfied
+            "ads": {
                 # OLD FIELDS (with mappings)
                 "ad_group_id",
                 "base_ad_group_id",
@@ -200,7 +198,7 @@ class DiscoveryTest(GoogleAdsBase):
             "display_keyword_performance_report": {  # "display_keyword_view"
             },
             "display_topics_performance_report": {  # "topic_view"
-            },# TODO_TDL-17909 consult https://developers.google.com/google-ads/api/docs/migration/url-reports for migrating this report
+            },
             "gender_performance_report": {  # "gender_view"
             },
             "geo_performance_report": {  # "geographic_view", "user_location_view"
@@ -283,7 +281,6 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_replication_keys = self.expected_replication_keys()[stream]
                 expected_automatic_fields = expected_primary_keys | expected_replication_keys | expected_foreign_keys
                 expected_replication_method = self.expected_replication_method()[stream]
-                # expected_fields = self.expected_fields()[stream] # TODO_TDL-17909
                 is_report = self.is_report(stream)
                 expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE', 'PRIMARY KEY'} if is_report else {'ATTRIBUTE', 'SEGMENT'}
 
@@ -346,9 +343,6 @@ class DiscoveryTest(GoogleAdsBase):
                 # verify replication key(s)
                 self.assertSetEqual(expected_replication_keys, actual_replication_keys)
 
-                # verify all expected fields are found # TODO_TDL-17909 set expectations
-                # self.assertSetEqual(expected_fields, set(actual_fields))
-
                 # verify the stream is given the inclusion of available
                 self.assertEqual(catalog['metadata']['inclusion'], 'available', msg=f"{stream} cannot be selected")
 
@@ -372,7 +366,6 @@ class DiscoveryTest(GoogleAdsBase):
                     with self.subTest(field=field):
                         self.assertIn(behavior, expected_behaviors)
 
-                # TODO put back when field exlusion changes are merged
                 # verify for each report stream with exlusions, that all supported fields are mutually exlcusive
                 if is_report and stream != "click_performance_report":
                     fields_to_exclusions = {md['breadcrumb'][-1]: md['metadata']['fieldExclusions']

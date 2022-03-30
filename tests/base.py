@@ -51,14 +51,13 @@ class GoogleAdsBase(unittest.TestCase):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
             'start_date':   '2021-12-01T00:00:00Z',
-            'user_id':      'not used?', # TODO ?
+            'user_id':      'not used?',  # Useless config property carried over from AdWords
             'customer_ids': ','.join(self.get_customer_ids()),
             # 'conversion_window_days': '30',
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
         }
 
-        # TODO_TDL-17911 Add a test around conversion_window_days
         if original:
             return return_value
 
@@ -72,10 +71,13 @@ class GoogleAdsBase(unittest.TestCase):
                 'refresh_token':     os.getenv('TAP_GOOGLE_ADS_REFRESH_TOKEN')}
 
     def expected_metadata(self):
-        """The expected streams and metadata about the streams"""
-        # TODO Investigate the foreign key expectations here,
-        #       - must prove each uncommented entry is a true foregin key constraint.
-        #       - must prove each commented entry is a NOT true foregin key constraint.
+        """
+        The expected streams and metadata about the streams
+
+        DEPRECATED reports from tap-adwords:
+            "CRITERIA_PERFORMANCE_REPORT"
+            "FINAL_URL_REPORT" replaced by landing page / expanded landing page
+        """
         return {
             # Core Objects
             "accounts": {
@@ -87,9 +89,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    # 'accessible_bidding_strategy_id',
-                    # 'bidding_strategy_id',
-                    # 'campaign_budget_id',
                     'customer_id'
                 },
             },
@@ -97,8 +96,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
-                    # 'accessible_bidding_strategy_id',
-                    # 'bidding_strategy_id',
                     'campaign_id',
                     'customer_id',
                 },
@@ -146,7 +143,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            # TODO Post Alpha
+            # TODO Post Beta
             # "call_metrics_call_details_report": {  # "call_view"
             #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
             #     self.REPLICATION_METHOD: self.INCREMENTAL,
@@ -257,33 +254,13 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            # "criteria_performance_report": { # DEPRECATED TODO maybe possilbe?
-            #     self.PRIMARY_KEYS: {"TODO"},
-            #     self.REPLICATION_METHOD: self.INCREMENTAL,
-            #     self.REPLICATION_KEYS: {"date"},
-            # },
-            # "final_url_report": {  # DEPRECATED Replaced with landing page / expanded landing page
-            #     self.PRIMARY_KEYS: {},
-            #     self.REPLICATION_METHOD: self.INCREMENTAL,
-            #     self.REPLICATION_KEYS: {"date"},
-            # },
-            # Custom Reports TODO feature
+
+            # Custom Reports TODO Post Beta feature
         }
 
     def expected_streams(self):
         """A set of expected stream names"""
         return set(self.expected_metadata().keys())
-
-    # TODO confirm whether or not these apply for
-    #   core objects ?
-    #   report objects ?
-    # def child_streams(self):
-    #     """
-    #     Return a set of streams that are child streams
-    #     based on having foreign key metadata
-    #     """
-    #     return {stream for stream, metadata in self.expected_metadata().items()
-    #             if metadata.get(self.FOREIGN_KEYS)}
 
     def expected_foreign_keys(self):
         """
@@ -388,58 +365,6 @@ class GoogleAdsBase(unittest.TestCase):
 
         return sync_record_count
 
-
-    # TODO we may need to account for exclusion rules
-    def perform_and_verify_table_and_field_selection(self, conn_id, test_catalogs,
-                                                     select_default_fields: bool = True,
-                                                     select_pagination_fields: bool = False):
-        """
-        Perform table and field selection based off of the streams to select
-        set and field selection parameters. Note that selecting all fields is not
-        possible for this tap due to dimension/metric conflicts set by Google and
-        enforced by the Stitch UI.
-
-        Verify this results in the expected streams selected and all or no
-        fields selected for those streams.
-        """
-
-        # Select all available fields or select no fields from all testable streams
-        self.select_all_streams_and_fields(conn_id, test_catalogs, True)
-        # self._select_streams_and_fields(
-        #     conn_id=conn_id, catalogs=test_catalogs,
-        #     select_default_fields=select_default_fields,
-        #     select_pagination_fields=select_pagination_fields
-        # )
-
-        catalogs = menagerie.get_catalogs(conn_id)
-
-        # Ensure our selection affects the catalog
-        expected_selected_streams = [tc.get('stream_name') for tc in test_catalogs]
-        expected_default_fields = self.expected_default_fields()
-        expected_pagination_fields = self.expected_pagination_fields()
-        for cat in catalogs:
-            catalog_entry = menagerie.get_annotated_schema(conn_id, cat['stream_id'])
-
-            # Verify all intended streams are selected
-            selected = catalog_entry['metadata'][0]['metadata'].get('selected')
-            print("Validating selection on {}: {}".format(cat['stream_name'], selected))
-            if cat['stream_name'] not in expected_selected_streams:
-                self.assertFalse(selected, msg="Stream selected, but not testable.")
-                continue # Skip remaining assertions if we aren't selecting this stream
-            self.assertTrue(selected, msg="Stream not selected.")
-
-            # collect field selection expecationas
-            expected_automatic_fields = self.expected_automatic_fields()[cat['stream_name']]
-            selected_default_fields = expected_default_fields[cat['stream_name']] if select_default_fields else set()
-            selected_pagination_fields = expected_pagination_fields[cat['stream_name']] if select_pagination_fields else set()
-
-            # Verify all intended fields within the stream are selected
-            expected_selected_fields = expected_automatic_fields | selected_default_fields | selected_pagination_fields
-            selected_fields = self._get_selected_fields_from_metadata(catalog_entry['metadata'])
-            for field in expected_selected_fields:
-                field_selected = field in selected_fields
-                print("\tValidating field selection on {}.{}: {}".format(cat['stream_name'], field, field_selected))
-            self.assertSetEqual(expected_selected_fields, selected_fields)
 
     @staticmethod
     def _get_selected_fields_from_metadata(metadata):
@@ -583,7 +508,6 @@ class GoogleAdsBase(unittest.TestCase):
     def is_report(self, stream):
         return stream.endswith('_report')
 
-    # TODO exclusion rules
 
     @staticmethod
     def expected_default_fields():

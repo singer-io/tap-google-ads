@@ -32,7 +32,7 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return {
             'start_date': dt.strftime(dt.utcnow() - timedelta(days=91), self.START_DATE_FORMAT),
-            'user_id': 'not used?', # TODO ?
+            'user_id': 'not used?',
             'customer_ids': ','.join(self.get_customer_ids()),
             'conversion_window': self.conversion_window,
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
@@ -42,7 +42,7 @@ class ConversionWindowBaseTest(GoogleAdsBase):
     def run_test(self):
         """
         Testing that basic sync functions without Critical Errors when
-        a valid conversion_windown is set.
+        a valid conversion_window is set.
         """
         print("Configurable Properties Test (conversion_window)")
 

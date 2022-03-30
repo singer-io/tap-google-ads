@@ -83,7 +83,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         # --- Test report streams --- #
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)} - {'click_performance_report'}  # No exclusions. TODO remove dynamically
+                           if self.is_report(stream)} - {'click_performance_report'}  # No exclusions, skipped intentionally
 
         # streams_to_test = {'search_query_performance_report'} # , 'placeholder_report',}
 
@@ -101,7 +101,6 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
         for stream in streams_to_test:
             with self.subTest(stream=stream):
 
-                # TODO Spike on running more than one sync per stream to increase the number of invalid field combos tested (Rushi)
                 catalogs_to_test = [catalog
                                     for catalog in found_catalogs
                                     if catalog["stream_name"] == stream]

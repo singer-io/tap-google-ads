@@ -18,24 +18,7 @@ class SyncCanaryTest(GoogleAdsBase):
     def test_run(self):
         """
         Testing that basic sync functions without Critical Errors
-        """
-        print("Canary Sync Test for tap-google-ads")
 
-        conn_id = connections.ensure_connection(self)
-
-        streams_to_test = self.expected_streams() - {
-            # TODO_TDL-17885 the following are not yet implemented
-            'display_keyword_performance_report', # no test data available
-            'display_topics_performance_report',  # no test data available
-            'placement_performance_report',  # no test data available
-            "keywords_performance_report",  # no test data available
-            "video_performance_report",  # no test data available
-            "shopping_performance_report",  # no test data available (need Shopping campaign type)
-            'campaign_audience_performance_report', # no test data available
-            'ad_group_audience_performance_report',  # Potential BUG see above
-        }
-
-        """
         Test Data available for the following report streams across the following dates (only the
         first and last date that data was generated is listed).
 
@@ -87,6 +70,22 @@ class SyncCanaryTest(GoogleAdsBase):
         "2021-12-06T00:00:00.000000Z"
         "2022-03-14T00:00:00.000000Z"
         """
+        print("Canary Sync Test for tap-google-ads")
+
+        conn_id = connections.ensure_connection(self)
+
+        streams_to_test = self.expected_streams() - {
+            # TODO_TDL-17885 the following are not yet implemented
+            'display_keyword_performance_report', # no test data available
+            'display_topics_performance_report',  # no test data available
+            'placement_performance_report',  # no test data available
+            "keywords_performance_report",  # no test data available
+            "video_performance_report",  # no test data available
+            "shopping_performance_report",  # no test data available (need Shopping campaign type)
+            'campaign_audience_performance_report', # no test data available
+            'ad_group_audience_performance_report',  # Potential BUG see above
+        }
+
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
         test_catalogs = [catalog for catalog in found_catalogs if catalog['stream_name'] in streams_to_test]

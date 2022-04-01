@@ -3,8 +3,8 @@
 
 # QA steps
  - [ ] automated tests passing
- - [ ] manual qa steps passing (list below)
- 
+ - [ ] manual qa steps passing (See: tap-tester/reference/manual_tests)
+
 # Risks
 
 # Rollback steps

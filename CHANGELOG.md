@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.0
+  * Version bump for GA release
+  * Adds fields to click_view report definition [#44](https://github.com/singer-io/tap-google-ads/pull/44)
+  * Adds date ranges to tests for faster test runs [#43](https://github.com/singer-io/tap-google-ads/pull/43)
+  * Adds more tests around primary key hashing [#42](https://github.com/singer-io/tap-google-ads/pull/42)
+
 ## v0.3.0
   * Removes unused code
   * Adds a behavior to "_sdc_record_hash"

@@ -32,7 +32,7 @@ def main_impl():
         do_discover(resource_schema)
         LOGGER.info("Discovery complete")
     elif args.catalog:
-        do_sync(args.config, args.catalog.to_dict(), resource_schema, state, args.schemaless)
+        do_sync(args.config, args.catalog.to_dict(), resource_schema, state)
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")

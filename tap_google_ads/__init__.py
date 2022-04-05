@@ -17,6 +17,7 @@ REQUIRED_CONFIG_KEYS = [
     "refresh_token",
     "customer_ids",
     "developer_token",
+    "schemaless"
 ]
 
 
@@ -31,7 +32,7 @@ def main_impl():
         do_discover(resource_schema)
         LOGGER.info("Discovery complete")
     elif args.catalog:
-        do_sync(args.config, args.catalog.to_dict(), resource_schema, state)
+        do_sync(args.config, args.catalog.to_dict(), resource_schema, state, args.schemaless)
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")

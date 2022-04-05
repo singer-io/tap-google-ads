@@ -55,7 +55,7 @@ def shuffle(shuffle_list, shuffle_key, current_value, sort_function):
     return top_half + bottom_half
 
 
-def do_sync(config, catalog, resource_schema, state):
+def do_sync(config, catalog, resource_schema, state, schemaless):
     # QA ADDED WORKAROUND [START]
     try:
         customers = json.loads(config["login_customer_ids"])
@@ -108,7 +108,7 @@ def do_sync(config, catalog, resource_schema, state):
             else:
                 stream_obj = report_streams[stream_name]
 
-            stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
+            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, schemaless)
 
     state.pop("currently_syncing", None)
     singer.write_state(state)

@@ -73,7 +73,7 @@ def get_query_limit(config):
 def do_sync(config, catalog, resource_schema, state):
     # QA ADDED WORKAROUND [START]
     try:
-        customers = json.loads(config["login_customer_ids"])
+        customers = json.loads(config["customer_ids"])
     except TypeError:  # falling back to raw value
         customers = config["login_customer_ids"]
 
@@ -117,7 +117,7 @@ def do_sync(config, catalog, resource_schema, state):
         singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
 
         for customer in customers:
-            sdk_client = create_sdk_client(config, customer["loginCustomerId"])
+            sdk_client = create_sdk_client(config, customer["customerId"])
 
             LOGGER.info(f"Syncing {stream_name} for customer Id {customer['customerId']}.")
 

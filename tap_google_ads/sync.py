@@ -126,7 +126,7 @@ def do_sync(config, catalog, resource_schema, state):
             else:
                 stream_obj = report_streams[stream_name]
 
-            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit)
+            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit, schemaless=config["schemaless"])
 
     state.pop("currently_syncing", None)
     singer.write_state(state)

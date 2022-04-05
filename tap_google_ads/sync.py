@@ -70,7 +70,7 @@ def get_query_limit(config):
         LOGGER.warning(f"The entered query limit is invalid; it will be set to the default query limit of {DEFAULT_QUERY_LIMIT}")
         return DEFAULT_QUERY_LIMIT
 
-def do_sync(config, catalog, resource_schema, state):
+def do_sync(config, catalog, resource_schema, state, schemaless=False):
     # QA ADDED WORKAROUND [START]
     try:
         customers = json.loads(config["login_customer_ids"])
@@ -126,7 +126,7 @@ def do_sync(config, catalog, resource_schema, state):
             else:
                 stream_obj = report_streams[stream_name]
 
-            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit)
+            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit, schemaless=schemaless)
 
     state.pop("currently_syncing", None)
     singer.write_state(state)

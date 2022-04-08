@@ -75,15 +75,17 @@ class SyncCanaryTest(GoogleAdsBase):
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = self.expected_streams() - {
-            # TODO_TDL-17885 the following are not yet implemented
-            'display_keyword_performance_report', # no test data available
-            'display_topics_performance_report',  # no test data available
-            'placement_performance_report',  # no test data available
-            "keywords_performance_report",  # no test data available
-            "video_performance_report",  # no test data available
-            "shopping_performance_report",  # no test data available (need Shopping campaign type)
-            'campaign_audience_performance_report', # no test data available
-            'ad_group_audience_performance_report',  # Potential BUG see above
+            # no test data available, but can generate
+            'display_keyword_performance_report',  # Singer Display #2, Ad Group 2
+            'display_topics_performance_report',  # Singer Display #2, Ad Group 2
+            "keywords_performance_report",  # needs a Search Campaign (currently have none)
+            # audiences are unclear on how metrics fall into segments
+            'campaign_audience_performance_report',  # Singer Display #2/Singer Display, Ad Group 2 (maybe?)
+            'ad_group_audience_performance_report',  # Singer Display #2/Singer Display, Ad Group 2 (maybe?)
+            # cannot generate test data
+            'placement_performance_report',  # need an app to run javascript to trace conversions
+            "video_performance_report",  # need a video to show
+            "shopping_performance_report",  # need Shopping campaign type, and link to a store
         }
 
         # Run a discovery job

@@ -13,5 +13,5 @@ def create_sdk_client(config, login_customer_id=None):
     if login_customer_id:
         CONFIG["login_customer_id"] = login_customer_id
 
-    sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
+    sdk_client = GoogleAdsClient.load_from_dict(CONFIG, version=config["version"])
     return sdk_client

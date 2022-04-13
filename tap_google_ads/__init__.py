@@ -17,7 +17,8 @@ REQUIRED_CONFIG_KEYS = [
     "refresh_token",
     "customer_ids",
     "developer_token",
-    "schemaless"
+    "schemaless",
+    "version"
 ]
 
 
@@ -26,6 +27,7 @@ def main_impl():
     resource_schema = create_resource_schema(args.config)
     state = {}
 
+    LOGGER.info(f"Sync Starting with google-ads api {args.config['version']} version.")
     if args.state:
         state.update(args.state)
     if args.discover:

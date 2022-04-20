@@ -164,6 +164,12 @@ def google_message_to_json(message):
     return json.loads(json_string)
 
 
+def filter_out_non_attribute_fields(fields):
+    return {field_name: field_data
+            for field_name, field_data in fields.items()
+            if field_data["field_details"]["category"] == "ATTRIBUTE"}
+
+
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
@@ -207,16 +213,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         `behavior` that are not covered by Google's resource_schema
         """
 
-    def filter_out_non_attribute_fields(self, fields):
-        self.resource_fields = {field_name: field_data
-                                for field_name, field_data in fields.items()
-                                if field_data["field_details"]["category"] == "ATTRIBUTE"}
 
     def create_full_schema(self, resource_schema):
         google_ads_name = self.google_ads_resource_names[0]
         self.resource_object = resource_schema[google_ads_name]
-        self.resource_fields = self.resource_object["fields"]
-        self.filter_out_non_attribute_fields(self.resource_fields)
+        self.resource_fields = filter_out_non_attribute_fields(self.resource_object["fields"])
         self.full_schema = create_nested_resource_schema(resource_schema, self.resource_fields)
 
     def set_stream_schema(self):

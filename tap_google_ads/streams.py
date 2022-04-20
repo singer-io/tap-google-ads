@@ -207,10 +207,16 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         `behavior` that are not covered by Google's resource_schema
         """
 
+    def filter_out_non_attribute_fields(self, fields):
+        self.resource_fields = {field_name: field_data
+                                for field_name, field_data in fields.items()
+                                if field_data["field_details"]["category"] == "ATTRIBUTE"}
+
     def create_full_schema(self, resource_schema):
         google_ads_name = self.google_ads_resource_names[0]
         self.resource_object = resource_schema[google_ads_name]
         self.resource_fields = self.resource_object["fields"]
+        self.filter_out_non_attribute_fields(self.resource_fields)
         self.full_schema = create_nested_resource_schema(resource_schema, self.resource_fields)
 
     def set_stream_schema(self):
@@ -247,9 +253,10 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         for field, props in self.resource_fields.items():
             resource_matches = field.startswith(self.resource_object["name"] + ".")
+            is_attribute = props["field_details"]["category"] == "ATTRIBUTE"
             is_id_field = field.endswith(".id")
 
-            if is_id_field or (props["field_details"]["category"] == "ATTRIBUTE" and resource_matches):
+            if is_id_field or (is_attribute and resource_matches):
                 # Transform the field name to match the schema
                 # Special case for ads since they are nested under ad_group_ad and
                 # we have to bump them up a level
@@ -540,6 +547,12 @@ class ReportStream(BaseStream):
 
 def initialize_core_streams(resource_schema):
     return {
+        "accessible_bidding_strategies": BaseStream(
+            report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
+            ["accessible_bidding_strategy"],
+            resource_schema,
+            ["id"],
+        ),
         "accounts": BaseStream(
             report_definitions.ACCOUNT_FIELDS,
             ["customer"],
@@ -558,21 +571,21 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
         ),
-        "campaigns": BaseStream(
-            report_definitions.CAMPAIGN_FIELDS,
-            ["campaign"],
-            resource_schema,
-            ["id"],
-        ),
         "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
             ["bidding_strategy"],
             resource_schema,
             ["id"],
         ),
-        "accessible_bidding_strategies": BaseStream(
-            report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
-            ["accessible_bidding_strategy"],
+        "call_view": BaseStream(
+            report_definitions.CALL_VIEW_FIELDS,
+            ["call_view"],
+            resource_schema,
+            ["resource_name"],
+        ),
+        "campaigns": BaseStream(
+            report_definitions.CAMPAIGN_FIELDS,
+            ["campaign"],
             resource_schema,
             ["id"],
         ),

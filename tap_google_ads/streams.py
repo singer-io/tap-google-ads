@@ -577,7 +577,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
         ),
-        "call_view": BaseStream(
+        "call_details": BaseStream(
             report_definitions.CALL_VIEW_FIELDS,
             ["call_view"],
             resource_schema,

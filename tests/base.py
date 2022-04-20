@@ -112,10 +112,7 @@ class GoogleAdsBase(unittest.TestCase):
             'campaign_budgets': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
-                    "customer_id",
-                    "campaign_id",
-                },
+                self.FOREIGN_KEYS: {"customer_id"},
             },
             'bidding_strategies': {
                 self.PRIMARY_KEYS:{"id"},
@@ -130,7 +127,11 @@ class GoogleAdsBase(unittest.TestCase):
             'call_details': {
                 self.PRIMARY_KEYS: {"resource_name"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"ad_group_id, campaign_id, customer_id"},
+                self.FOREIGN_KEYS: {
+                    "ad_group_id",
+                    "campaign_id",
+                    "customer_id"
+                },
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"

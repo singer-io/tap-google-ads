@@ -127,6 +127,11 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {"customer_id"},
             },
+            'call_details': {
+                self.PRIMARY_KEYS: {"resource_name"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {"ad_group_id, campaign_id, customer_id"},
+            },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},

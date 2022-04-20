@@ -78,7 +78,9 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if not self.is_report(stream)}
+                           if not self.is_report(stream)} - {
+                                   "call_details"
+        }
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)

@@ -156,6 +156,7 @@ class StartDateTest1(StartDateTest):
         'ad_group_audience_performance_report',
         "shopping_performance_report",
         'campaign_audience_performance_report',
+        'call_details',
     }
 
     def setUp(self):
@@ -163,6 +164,7 @@ class StartDateTest1(StartDateTest):
         self.start_date_2 = self.timedelta_formatted(self.start_date_1, days=15)
         self.streams_to_test = self.expected_streams() - {
             'search_query_performance_report', # Covered in other start date test
+            'call_details', # Need test data
         } - self.missing_coverage_streams # TODO_TDL-17885
 
     @staticmethod

@@ -86,6 +86,7 @@ class SyncCanaryTest(GoogleAdsBase):
             'placement_performance_report',  # need an app to run javascript to trace conversions
             "video_performance_report",  # need a video to show
             "shopping_performance_report",  # need Shopping campaign type, and link to a store
+            "call_details", # need test call data before data will be returned
         }
 
         # Run a discovery job

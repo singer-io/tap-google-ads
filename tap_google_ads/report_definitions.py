@@ -5,6 +5,7 @@ CAMPAIGN_FIELDS = []
 BIDDING_STRATEGY_FIELDS = []
 ACCESSIBLE_BIDDING_STRATEGY_FIELDS = []
 CAMPAIGN_BUDGET_FIELDS = []
+LABEL_FIELDS = []
 ACCOUNT_PERFORMANCE_REPORT_FIELDS = [
     "customer.auto_tagging_enabled",
     "customer.currency_code",
@@ -626,6 +627,7 @@ CAMPAIGN_PERFORMANCE_REPORT_FIELDS = [
     "campaign.experiment_type",
     "campaign.final_url_suffix",
     "campaign.id",
+    "campaign.labels",
     "campaign.manual_cpc.enhanced_cpc_enabled",
     "campaign.maximize_conversion_value.target_roas",
     "campaign.name",

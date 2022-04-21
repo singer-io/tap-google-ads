@@ -582,6 +582,12 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
         ),
+        "labels": BaseStream(
+            report_definitions.LABEL_FIELDS,
+            ["label"],
+            resource_schema,
+            ["id"],
+        ),
     }
 
 

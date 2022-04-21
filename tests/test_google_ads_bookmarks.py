@@ -54,7 +54,7 @@ class BookmarksTest(GoogleAdsBase):
             'shopping_performance_report',
             'video_performance_report',
             'campaign_audience_performance_report',
-            'call_details',
+            'call_details', # need test call data before data will be returned
         }
 
         # Run a discovery job

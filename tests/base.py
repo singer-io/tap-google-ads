@@ -112,10 +112,7 @@ class GoogleAdsBase(unittest.TestCase):
             'campaign_budgets': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
-                    "customer_id",
-                    "campaign_id",
-                },
+                self.FOREIGN_KEYS: {"customer_id"},
             },
             'bidding_strategies': {
                 self.PRIMARY_KEYS:{"id"},
@@ -126,6 +123,15 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {"customer_id"},
+            },
+            'call_details': {
+                self.PRIMARY_KEYS: {"resource_name"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    "ad_group_id",
+                    "campaign_id",
+                    "customer_id"
+                },
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"
@@ -143,12 +149,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            # TODO Post Beta
-            # "call_metrics_call_details_report": {  # "call_view"
-            #     self.PRIMARY_KEYS: {"_sdc_record_hash"},
-            #     self.REPLICATION_METHOD: self.INCREMENTAL,
-            #     self.REPLICATION_KEYS: {"date"},
-            # },
             "click_performance_report": { #  "click_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,

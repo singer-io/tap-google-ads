@@ -32,6 +32,7 @@ REPORTS = [
     "gender_view",
     "geographic_view",
     "keyword_view",
+    "label",
     "landing_page_view",
     "managed_placement_view",
     "search_term_view",

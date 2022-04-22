@@ -79,7 +79,9 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
 
         streams_to_test = {stream for stream in self.expected_streams()
                            if not self.is_report(stream)} - {
-                                   "call_details" # need test call data before data will be returned
+                                   "call_details", # need test call data before data will be returned
+                                   "campaign_labels", # need test call data before data will be returned
+                                   "labels", # need test call data before data will be returned
         }
 
         # Run a discovery job

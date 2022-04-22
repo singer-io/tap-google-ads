@@ -21,6 +21,7 @@ REPORTS = [
     "campaign_audience_view",
     "campaign_budget",
     "campaign_criterion",
+    "campaign_label",
     "click_view",
     "customer",
     "display_keyword_view",

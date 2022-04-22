@@ -139,6 +139,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"resource_name"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {
+                    "customer_id",
                     "campaign_id",
                     "label_id"
                 },
@@ -146,7 +147,9 @@ class GoogleAdsBase(unittest.TestCase):
             'labels': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: set(),
+                self.FOREIGN_KEYS: {
+                    "customer_id"
+                    },
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"

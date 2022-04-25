@@ -1,8 +1,4 @@
 """Test tap can handle running a sync with no streams selected."""
-from datetime import datetime as dt
-from datetime import timedelta
-import random
-
 from tap_tester import menagerie, connections, runner, LOGGER
 
 from base import GoogleAdsBase

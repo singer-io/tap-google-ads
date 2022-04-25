@@ -1,7 +1,8 @@
 # Changelog
 
 ## v1.1.0
-  * Adds call_details core stream and removes segmenting resources from core streams [#49](https://github.com/singer-io/tap-google-ads/pull/49)
+  * Adds `campaign_labels` and `labels` core streams; adds "campaign.labels" field to reports where relevant [#53](https://github.com/singer-io/tap-google-ads/pull/53)
+  * Adds `call_details` core stream and removes segmenting resources from core streams [#49](https://github.com/singer-io/tap-google-ads/pull/49)
 
 ## v1.0.0
   * Version bump for GA release

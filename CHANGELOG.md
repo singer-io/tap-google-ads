@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.0
+  * Fixes a bug with currently_syncing and adds tests around the bug fix [#54](https://github.com/singer-io/tap-google-ads/pull/54)
+  * Adds `campaign_labels` and `labels` core streams; adds "campaign.labels" field to reports where relevant [#53](https://github.com/singer-io/tap-google-ads/pull/53)
+  * Adds `call_details` core stream and removes segmenting resources from core streams [#49](https://github.com/singer-io/tap-google-ads/pull/49)
+
 ## v1.0.0
   * Version bump for GA release
   * Adds fields to click_view report definition [#44](https://github.com/singer-io/tap-google-ads/pull/44)

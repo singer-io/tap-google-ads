@@ -87,8 +87,6 @@ class SyncCanaryTest(GoogleAdsBase):
             "video_performance_report",  # need a video to show
             "shopping_performance_report",  # need Shopping campaign type, and link to a store
             "call_details", # need test call data before data will be returned
-            "campaign_labels", # need test call data before data will be returned
-            "labels", # need test call data before data will be returned
         }
 
         # Run a discovery job

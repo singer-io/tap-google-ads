@@ -157,8 +157,6 @@ class StartDateTest1(StartDateTest):
         "shopping_performance_report",
         'campaign_audience_performance_report',
         'call_details',
-        "campaign_labels",
-        "labels",
     }
 
     def setUp(self):

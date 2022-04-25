@@ -9,10 +9,11 @@ from tap_google_ads.streams import initialize_reports
 
 LOGGER = singer.get_logger()
 
-REPORTS = [
+STREAMS = [
     "accessible_bidding_strategy",
     "ad_group",
     "ad_group_ad",
+    "ad_group_criterion",
     "ad_group_audience_view",
     "age_range_view",
     "bidding_strategy",
@@ -22,11 +23,13 @@ REPORTS = [
     "campaign_budget",
     "campaign_criterion",
     "campaign_label",
+    "carrier_constant",
     "click_view",
     "customer",
     "display_keyword_view",
     "dynamic_search_ads_search_term_view",
     "expanded_landing_page_view",
+    "feed",
     "feed_item",
     "feed_item_target",
     "feed_placeholder_view",
@@ -35,10 +38,17 @@ REPORTS = [
     "keyword_view",
     "label",
     "landing_page_view",
+    "language_constant",
     "managed_placement_view",
+    "mobile_app_category_constant",
+    "mobile_device_constant",
+    "operating_system_version_constant",
     "search_term_view",
     "shopping_performance_view",
+    "topic_constant",
     "topic_view",
+    "user_interest",
+    "user_list",
     "user_location_view",
     "video",
 ]
@@ -176,12 +186,12 @@ def create_resource_schema(config):
         updated_segments = get_segments(resource_schema, resource)
         resource["segments"] = updated_segments
 
-    for report in REPORTS:
-        report_object = resource_schema[report]
+    for stream in STREAMS:
+        stream_object = resource_schema[stream]
         fields = {}
-        attributes = report_object["attributes"]
-        metrics = report_object["metrics"]
-        segments = report_object["segments"]
+        attributes = stream_object["attributes"]
+        metrics = stream_object["metrics"]
+        segments = stream_object["segments"]
         for field in attributes + metrics + segments:
             field_schema = dict(resource_schema[field])
 
@@ -192,6 +202,10 @@ def create_resource_schema(config):
                 "field_details": field_schema,
                 "incompatible_fields": [],
             }
+
+        if stream == "user_interest":
+            import ipdb; ipdb.set_trace()
+            1+1
 
         # Start discovery of field exclusions
         metrics_and_segments = set(metrics + segments)
@@ -224,7 +238,7 @@ def create_resource_schema(config):
                     ):
                         field["incompatible_fields"].append(compared_field)
 
-        report_object["fields"] = fields
+        stream_object["fields"] = fields
     return resource_schema
 
 
@@ -248,6 +262,7 @@ def do_discover(resource_schema):
     core_streams = do_discover_streams(initialize_core_streams(resource_schema))
     report_streams = do_discover_streams(initialize_reports(resource_schema))
     streams = []
+
     streams.extend(core_streams)
     streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)

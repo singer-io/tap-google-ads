@@ -240,8 +240,16 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             if (
                 resource_name not in {"metrics", "segments"}
                 and resource_name not in self.google_ads_resource_names
+                #and resource_name != "user_interest"
             ):
-                self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
+                try:
+                    self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
+                except:
+                    pass
+
+            # if resource_name == "user_interest":
+            #     import ipdb; ipdb.set_trace()
+            #     1+1
 
     def build_stream_metadata(self):
         self.stream_metadata = {
@@ -278,7 +286,21 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     # Add inclusion metadata
                     # Foreign keys are automatically included and they are all id fields
-                    if field in self.primary_keys or field in {'customer_id', 'ad_group_id', 'campaign_id', 'label_id'}:
+                    if field in self.primary_keys or field in {
+                            'ad_group_id',
+                            'campaign_id',
+                            'carrier_constant_id',
+                            'customer_id',
+                            'feed_id',
+                            'label_id',
+                            'language_constant_id',
+                            'mobile_app_category_constant_id',
+                            'mobile_device_constant_id',
+                            'operating_system_version_constant_id',
+                            'topic_constant_id',
+                            'user_interest_id',
+                            'user_list_id',
+                    }:
                         inclusion = "automatic"
                     elif props["field_details"]["selectable"]:
                         inclusion = "available"
@@ -566,6 +588,12 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
         ),
+        "ad_group_criterion": BaseStream(
+            report_definitions.AD_GROUP_CRITERION_FIELDS,
+            ["ad_group_criterion"],
+            resource_schema,
+            ["ad_group_id","criterion_id"],
+        ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
             ["ad_group_ad"],
@@ -596,15 +624,81 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
         ),
+        "campaign_criterion": BaseStream(
+            report_definitions.CAMPAIGN_CRITERION_FIELDS,
+            ["campaign_criterion"],
+            resource_schema,
+            ["campaign_id","criterion_id"],
+        ),
         "campaign_labels": BaseStream(
             report_definitions.CAMPAIGN_LABEL_FIELDS,
             ["campaign_label"],
             resource_schema,
             ["resource_name"],
         ),
+        "carrier_constant": BaseStream(
+            report_definitions.CARRIER_CONSTANT_FIELDS,
+            ["carrier_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "feed": BaseStream(
+            report_definitions.FEED_FIELDS,
+            ["feed"],
+            resource_schema,
+            ["id"],
+        ),
+        "feed_item": BaseStream(
+            report_definitions.FEED_ITEM_FIELDS,
+            ["feed_item"],
+            resource_schema,
+            ["id"],
+        ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
             ["label"],
+            resource_schema,
+            ["id"],
+        ),
+        "language_constant": BaseStream(
+            report_definitions.LANGUAGE_CONSTANT_FIELDS,
+            ["language_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "mobile_app_category_constant": BaseStream(
+            report_definitions.MOBILE_APP_CATEGORY_CONSTANT_FIELDS,
+            ["mobile_app_category_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "mobile_device_constant": BaseStream(
+            report_definitions.MOBILE_DEVICE_CONSTANT_FIELDS,
+            ["mobile_device_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "operating_system_version_constant": BaseStream(
+            report_definitions.OPERATING_SYSTEM_VERSION_CONSTANT_FIELDS,
+            ["operating_system_version_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "topic_constant": BaseStream(
+            report_definitions.TOPIC_CONSTANT_FIELDS,
+            ["topic_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "user_interest": BaseStream(
+            report_definitions.USER_INTEREST_FIELDS,
+            ["user_interest"],
+            resource_schema,
+            ["id"],
+        ),
+        "user_list": BaseStream(
+            report_definitions.USER_LIST_FIELDS,
+            ["user_list"],
             resource_schema,
             ["id"],
         ),

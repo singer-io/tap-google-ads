@@ -80,17 +80,15 @@ class GoogleAdsBase(unittest.TestCase):
         """
         return {
             # Core Objects
+            'accessible_bidding_strategies': {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {"customer_id"},
+            },
             "accounts": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: set(),
-            },
-            "campaigns": {
-                self.PRIMARY_KEYS: {"id"},
-                self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
-                    'customer_id'
-                },
             },
             "ad_groups": {
                 self.PRIMARY_KEYS: {"id"},
@@ -109,18 +107,8 @@ class GoogleAdsBase(unittest.TestCase):
                     "ad_group_id"
                 },
             },
-            'campaign_budgets': {
-                self.PRIMARY_KEYS: {"id"},
-                self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"customer_id"},
-            },
             'bidding_strategies': {
                 self.PRIMARY_KEYS:{"id"},
-                self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"customer_id"},
-            },
-            'accessible_bidding_strategies': {
-                self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.FOREIGN_KEYS: {"customer_id"},
             },
@@ -132,6 +120,36 @@ class GoogleAdsBase(unittest.TestCase):
                     "campaign_id",
                     "customer_id"
                 },
+            },
+            "campaigns": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    'customer_id'
+                },
+            },
+            'campaign_budgets': {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    "customer_id"
+                },
+            },
+            'campaign_labels': {
+                self.PRIMARY_KEYS: {"resource_name"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    "customer_id",
+                    "campaign_id",
+                    "label_id"
+                },
+            },
+            'labels': {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.FOREIGN_KEYS: {
+                    "customer_id"
+                    },
             },
             # Report objects
             "age_range_performance_report": {  # "age_range_view"

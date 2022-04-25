@@ -278,7 +278,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     # Add inclusion metadata
                     # Foreign keys are automatically included and they are all id fields
-                    if field in self.primary_keys or field in {'customer_id', 'ad_group_id', 'campaign_id'}:
+                    if field in self.primary_keys or field in {'customer_id', 'ad_group_id', 'campaign_id', 'label_id'}:
                         inclusion = "automatic"
                     elif props["field_details"]["selectable"]:
                         inclusion = "available"
@@ -593,6 +593,18 @@ def initialize_core_streams(resource_schema):
         "campaign_budgets": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
             ["campaign_budget"],
+            resource_schema,
+            ["id"],
+        ),
+        "campaign_labels": BaseStream(
+            report_definitions.CAMPAIGN_LABEL_FIELDS,
+            ["campaign_label"],
+            resource_schema,
+            ["resource_name"],
+        ),
+        "labels": BaseStream(
+            report_definitions.LABEL_FIELDS,
+            ["label"],
             resource_schema,
             ["id"],
         ),

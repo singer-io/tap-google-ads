@@ -441,7 +441,7 @@ class ReportStream(BaseStream):
             # Add inclusion metadata
             if self.behavior[report_field]:
                 inclusion = "available"
-                if report_field == "segments.date":
+                if report_field in {"segments.date", "geographic_view.location_type"}:
                     inclusion = "automatic"
             else:
                 inclusion = "unsupported"

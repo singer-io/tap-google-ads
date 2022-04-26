@@ -110,5 +110,5 @@ def do_sync(config, catalog, resource_schema, state):
 
             stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
 
-    state.pop("currently_syncing")
+    state.pop("currently_syncing", None)
     singer.write_state(state)

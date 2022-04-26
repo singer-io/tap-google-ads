@@ -28,6 +28,7 @@ class GoogleAdsBase(unittest.TestCase):
     FULL_TABLE = "FULL_TABLE"
     START_DATE_FORMAT = "%Y-%m-%dT00:00:00Z"
     REPLICATION_KEY_FORMAT = "%Y-%m-%dT00:00:00.000000Z"
+    AUTOMATIC_KEYS = "automatic_keys"
 
     start_date = ""
 
@@ -191,6 +192,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"geographic_view_location_type"} # Added to account for inherent segmentation
             },
             "user_location_performance_report": {  # "user_location_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
@@ -311,7 +313,7 @@ class GoogleAdsBase(unittest.TestCase):
         auto_fields = {}
         for k, v in self.expected_metadata().items():
             auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set()) | \
-                v.get(self.FOREIGN_KEYS, set())
+                v.get(self.FOREIGN_KEYS, set()) | v.get(self.AUTOMATIC_KEYS, set())
 
         return auto_fields
 

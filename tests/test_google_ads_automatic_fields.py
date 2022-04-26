@@ -25,7 +25,9 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         # --- Test report streams throw an error --- #
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)}
+                           if self.is_report(stream)} - {
+                                "geo_performance_report", # minimum field selection is valid with location_type attribute as automatic
+                           }
 
         conn_id = connections.ensure_connection(self)
 
@@ -80,7 +82,9 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         streams_to_test = {stream for stream in self.expected_streams()
                            if not self.is_report(stream)} - {
                                    "call_details", # need test call data before data will be returned
-        }
+                           } + {
+                               "geo_performance_report", # minimum field selection is valid with location_type attribute as automatic
+                           }
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)

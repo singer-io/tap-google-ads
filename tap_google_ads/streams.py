@@ -172,11 +172,11 @@ def filter_out_non_attribute_fields(fields):
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys):
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
-
+        self.automatic_keys = ["customer_id"] +  automatic_keys
         self.extract_field_information(resource_schema)
 
         self.create_full_schema(resource_schema)
@@ -390,7 +390,7 @@ class ReportStream(BaseStream):
                 # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
                 if resource_name == "ad_group_ad" and field_name == "ad":
                     for ad_field_name, ad_field_schema in data_type["properties"].items():
-                        self.stream_schema["properties"][ad_field_name] = ad_field_schema
+                        self.stream_schema["properties"][f"{resource_name}_{ad_field_name}"] = ad_field_schema
                 elif resource_name not in {"metrics", "segments"}:
                     self.stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
                 else:
@@ -414,7 +414,8 @@ class ReportStream(BaseStream):
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
             # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
             if report_field.startswith("ad_group_ad.ad."):
-                transformed_field_name = report_field.split(".")[2]
+                report_field_parts = report_field.split(".")
+                transformed_field_name = f"{report_field_parts[0]}_{report_field_parts[2]}"
             elif not is_metric_or_segment:
                 transformed_field_name = "_".join(report_field.split(".")[:2])
             else:
@@ -441,7 +442,7 @@ class ReportStream(BaseStream):
             # Add inclusion metadata
             if self.behavior[report_field]:
                 inclusion = "available"
-                if report_field in {"segments.date", "geographic_view.location_type"}:
+                if report_field in {"segments.date"} | {self.automatic_keys}:
                     inclusion = "automatic"
             else:
                 inclusion = "unsupported"
@@ -565,48 +566,71 @@ def initialize_core_streams(resource_schema):
             ["ad_group"],
             resource_schema,
             ["id"],
+            {
+                "campaign_id",
+                "customer_id",
+             },
         ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
             ["ad_group_ad"],
             resource_schema,
             ["id"],
+            {
+                "ad_group_id",
+                "campaign_id",
+                "customer_id",
+             },
         ),
         "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
             ["bidding_strategy"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
         "call_details": BaseStream(
             report_definitions.CALL_VIEW_FIELDS,
             ["call_view"],
             resource_schema,
             ["resource_name"],
+            {
+                "ad_group_id",
+                "campaign_id",
+                "customer_id",
+             },
         ),
         "campaigns": BaseStream(
             report_definitions.CAMPAIGN_FIELDS,
             ["campaign"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
         "campaign_budgets": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
             ["campaign_budget"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
         "campaign_labels": BaseStream(
             report_definitions.CAMPAIGN_LABEL_FIELDS,
             ["campaign_label"],
             resource_schema,
             ["resource_name"],
+            {
+                "campaign_id",
+                "customer_id",
+                "label_id",
+            },
         ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
             ["label"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
     }
 
@@ -618,120 +642,184 @@ def initialize_reports(resource_schema):
             ["customer"],
             resource_schema,
             ["_sdc_record_hash"],
-        ),
-        "ad_group_performance_report": ReportStream(
-            report_definitions.AD_GROUP_PERFORMANCE_REPORT_FIELDS,
-            ["ad_group"],
-            resource_schema,
-            ["_sdc_record_hash"],
+            {"customer_id"},
         ),
         "ad_group_audience_performance_report": ReportStream(
             report_definitions.AD_GROUP_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
             ["ad_group_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_criterion_id",
+                "ad_group_id",
+             },
+        ),
+        "ad_group_performance_report": ReportStream(
+            report_definitions.AD_GROUP_PERFORMANCE_REPORT_FIELDS,
+            ["ad_group"],
+            resource_schema,
+            ["_sdc_record_hash"],
+            {"ad_group_id"},
         ),
         "ad_performance_report": ReportStream(
             report_definitions.AD_PERFORMANCE_REPORT_FIELDS,
             ["ad_group_ad"],
             resource_schema,
             ["_sdc_record_hash"],
+            {"ad_group_ad_id"},
         ),
         "age_range_performance_report": ReportStream(
             report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS,
             ["age_range_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_age_range",
+                "ad_group_criterion_id",
+                "ad_group_id",
+             },
         ),
         "campaign_performance_report": ReportStream(
             report_definitions.CAMPAIGN_PERFORMANCE_REPORT_FIELDS,
             ["campaign"],
             resource_schema,
             ["_sdc_record_hash"],
+            {"campaign_id"},
         ),
         "campaign_audience_performance_report": ReportStream(
             report_definitions.CAMPAIGN_AUDIENCE_PERFORMANCE_REPORT_FIELDS,
             ["campaign_audience_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "campaign_id",
+                "campaign_criterion_criterion_id",
+            },
         ),
         "click_performance_report": ReportStream(
             report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS,
             ["click_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "clicks",
+                "click_view_gclid",
+            },
         ),
         "display_keyword_performance_report": ReportStream(
             report_definitions.DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS,
             ["display_keyword_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_id",
+                "ad_group_id",
+            },
         ),
         "display_topics_performance_report": ReportStream(
             report_definitions.DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS,
             ["topic_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_id",
+                "ad_group_id",
+            },
         ),
         "expanded_landing_page_report": ReportStream(
             report_definitions.EXPANDED_LANDING_PAGE_REPORT_FIELDS,
             ["expanded_landing_page_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {"expanded_landing_page_view_expanded_final_url"},
         ),
         "gender_performance_report": ReportStream(
             report_definitions.GENDER_PERFORMANCE_REPORT_FIELDS,
             ["gender_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_id",
+                "ad_group_id",
+            },
         ),
         "geo_performance_report": ReportStream(
             report_definitions.GEO_PERFORMANCE_REPORT_FIELDS,
             ["geographic_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "geographic_view_country_criterion_id",
+                "location_type",
+            },
         ),
         "keywordless_query_report": ReportStream(
             report_definitions.KEYWORDLESS_QUERY_REPORT_FIELDS,
             ["dynamic_search_ads_search_term_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_id",
+                "dynamic_search_ads_search_term_view_headline",
+                "dynamic_search_ads_search_term_view_landing_page",
+                "dynamic_search_ads_search_term_view_page_url",
+                "dynamic_search_ads_search_term_view_search_term",
+            },
         ),
         "keywords_performance_report": ReportStream(
             report_definitions.KEYWORDS_PERFORMANCE_REPORT_FIELDS,
             ["keyword_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_id",
+                "ad_group_id",
+            },
         ),
         "landing_page_report": ReportStream(
             report_definitions.LANDING_PAGE_REPORT_FIELDS,
             ["landing_page_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {"landing_page_view_unexpanded_final_url"},
         ),
         "placeholder_feed_item_report": ReportStream(
             report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
             ["feed_item"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "feed_id",
+                "feed_item_id",
+             }
         ),
         "placeholder_report": ReportStream(
             report_definitions.PLACEHOLDER_REPORT_FIELDS,
             ["feed_placeholder_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {"feed_placeholder_view_placeholder_type"},
         ),
         "placement_performance_report": ReportStream(
             report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS,
             ["managed_placement_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_criterion_id",
+                "ad_group_id",
+            },
         ),
         "search_query_performance_report": ReportStream(
             report_definitions.SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS,
             ["search_term_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "ad_group_id",
+                "campaign_id",
+                "search_term_view_search_term",
+            },
         ),
         "shopping_performance_report": ReportStream(
             report_definitions.SHOPPING_PERFORMANCE_REPORT_FIELDS,
@@ -744,11 +832,16 @@ def initialize_reports(resource_schema):
             ["user_location_view"],
             resource_schema,
             ["_sdc_record_hash"],
+            {
+                "user_location_view_country_criterion_id",
+                "user_location_view_targeting_location",
+            },
         ),
         "video_performance_report": ReportStream(
             report_definitions.VIDEO_PERFORMANCE_REPORT_FIELDS,
             ["video"],
             resource_schema,
             ["_sdc_record_hash"],
+            {"video_id"},
         ),
     }

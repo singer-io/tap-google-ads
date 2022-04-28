@@ -172,11 +172,11 @@ def filter_out_non_attribute_fields(fields):
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys):
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
-        self.automatic_keys = ["customer_id"] +  automatic_keys
+        self.automatic_keys = automatic_keys if automatic_keys else set()
         self.extract_field_information(resource_schema)
 
         self.create_full_schema(resource_schema)
@@ -278,7 +278,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     # Add inclusion metadata
                     # Foreign keys are automatically included and they are all id fields
-                    if field in self.primary_keys or field in {'customer_id', 'ad_group_id', 'campaign_id', 'label_id'}:
+                    if field in self.primary_keys or field in self.automatic_keys:
                         inclusion = "automatic"
                     elif props["field_details"]["selectable"]:
                         inclusion = "available"
@@ -365,6 +365,7 @@ def get_query_date(start_date, bookmark, conversion_window_date):
 
 
 class ReportStream(BaseStream):
+
     def create_full_schema(self, resource_schema):
         google_ads_name = self.google_ads_resource_names[0]
         self.resource_object = resource_schema[google_ads_name]
@@ -442,7 +443,7 @@ class ReportStream(BaseStream):
             # Add inclusion metadata
             if self.behavior[report_field]:
                 inclusion = "available"
-                if report_field in {"segments.date"} | {self.automatic_keys}:
+                if transformed_field_name in ({"date"} | self.automatic_keys):
                     inclusion = "automatic"
             else:
                 inclusion = "unsupported"

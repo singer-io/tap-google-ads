@@ -1184,7 +1184,7 @@ KEYWORDLESS_QUERY_REPORT_FIELDS = [
     "customer.time_zone",
     "dynamic_search_ads_search_term_view.headline",
     "dynamic_search_ads_search_term_view.landing_page",
-    "dynamic_search_ads_search_term_view_page_url",
+    "dynamic_search_ads_search_term_view.page_url",
     "dynamic_search_ads_search_term_view.search_term",
     "metrics.all_conversions",
     "metrics.all_conversions_from_interactions_rate",

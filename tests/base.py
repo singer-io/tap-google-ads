@@ -22,13 +22,12 @@ class GoogleAdsBase(unittest.TestCase):
     AUTOMATIC_FIELDS = "automatic"
     REPLICATION_KEYS = "valid-replication-keys"
     PRIMARY_KEYS = "table-key-properties"
-    FOREIGN_KEYS = "table-foreign-key-properties"
+    AUTOMATIC_KEYS = "table-automatic-key-properties"
     REPLICATION_METHOD = "forced-replication-method"
     INCREMENTAL = "INCREMENTAL"
     FULL_TABLE = "FULL_TABLE"
     START_DATE_FORMAT = "%Y-%m-%dT00:00:00Z"
     REPLICATION_KEY_FORMAT = "%Y-%m-%dT00:00:00.000000Z"
-    AUTOMATIC_KEYS = "automatic_keys"
 
     start_date = ""
 
@@ -84,25 +83,26 @@ class GoogleAdsBase(unittest.TestCase):
             'accessible_bidding_strategies': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"customer_id"},
+                self.AUTOMATIC_KEYS: {"customer_id"},
             },
             "accounts": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: set(),
+                self.AUTOMATIC_KEYS: set(),
             },
             "ad_groups": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
+                self.AUTOMATIC_KEYS: {
                     'campaign_id',
                     'customer_id',
                 },
+
             },
             "ads": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
+                self.AUTOMATIC_KEYS: {
                     "campaign_id",
                     "customer_id",
                     "ad_group_id"
@@ -111,12 +111,12 @@ class GoogleAdsBase(unittest.TestCase):
             'bidding_strategies': {
                 self.PRIMARY_KEYS:{"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {"customer_id"},
+                self.AUTOMATIC_KEYS: {"customer_id"},
             },
             'call_details': {
                 self.PRIMARY_KEYS: {"resource_name"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
+                self.AUTOMATIC_KEYS: {
                     "ad_group_id",
                     "campaign_id",
                     "customer_id"
@@ -125,21 +125,21 @@ class GoogleAdsBase(unittest.TestCase):
             "campaigns": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
+                self.AUTOMATIC_KEYS: {
                     'customer_id'
                 },
             },
             'campaign_budgets': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
+                self.AUTOMATIC_KEYS: {
                     "customer_id"
                 },
             },
             'campaign_labels': {
                 self.PRIMARY_KEYS: {"resource_name"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
+                self.AUTOMATIC_KEYS: {
                     "customer_id",
                     "campaign_id",
                     "label_id"
@@ -148,96 +148,183 @@ class GoogleAdsBase(unittest.TestCase):
             'labels': {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.FOREIGN_KEYS: {
-                    "customer_id"
+                self.AUTOMATIC_KEYS: {
+                    "customer_id",
                     },
             },
             # Report objects
+
+            # All reports have AUTOMATIC_KEYS that we include to delineate reporting data downstream.
+            # These are fields that are inherently used by Google for each respective resource to aggregate metrics
+            # shopping_performance_report's automatic_keys are currently unknown, and thus are temporarily empty
+
+            "account_performance_report": { # accounts
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"customer_id"},
+            },
+            "ad_group_performance_report": {  # ad_group
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_criterion_id",
+                    "ad_group_id",
+                },
+            },
+            "ad_group_audience_performance_report": {  # ad_group_audience_view
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"ad_group_id"},
+            },
+            "ad_performance_report": {  # ads
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"ad_group_ad_id"},
+            },
             "age_range_performance_report": {  # "age_range_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
-            },
-            "campaign_performance_report": {  # "campaign"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_age_range",
+                    "ad_group_criterion_id",
+                    "ad_group_id",
+                },
             },
             "campaign_audience_performance_report": {  # "campaign_audience_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "campaign_id",
+                    "campaign_criterion_criterion_id",
+                },
             },
+            "campaign_performance_report": {  # "campaign"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "campaign_id",
+                    "campaign_criterion_criterion_id",
+                },
+            },
+
             "click_performance_report": { #  "click_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "clicks", # This metric is automatically included because it is the only metric available via the report
+                    "click_view_gclid",
+                },
             },
             "display_keyword_performance_report": {  # "display_keyword_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_id",
+                    "ad_group_id",
+                },
             },
             "display_topics_performance_report": {  # "topic_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
-            },
-            "gender_performance_report": {  # "gender_view"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "geo_performance_report": {  # "geographic_view"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-                self.AUTOMATIC_KEYS: {"geographic_view_location_type"} # Added to account for inherent segmentation
-            },
-            "user_location_performance_report": {  # "user_location_view"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "keywordless_query_report": {  # "dynamic_search_ads_search_term_view"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "keywords_performance_report": {  # "keyword_view"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "landing_page_report": {
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_id",
+                    "ad_group_id",
+                },
             },
             "expanded_landing_page_report": {
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"expanded_landing_page_view_expanded_final_url"},
+            },
+            "gender_performance_report": {  # "gender_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_id",
+                    "ad_group_id",
+                },
+            },
+            "geo_performance_report": {  # "geographic_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "geographic_view_country_criterion_id",
+                    "geographic_view_location_type",
+                }
+            },
+            "keywordless_query_report": {  # "dynamic_search_ads_search_term_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_id",
+                    "dynamic_search_ads_search_term_view_headline",
+                    "dynamic_search_ads_search_term_view_landing_page",
+                    "dynamic_search_ads_search_term_view_page_url",
+                    "dynamic_search_ads_search_term_view_search_term",
+                },
+            },
+            "keywords_performance_report": {  # "keyword_view"
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_id",
+                    "ad_group_id",
+                },
+            },
+            "landing_page_report": {
+                self.PRIMARY_KEYS: {"_sdc_record_hash"},
+                self.REPLICATION_METHOD: self.INCREMENTAL,
+                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"landing_page_view_unexpanded_final_url"},
             },
             "placeholder_feed_item_report": {  # "feed_item", "feed_item_target"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "feed_id",
+                    "feed_item_id",
+                },
             },
             "placeholder_report": { # "feed_placeholder_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"feed_placeholder_view_placeholder_type"},
             },
             "placement_performance_report": {  # "managed_placement_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_criterion_id",
+                    "ad_group_id",
+                },
             },
             "search_query_performance_report": {  # "search_term_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "ad_group_id",
+                    "campaign_id",
+                    "search_term_view_search_term",
+                },
             },
             "shopping_performance_report": {  # "shopping_performance_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
@@ -248,31 +335,16 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {
+                    "user_location_view_country_criterion_id",
+                    "user_location_view_targeting_location",
+                },
             },
             "video_performance_report": {  # "video"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
-            },
-            "account_performance_report": { # accounts
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "ad_group_performance_report": {  # ad_group
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "ad_group_audience_performance_report": {  # ad_group_audience_view
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "ad_performance_report": {  # ads
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
+                self.AUTOMATIC_KEYS: {"video_id"},
             },
 
             # Custom Reports TODO Post Beta feature
@@ -282,12 +354,12 @@ class GoogleAdsBase(unittest.TestCase):
         """A set of expected stream names"""
         return set(self.expected_metadata().keys())
 
-    def expected_foreign_keys(self):
+    def expected_automatic_keys(self):
         """
         return a dictionary with key of table name
-        and value as a set of foreign key fields
+        and value as a set of automatic key fields
         """
-        return {table: properties.get(self.FOREIGN_KEYS, set())
+        return {table: properties.get(self.AUTOMATIC_KEYS, set())
                 for table, properties
                 in self.expected_metadata().items()}
 
@@ -310,10 +382,14 @@ class GoogleAdsBase(unittest.TestCase):
                 in self.expected_metadata().items()}
 
     def expected_automatic_fields(self):
+        """
+        return a dictionary with key of table name
+        and value as a set of all inclusion == automatic fields
+        """
         auto_fields = {}
         for k, v in self.expected_metadata().items():
             auto_fields[k] = v.get(self.PRIMARY_KEYS, set()) | v.get(self.REPLICATION_KEYS, set()) | \
-                v.get(self.FOREIGN_KEYS, set()) | v.get(self.AUTOMATIC_KEYS, set())
+                v.get(self.AUTOMATIC_KEYS, set())
 
         return auto_fields
 

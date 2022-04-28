@@ -25,9 +25,7 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         # --- Test report streams throw an error --- #
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)} - {
-                                "geo_performance_report", # minimum field selection is valid with location_type attribute as automatic
-                           }
+                           if stream == "shopping_performance_report"} # All other reports have automatic_keys
 
         conn_id = connections.ensure_connection(self)
 
@@ -73,17 +71,16 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         """
         Testing that basic sync with minimum field selection functions without Critical Errors
         """
-        print("Automatic Fields Test for tap-google-ads core streams")
+        print("Automatic Fields Test for tap-google-ads core streams and most reports")
 
         # --- Start testing core streams --- #
 
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if not self.is_report(stream)} - {
+                           if stream not in {
                                    "call_details", # need test call data before data will be returned
-                           } + {
-                               "geo_performance_report", # minimum field selection is valid with location_type attribute as automatic
+                                   "shopping_performance_report", # No automatic keys for this report
                            }
 
         # Run a discovery job

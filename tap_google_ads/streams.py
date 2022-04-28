@@ -751,7 +751,7 @@ def initialize_reports(resource_schema):
             ["_sdc_record_hash"],
             {
                 "geographic_view_country_criterion_id",
-                "location_type",
+                "geographic_view_location_type",
             },
         ),
         "keywordless_query_report": ReportStream(

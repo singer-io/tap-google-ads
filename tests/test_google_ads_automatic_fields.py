@@ -81,6 +81,7 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
                            if stream not in {
                                    "call_details", # need test call data before data will be returned
                                    "shopping_performance_report", # No automatic keys for this report
+                                   }
                            }
 
         # Run a discovery job

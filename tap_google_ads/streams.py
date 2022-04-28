@@ -415,8 +415,8 @@ class ReportStream(BaseStream):
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
             # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
             if report_field.startswith("ad_group_ad.ad."):
-                report_field_parts = report_field.split(".")
-                transformed_field_name = f"{report_field_parts[0]}_{report_field_parts[2]}"
+                split_report_field = report_field.split(".")
+                transformed_field_name = f"{split_report_field[0]}_{split_report_field[2]}"
             elif not is_metric_or_segment:
                 transformed_field_name = "_".join(report_field.split(".")[:2])
             else:

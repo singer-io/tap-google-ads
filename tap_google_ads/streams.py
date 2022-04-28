@@ -464,7 +464,12 @@ class ReportStream(BaseStream):
             elif resource_name == "ad_group_ad":
                 for key, sub_value in value.items():
                     if key == 'ad':
-                        transformed_obj.update(sub_value)
+                        # item {'resource_name': {'key': {'ad_field': '12345'}}
+                        # becomes {'resource_name_ad_field': '12345'}
+                        # {'ad_group_ad': {'ad': {'id': '12345'}}
+                        # {'ad_group_ad_id': '12345'}
+                        for ad_field, ad_value in sub_value.items():
+                            transformed_obj.update({f"{resource_name}_{ad_field}": ad_value})
                     else:
                         transformed_obj.update({f"{resource_name}_{key}": sub_value})
             else:

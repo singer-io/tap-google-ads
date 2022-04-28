@@ -164,7 +164,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {"customer_id"},
             },
-            "ad_group_performance_report": {  # ad_group
+            "ad_group_audience_performance_report": {  # ad_group_audience_view
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
@@ -173,7 +173,7 @@ class GoogleAdsBase(unittest.TestCase):
                     "ad_group_id",
                 },
             },
-            "ad_group_audience_performance_report": {  # ad_group_audience_view
+            "ad_group_performance_report": {  # ad_group
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
@@ -191,7 +191,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {
                     "ad_group_criterion_age_range",
-                    "ad_group_criterion_id",
+                    "ad_group_criterion_criterion_id",
                     "ad_group_id",
                 },
             },
@@ -208,10 +208,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
-                self.AUTOMATIC_KEYS: {
-                    "campaign_id",
-                    "campaign_criterion_criterion_id",
-                },
+                self.AUTOMATIC_KEYS: {"campaign_id"}
             },
 
             "click_performance_report": { #  "click_view"
@@ -228,7 +225,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {
-                    "ad_group_criterion_id",
+                    "ad_group_criterion_criterion_id",
                     "ad_group_id",
                 },
             },
@@ -237,7 +234,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {
-                    "ad_group_criterion_id",
+                    "ad_group_criterion_criterion_id",
                     "ad_group_id",
                 },
             },
@@ -252,7 +249,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {
-                    "ad_group_criterion_id",
+                    "ad_group_criterion_criterion_id",
                     "ad_group_id",
                 },
             },
@@ -282,7 +279,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {
-                    "ad_group_criterion_id",
+                    "ad_group_criterion_criterion_id",
                     "ad_group_id",
                 },
             },
@@ -312,7 +309,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {
-                    "ad_group_criterion_id",
+                    "ad_group_criterion_criterion_id",
                     "ad_group_id",
                 },
             },

@@ -57,7 +57,7 @@ class DiscoveryTest(GoogleAdsBase):
                 expected_primary_keys = self.expected_primary_keys()[stream]
                 expected_automatic_keys = self.expected_automatic_keys()[stream]
                 expected_replication_keys = self.expected_replication_keys()[stream]
-                expected_automatic_fields = expected_primary_keys | expected_replication_keys | expected_automatic_keys
+                expected_automatic_fields = self.expected_automatic_fields()[stream]
                 expected_replication_method = self.expected_replication_method()[stream]
                 is_report = self.is_report(stream)
                 expected_behaviors = {'METRIC', 'SEGMENT', 'ATTRIBUTE', 'PRIMARY KEY'} if is_report else {'ATTRIBUTE', 'SEGMENT'}

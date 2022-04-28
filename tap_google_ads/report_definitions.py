@@ -556,6 +556,7 @@ CAMPAIGN_AUDIENCE_PERFORMANCE_REPORT_FIELDS = [
     "campaign.base_campaign",
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",
+    "campaign.id",
     "campaign.name",
     "campaign.status",
     "campaign_criterion.age_range.type",

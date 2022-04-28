@@ -555,6 +555,7 @@ def initialize_core_streams(resource_schema):
             ["accessible_bidding_strategy"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
         "accounts": BaseStream(
             report_definitions.ACCOUNT_FIELDS,
@@ -676,7 +677,7 @@ def initialize_reports(resource_schema):
             ["_sdc_record_hash"],
             {
                 "ad_group_criterion_age_range",
-                "ad_group_criterion_id",
+                "ad_group_criterion_criterion_id",
                 "ad_group_id",
              },
         ),
@@ -713,7 +714,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
             {
-                "ad_group_criterion_id",
+                "ad_group_criterion_criterion_id",
                 "ad_group_id",
             },
         ),
@@ -723,7 +724,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
             {
-                "ad_group_criterion_id",
+                "ad_group_criterion_criterion_id",
                 "ad_group_id",
             },
         ),
@@ -740,7 +741,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
             {
-                "ad_group_criterion_id",
+                "ad_group_criterion_criterion_id",
                 "ad_group_id",
             },
         ),
@@ -773,7 +774,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
             {
-                "ad_group_criterion_id",
+                "ad_group_criterion_criterion_id",
                 "ad_group_id",
             },
         ),
@@ -807,7 +808,7 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
             {
-                "ad_group_criterion_id",
+                "ad_group_criterion_criterion_id",
                 "ad_group_id",
             },
         ),

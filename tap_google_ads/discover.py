@@ -9,7 +9,7 @@ from tap_google_ads.streams import initialize_reports
 
 LOGGER = singer.get_logger()
 
-REPORTS = [
+STREAMS = [
     "accessible_bidding_strategy",
     "ad_group",
     "ad_group_ad",
@@ -176,12 +176,12 @@ def create_resource_schema(config):
         updated_segments = get_segments(resource_schema, resource)
         resource["segments"] = updated_segments
 
-    for report in REPORTS:
-        report_object = resource_schema[report]
+    for stream in STREAMS:
+        stream_object = resource_schema[stream]
         fields = {}
-        attributes = report_object["attributes"]
-        metrics = report_object["metrics"]
-        segments = report_object["segments"]
+        attributes = stream_object["attributes"]
+        metrics = stream_object["metrics"]
+        segments = stream_object["segments"]
         for field in attributes + metrics + segments:
             field_schema = dict(resource_schema[field])
 
@@ -224,7 +224,7 @@ def create_resource_schema(config):
                     ):
                         field["incompatible_fields"].append(compared_field)
 
-        report_object["fields"] = fields
+        stream_object["fields"] = fields
     return resource_schema
 
 

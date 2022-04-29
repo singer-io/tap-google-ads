@@ -242,14 +242,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 and resource_name not in self.google_ads_resource_names
                 #and resource_name != "user_interest"
             ):
-                try:
-                    self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
-                except:
-                    pass
-
-            # if resource_name == "user_interest":
-            #     import ipdb; ipdb.set_trace()
-            #     1+1
+                self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
 
     def build_stream_metadata(self):
         self.stream_metadata = {

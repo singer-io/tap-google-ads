@@ -203,10 +203,6 @@ def create_resource_schema(config):
                 "incompatible_fields": [],
             }
 
-        if stream == "user_interest":
-            import ipdb; ipdb.set_trace()
-            1+1
-
         # Start discovery of field exclusions
         metrics_and_segments = set(metrics + segments)
 

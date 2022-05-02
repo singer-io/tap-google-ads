@@ -176,7 +176,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
-        self.automatic_keys = {"date"}.union(automatic_keys) if automatic_keys else {"date"}
+        self.automatic_keys = automatic_keys if automatic_keys else set()
         self.extract_field_information(resource_schema)
 
         self.create_full_schema(resource_schema)

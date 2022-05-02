@@ -238,11 +238,19 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 self.stream_schema["properties"].pop("ad")
 
             if (
-                resource_name not in {"metrics", "segments"}
+                resource_name not in {"metrics", "segments", "user_interest"}
                 and resource_name not in self.google_ads_resource_names
-                #and resource_name != "user_interest"
             ):
                 self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
+
+            # user_interest stream has a `user_interest.user_interest_id` instead of a `user_interest.id`
+            # this case is handled below where it's set to id for the user_interest stream
+            # but remains user_interest_id when its an attributed resource
+            if (
+                resource_name in self.google_ads_resource_names
+                and resource_name == "user_interest"
+            ):
+                self.stream_schema["properties"]["id"] = schema["properties"]["user_interest_id"]
 
     def build_stream_metadata(self):
         self.stream_metadata = {

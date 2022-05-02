@@ -391,7 +391,7 @@ class ReportStream(BaseStream):
                 # Move ad_group_ad.ad.x fields up a level in the schema (ad_group_ad.ad.x -> ad_group_ad.x)
                 if resource_name == "ad_group_ad" and field_name == "ad":
                     for ad_field_name, ad_field_schema in data_type["properties"].items():
-                        self.stream_schema["properties"][f"{resource_name}_{ad_field_name}"] = ad_field_schema
+                        self.stream_schema["properties"][ad_field_name] = ad_field_schema
                 elif resource_name not in {"metrics", "segments"}:
                     self.stream_schema["properties"][f"{resource_name}_{field_name}"] = data_type
                 else:
@@ -415,8 +415,7 @@ class ReportStream(BaseStream):
             is_metric_or_segment = report_field.startswith("metrics.") or report_field.startswith("segments.")
             # Transform ad_group_ad.ad.x fields to just x to reflect ad_group_ads schema
             if report_field.startswith("ad_group_ad.ad."):
-                split_report_field = report_field.split(".")
-                transformed_field_name = f"{split_report_field[0]}_{split_report_field[2]}"
+                transformed_field_name = report_field.split(".")[2]
             elif not is_metric_or_segment:
                 transformed_field_name = "_".join(report_field.split(".")[:2])
             else:
@@ -464,12 +463,7 @@ class ReportStream(BaseStream):
             elif resource_name == "ad_group_ad":
                 for key, sub_value in value.items():
                     if key == 'ad':
-                        # item {'resource_name': {'key': {'ad_field': '12345'}}
-                        # becomes {'resource_name_ad_field': '12345'}
-                        # {'ad_group_ad': {'ad': {'id': '12345'}}
-                        # {'ad_group_ad_id': '12345'}
-                        for ad_field, ad_value in sub_value.items():
-                            transformed_obj.update({f"{resource_name}_{ad_field}": ad_value})
+                        transformed_obj.update(sub_value)
                     else:
                         transformed_obj.update({f"{resource_name}_{key}": sub_value})
             else:
@@ -673,7 +667,7 @@ def initialize_reports(resource_schema):
             ["ad_group_ad"],
             resource_schema,
             ["_sdc_record_hash"],
-            {"ad_group_ad_id"},
+            {"id"},
         ),
         "age_range_performance_report": ReportStream(
             report_definitions.AGE_RANGE_PERFORMANCE_REPORT_FIELDS,

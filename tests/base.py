@@ -183,7 +183,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
-                self.AUTOMATIC_KEYS: {"ad_group_ad_id"},
+                self.AUTOMATIC_KEYS: {"id"},
             },
             "age_range_performance_report": {  # "age_range_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},

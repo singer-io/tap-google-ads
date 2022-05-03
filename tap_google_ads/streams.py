@@ -586,6 +586,14 @@ def initialize_core_streams(resource_schema):
             ["ad_group_criterion"],
             resource_schema,
             ["ad_group_id","criterion_id"],
+            {
+                "campaign_id",
+                "customer_id",
+                "mobile_app_category_constant_id",
+                "topic_constant_id",
+                "user_interest",
+                "user_list_id",
+            },
         ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
@@ -635,6 +643,18 @@ def initialize_core_streams(resource_schema):
             ["campaign_criterion"],
             resource_schema,
             ["campaign_id","criterion_id"],
+            {
+                "carrier_constant_id",
+                "customer_id",
+                "feed_id",
+                "language_constant_id",
+                "mobile_app_category_constant_id",
+                "mobile_device_constant_id",
+                "operating_system_version_constant_id",
+                "topic_constant_id",
+                "user_interest",
+                "user_list_id",
+            },
         ),
         "campaign_labels": BaseStream(
             report_definitions.CAMPAIGN_LABEL_FIELDS,
@@ -658,12 +678,17 @@ def initialize_core_streams(resource_schema):
             ["feed"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
         "feed_item": BaseStream(
             report_definitions.FEED_ITEM_FIELDS,
             ["feed_item"],
             resource_schema,
             ["id"],
+            {
+                "customer_id",
+                "feed_id",
+            },
         ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
@@ -713,6 +738,7 @@ def initialize_core_streams(resource_schema):
             ["user_list"],
             resource_schema,
             ["id"],
+            {"customer_id"},
         ),
     }
 

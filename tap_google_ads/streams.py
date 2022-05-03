@@ -418,6 +418,22 @@ class UserInterestStream(BaseStream):
             if props["field_details"]["selectable"]:
                 self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
 
+    def transform_keys(self, json_message):
+        """
+        This function does a few things with Google's response for sync queries for the user_interest stream:
+        1) clone json_message to transformed_message
+        2) create id field with user_interest_id's value
+        3) pop user_interest_id field off the message
+
+        """
+        transformed_message = {}.update(json_message)
+        resource_message = transformed_message[self.google_ads_resource_names[0]]
+
+        resource_message["id"] = resource_message["user_interest_id"]
+        resource_message.pop("user_interest_id")
+
+        return transformed_message
+
 
 class ReportStream(BaseStream):
 

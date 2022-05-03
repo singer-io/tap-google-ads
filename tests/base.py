@@ -104,10 +104,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.AUTOMATIC_KEYS: {
                     "campaign_id",
                     "customer_id",
-                    "mobile_app_category_constant_id",
-                    "topic_constant_id",
-                    "user_interest",
-                    "user_list_id",
                 },
             },
             "ads": {
@@ -146,18 +142,7 @@ class GoogleAdsBase(unittest.TestCase):
             "campaign_criterion": {
                 self.PRIMARY_KEYS: {"campaign_id", "criterion_id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.AUTOMATIC_KEYS: {
-                    "carrier_constant_id",
-                    "customer_id",
-                    "feed_id",
-                    "language_constant_id",
-                    "mobile_app_category_constant_id",
-                    "mobile_device_constant_id",
-                    "operating_system_version_constant_id",
-                    "topic_constant_id",
-                    "user_interest",
-                    "user_list_id",
-                },
+                self.AUTOMATIC_KEYS: {"customer_id"},
             },
             "campaign_labels": {
                 self.PRIMARY_KEYS: {"resource_name"},

@@ -1,10 +1,16 @@
-ACCOUNT_FIELDS = []
-AD_GROUP_FIELDS = []
-AD_GROUP_AD_FIELDS = []
-CAMPAIGN_FIELDS = []
-BIDDING_STRATEGY_FIELDS = []
+# Core streams
 ACCESSIBLE_BIDDING_STRATEGY_FIELDS = []
+ACCOUNT_FIELDS = []
+AD_GROUP_AD_FIELDS = []
+AD_GROUP_FIELDS = []
+BIDDING_STRATEGY_FIELDS = []
+CALL_VIEW_FIELDS = []
 CAMPAIGN_BUDGET_FIELDS = []
+CAMPAIGN_FIELDS = []
+CAMPAIGN_LABEL_FIELDS = []
+LABEL_FIELDS = []
+
+# Report streams
 ACCOUNT_PERFORMANCE_REPORT_FIELDS = [
     "customer.auto_tagging_enabled",
     "customer.currency_code",
@@ -100,6 +106,7 @@ AD_GROUP_PERFORMANCE_REPORT_FIELDS = [
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",
     "campaign.id",
+    "campaign.labels",
     "campaign.manual_cpc.enhanced_cpc_enabled",
     "campaign.name",
     "campaign.percent_cpc.enhanced_cpc_enabled",
@@ -289,6 +296,7 @@ AD_PERFORMANCE_REPORT_FIELDS = [
     "ad_group_ad.status",
     "campaign.base_campaign",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -626,6 +634,7 @@ CAMPAIGN_PERFORMANCE_REPORT_FIELDS = [
     "campaign.experiment_type",
     "campaign.final_url_suffix",
     "campaign.id",
+    "campaign.labels",
     "campaign.manual_cpc.enhanced_cpc_enabled",
     "campaign.maximize_conversion_value.target_roas",
     "campaign.name",
@@ -744,6 +753,7 @@ CLICK_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.name",
     "ad_group.status",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "click_view.ad_group_ad",
@@ -799,6 +809,7 @@ DISPLAY_KEYWORD_PERFORMANCE_REPORT_FIELDS = [
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -888,6 +899,7 @@ DISPLAY_TOPICS_PERFORMANCE_REPORT_FIELDS = [
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -958,6 +970,7 @@ EXPANDED_LANDING_PAGE_REPORT_FIELDS = [
     "ad_group.status",
     "campaign.advertising_channel_type",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "expanded_landing_page_view.expanded_final_url",
@@ -1030,6 +1043,7 @@ GENDER_PERFORMANCE_REPORT_FIELDS = [
     "campaign.base_campaign",
     "campaign.bidding_strategy",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1099,6 +1113,7 @@ GEO_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.name",
     "ad_group.status",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1156,6 +1171,7 @@ KEYWORDLESS_QUERY_REPORT_FIELDS = [
     "ad_group.name",
     "ad_group.status",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1230,6 +1246,7 @@ KEYWORDS_PERFORMANCE_REPORT_FIELDS = [
     "campaign.bidding_strategy",
     "campaign.bidding_strategy_type",
     "campaign.id",
+    "campaign.labels",
     "campaign.manual_cpc.enhanced_cpc_enabled",
     "campaign.name",
     "campaign.percent_cpc.enhanced_cpc_enabled",
@@ -1329,6 +1346,7 @@ LANDING_PAGE_REPORT_FIELDS = [
     "ad_group.status",
     "campaign.advertising_channel_type",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "landing_page_view.unexpanded_final_url",
@@ -1383,6 +1401,7 @@ PLACEHOLDER_FEED_ITEM_REPORT_FIELDS = [
     "ad_group.status",
     "ad_group_ad.resource_name",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1450,6 +1469,7 @@ PLACEHOLDER_REPORT_FIELDS = [
     "ad_group.status",
     "ad_group_ad.resource_name",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.descriptive_name",
@@ -1523,6 +1543,7 @@ PLACEMENT_PERFORMANCE_REPORT_FIELDS = [
     "campaign.base_campaign",
     "campaign.bidding_strategy",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1595,6 +1616,7 @@ SEARCH_QUERY_PERFORMANCE_REPORT_FIELDS = [
     "ad_group_ad.ad.id",
     "ad_group_ad.ad.tracking_url_template",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1660,6 +1682,7 @@ SHOPPING_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.name",
     "ad_group.status",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.descriptive_name",
@@ -1728,6 +1751,7 @@ USER_LOCATION_PERFORMANCE_REPORT_FIELDS = [
     "ad_group.name",
     "ad_group.status",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",
@@ -1787,6 +1811,7 @@ VIDEO_PERFORMANCE_REPORT_FIELDS = [
     "ad_group_ad.ad.id",
     "ad_group_ad.status",
     "campaign.id",
+    "campaign.labels",
     "campaign.name",
     "campaign.status",
     "customer.currency_code",

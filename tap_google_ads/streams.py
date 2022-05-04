@@ -296,11 +296,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 if props["field_details"]["selectable"]:
                     self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
 
-    def transform_keys(self, obj):
+    def transform_keys(self, json_message):
         """This function does a few things with Google's response for sync queries:
-        1) checks an object's fields to see if they're for the current resource
-        2) if they are, keep the fields in transformed_obj with no modifications
-        3) if they are not, append a foreign key to the transformed_obj using the id value
+        1) checks a json_message's fields to see if they're for  the current resource
+        2) if they are, keep the fields in transformed_json with no modifications
+        3) if they are not, append a foreign key to the transformed_message using the id value
         4) if the resource is ad_group_ad, pops ad fields up to the ad_group_ad level
 
         We've seen API responses where Google returns `type_` when the
@@ -308,24 +308,24 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         `"type_": X` to `"type": X`
         """
         target_resource_name = self.google_ads_resource_names[0]
-        transformed_obj = {}
+        transformed_message = {}
 
-        for resource_name, value in obj.items():
+        for resource_name, value in json_message.items():
             resource_matches = target_resource_name == resource_name
 
             if resource_matches:
-                transformed_obj.update(value)
+                transformed_message.update(value)
             else:
-                transformed_obj[f"{resource_name}_id"] = value["id"]
+                transformed_message[f"{resource_name}_id"] = value["id"]
 
             if resource_name == "ad_group_ad":
-                transformed_obj.update(value["ad"])
-                transformed_obj.pop("ad")
+                transformed_message.update(value["ad"])
+                transformed_message.pop("ad")
 
-        if "type_" in transformed_obj:
-            transformed_obj["type"] = transformed_obj.pop("type_")
+        if "type_" in transformed_message:
+            transformed_message["type"] = transformed_message.pop("type_")
 
-        return transformed_obj
+        return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -347,8 +347,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             # Pages are fetched automatically while iterating through the response
             for message in response:
                 json_message = google_message_to_json(message)
-                transformed_obj = self.transform_keys(json_message)
-                record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
+                transformed_message = self.transform_keys(json_message)
+                record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
                 singer.write_record(stream_name, record)
 
@@ -370,7 +370,6 @@ class UserInterestStream(BaseStream):
     user_interest stream has `user_interest.user_interest_id` instead of a `user_interest.id`
     this class sets it to id for the user_interest core stream
     """
-
     def format_field_names(self):
 
         schema = self.full_schema["properties"]["user_interest"]
@@ -426,11 +425,12 @@ class UserInterestStream(BaseStream):
         3) pop user_interest_id field off the message
 
         """
-        transformed_message = {}.update(json_message)
-        resource_message = transformed_message[self.google_ads_resource_names[0]]
+        transformed_message = {}
+        resource_message = json_message[self.google_ads_resource_names[0]]
 
-        resource_message["id"] = resource_message["user_interest_id"]
-        resource_message.pop("user_interest_id")
+        transformed_message.update(resource_message)
+        transformed_message["id"] = resource_message["user_interest_id"]
+        transformed_message.pop("user_interest_id")
 
         return transformed_message
 
@@ -525,28 +525,28 @@ class ReportStream(BaseStream):
 
             self.stream_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
 
-    def transform_keys(self, obj):
-        transformed_obj = {}
+    def transform_keys(self, json_message):
+        transformed_message = {}
 
-        for resource_name, value in obj.items():
+        for resource_name, value in json_message.items():
             if resource_name in {"metrics", "segments"}:
-                transformed_obj.update(value)
+                transformed_message.update(value)
             elif resource_name == "ad_group_ad":
                 for key, sub_value in value.items():
                     if key == 'ad':
-                        transformed_obj.update(sub_value)
+                        transformed_message.update(sub_value)
                     else:
-                        transformed_obj.update({f"{resource_name}_{key}": sub_value})
+                        transformed_message.update({f"{resource_name}_{key}": sub_value})
             else:
                 # value = {"a": 1, "b":2}
                 # turns into
                 # {"resource_a": 1, "resource_b": 2}
-                transformed_obj.update(
+                transformed_message.update(
                     {f"{resource_name}_{key}": sub_value
                      for key, sub_value in value.items()}
                 )
 
-        return transformed_obj
+        return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -604,8 +604,8 @@ class ReportStream(BaseStream):
                 # Pages are fetched automatically while iterating through the response
                 for message in response:
                     json_message = google_message_to_json(message)
-                    transformed_obj = self.transform_keys(json_message)
-                    record = transformer.transform(transformed_obj, stream["schema"])
+                    transformed_message = self.transform_keys(json_message)
+                    record = transformer.transform(transformed_message, stream["schema"])
                     record["_sdc_record_hash"] = generate_hash(record, stream_mdata)
 
                     singer.write_record(stream_name, record)

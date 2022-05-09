@@ -55,7 +55,7 @@ To run the discover mode of `tap-google-ads` with the configuration file, use th
 $ tap-google-ads -c my-config.json -d
 ```
 
-To run he sync mode of `tap-google-ads` with the catalog file, use the command:
+To run the sync mode of `tap-google-ads` with the catalog file, use the command:
 
 ```bash
 $ tap-google-ads -c my-config.json --catalog catalog.json

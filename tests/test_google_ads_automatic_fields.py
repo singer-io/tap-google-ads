@@ -25,7 +25,7 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         # --- Test report streams throw an error --- #
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if self.is_report(stream)}
+                           if stream == "shopping_performance_report"} # All other reports have automatic_keys
 
         conn_id = connections.ensure_connection(self)
 
@@ -71,16 +71,28 @@ class AutomaticFieldsGoogleAds(GoogleAdsBase):
         """
         Testing that basic sync with minimum field selection functions without Critical Errors
         """
-        print("Automatic Fields Test for tap-google-ads core streams")
+        print("Automatic Fields Test for tap-google-ads core streams and most reports")
 
         # --- Start testing core streams --- #
 
         conn_id = connections.ensure_connection(self)
 
         streams_to_test = {stream for stream in self.expected_streams()
-                           if not self.is_report(stream)} - {
+                           if stream not in {
+                                   # no test data available, but can generate
+                                   'display_keyword_performance_report',  # Singer Display #2, Ad Group 2
+                                   'display_topics_performance_report',  # Singer Display #2, Ad Group 2
+                                   "keywords_performance_report",  # needs a Search Campaign (currently have none)
+                                   # audiences are unclear on how metrics fall into segments
+                                   'campaign_audience_performance_report',  # Singer Display #2/Singer Display, Ad Group 2 (maybe?)
+                                   'ad_group_audience_performance_report',  # Singer Display #2/Singer Display, Ad Group 2 (maybe?)
+                                   # cannot generate test data
+                                   'placement_performance_report',  # need an app to run javascript to trace conversions
+                                   "video_performance_report",  # need a video to show
+                                   "shopping_performance_report",  # need Shopping campaign type, and link to a store
                                    "call_details", # need test call data before data will be returned
-        }
+                                   "shopping_performance_report", # No automatic keys for this report
+                           }}
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.0
+  * Renames `REPORTS` variable to `STREAMS` and updates corresponding variables similarly. Removes unused `add_extra_fields` function [#56](https://github.com/singer-io/tap-google-ads/pull/56) 
+  * Adds `automatic_keys` to metadata for streams, including reports. Updates tests [#55](https://github.com/singer-io/tap-google-ads/pull/55)
+
 ## v1.1.0
   * Fixes a bug with currently_syncing and adds tests around the bug fix [#54](https://github.com/singer-io/tap-google-ads/pull/54)
   * Adds `campaign_labels` and `labels` core streams; adds "campaign.labels" field to reports where relevant [#53](https://github.com/singer-io/tap-google-ads/pull/53)

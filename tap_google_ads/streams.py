@@ -205,13 +205,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     self.behavior[field_name] = field["field_details"]["category"]
 
-            self.add_extra_fields(resource_schema)
         self.field_exclusions = {k: list(v) for k, v in self.field_exclusions.items()}
-
-    def add_extra_fields(self, resource_schema):
-        """This function should add fields to `field_exclusions`, `schema`, and
-        `behavior` that are not covered by Google's resource_schema
-        """
 
 
     def create_full_schema(self, resource_schema):

@@ -45,6 +45,10 @@ This tap:
     - [UserLocation Performance Report](https://developers.google.com/google-ads/api/fields/v10/user_location_view)
     - [Video Performance Report](https://developers.google.com/google-ads/api/fields/v10/video)
 
+## Bookmarking Strategy
+
+The Google Ads API supports the `start_date` and `end_date` parameters that limits the records which filters the analytics records in the given time period.
+
 ## Configuration
 
 This tap requires a `config.json` which specifies details regarding [OAuth 2.0](https://developers.google.com/google-ads/api/docs/oauth/overview) authentication and a cutoff date for syncing historical data. See [config.sample.json](config.sample.json) for an example.

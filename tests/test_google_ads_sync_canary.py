@@ -84,8 +84,6 @@ class SyncCanaryTest(GoogleAdsBase):
             "campaign_audience_performance_report",  # Singer Display #2/Singer Display, Ad Group 2 (maybe?)
             "ad_group_audience_performance_report",  # Singer Display #2/Singer Display, Ad Group 2 (maybe?)
             # cannot generate test data
-            "feed", # deprecated by Google and no test data
-            "feed_item", # deprecated by Google and no test data
             "placement_performance_report",  # need an app to run javascript to trace conversions
             "video_performance_report",  # need a video to show
             "shopping_performance_report",  # need Shopping campaign type, and link to a store

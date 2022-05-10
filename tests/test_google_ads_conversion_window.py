@@ -47,7 +47,7 @@ class ConversionWindowBaseTest(GoogleAdsBase):
         print("Configurable Properties Test (conversion_window)")
 
         streams_to_test = {
-            'campagins',
+            'campaigns',
             'account_performance_report',
         }
 

@@ -80,7 +80,7 @@ class GoogleAdsBase(unittest.TestCase):
         """
         return {
             # Core Objects
-            'accessible_bidding_strategies': {
+            "accessible_bidding_strategies": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {"customer_id"},
@@ -94,26 +94,33 @@ class GoogleAdsBase(unittest.TestCase):
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {
-                    'campaign_id',
-                    'customer_id',
+                    "campaign_id",
+                    "customer_id",
                 },
-
+            },
+            "ad_group_criterion": {
+                self.PRIMARY_KEYS: {"ad_group_id", "criterion_id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: {
+                    "campaign_id",
+                    "customer_id",
+                },
             },
             "ads": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {
+                    "ad_group_id",
                     "campaign_id",
                     "customer_id",
-                    "ad_group_id"
                 },
             },
-            'bidding_strategies': {
+            "bidding_strategies": {
                 self.PRIMARY_KEYS:{"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {"customer_id"},
             },
-            'call_details': {
+            "call_details": {
                 self.PRIMARY_KEYS: {"resource_name"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {
@@ -125,18 +132,19 @@ class GoogleAdsBase(unittest.TestCase):
             "campaigns": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.AUTOMATIC_KEYS: {
-                    'customer_id'
-                },
+                self.AUTOMATIC_KEYS: {"customer_id"},
             },
-            'campaign_budgets': {
+            "campaign_budgets": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.AUTOMATIC_KEYS: {
-                    "customer_id"
-                },
+                self.AUTOMATIC_KEYS: {"customer_id"},
             },
-            'campaign_labels': {
+            "campaign_criterion": {
+                self.PRIMARY_KEYS: {"campaign_id", "criterion_id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: {"customer_id"},
+            },
+            "campaign_labels": {
                 self.PRIMARY_KEYS: {"resource_name"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {
@@ -145,12 +153,63 @@ class GoogleAdsBase(unittest.TestCase):
                     "label_id"
                 },
             },
-            'labels': {
+            "carrier_constant": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "feed": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: {"customer_id"},
+            },
+            "feed_item": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: {
                     "customer_id",
-                    },
+                    "feed_id",
+                },
+            },
+            "labels": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: {"customer_id"},
+            },
+            "language_constant": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "mobile_app_category_constant": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "mobile_device_constant": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "operating_system_version_constant": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "topic_constant": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "user_interest": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
+            "user_list": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: {"customer_id"},
             },
             # Report objects
 

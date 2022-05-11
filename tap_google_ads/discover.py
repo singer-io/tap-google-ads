@@ -13,6 +13,7 @@ STREAMS = [
     "accessible_bidding_strategy",
     "ad_group",
     "ad_group_ad",
+    "ad_group_criterion",
     "ad_group_audience_view",
     "age_range_view",
     "bidding_strategy",
@@ -22,11 +23,13 @@ STREAMS = [
     "campaign_budget",
     "campaign_criterion",
     "campaign_label",
+    "carrier_constant",
     "click_view",
     "customer",
     "display_keyword_view",
     "dynamic_search_ads_search_term_view",
     "expanded_landing_page_view",
+    "feed",
     "feed_item",
     "feed_item_target",
     "feed_placeholder_view",
@@ -35,10 +38,17 @@ STREAMS = [
     "keyword_view",
     "label",
     "landing_page_view",
+    "language_constant",
     "managed_placement_view",
+    "mobile_app_category_constant",
+    "mobile_device_constant",
+    "operating_system_version_constant",
     "search_term_view",
     "shopping_performance_view",
+    "topic_constant",
     "topic_view",
+    "user_interest",
+    "user_list",
     "user_location_view",
     "video",
 ]
@@ -248,6 +258,7 @@ def do_discover(resource_schema):
     core_streams = do_discover_streams(initialize_core_streams(resource_schema))
     report_streams = do_discover_streams(initialize_reports(resource_schema))
     streams = []
+
     streams.extend(core_streams)
     streams.extend(report_streams)
     json.dump({"streams": streams}, sys.stdout, indent=2)

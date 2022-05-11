@@ -234,6 +234,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             if (
                 resource_name not in {"metrics", "segments"}
                 and resource_name not in self.google_ads_resource_names
+                and "id" in schema["properties"]
             ):
                 self.stream_schema["properties"][resource_name + "_id"] = schema["properties"]["id"]
 
@@ -289,11 +290,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 if props["field_details"]["selectable"]:
                     self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
 
-    def transform_keys(self, obj):
+    def transform_keys(self, json_message):
         """This function does a few things with Google's response for sync queries:
-        1) checks an object's fields to see if they're for the current resource
-        2) if they are, keep the fields in transformed_obj with no modifications
-        3) if they are not, append a foreign key to the transformed_obj using the id value
+        1) checks a json_message's fields to see if they're for  the current resource
+        2) if they are, keep the fields in transformed_json with no modifications
+        3) if they are not, append a foreign key to the transformed_message using the id value
         4) if the resource is ad_group_ad, pops ad fields up to the ad_group_ad level
 
         We've seen API responses where Google returns `type_` when the
@@ -301,24 +302,24 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         `"type_": X` to `"type": X`
         """
         target_resource_name = self.google_ads_resource_names[0]
-        transformed_obj = {}
+        transformed_message = {}
 
-        for resource_name, value in obj.items():
+        for resource_name, value in json_message.items():
             resource_matches = target_resource_name == resource_name
 
             if resource_matches:
-                transformed_obj.update(value)
+                transformed_message.update(value)
             else:
-                transformed_obj[f"{resource_name}_id"] = value["id"]
+                transformed_message[f"{resource_name}_id"] = value["id"]
 
             if resource_name == "ad_group_ad":
-                transformed_obj.update(value["ad"])
-                transformed_obj.pop("ad")
+                transformed_message.update(value["ad"])
+                transformed_message.pop("ad")
 
-        if "type_" in transformed_obj:
-            transformed_obj["type"] = transformed_obj.pop("type_")
+        if "type_" in transformed_message:
+            transformed_message["type"] = transformed_message.pop("type_")
 
-        return transformed_obj
+        return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -340,8 +341,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             # Pages are fetched automatically while iterating through the response
             for message in response:
                 json_message = google_message_to_json(message)
-                transformed_obj = self.transform_keys(json_message)
-                record = transformer.transform(transformed_obj, stream["schema"], singer.metadata.to_map(stream_mdata))
+                transformed_message = self.transform_keys(json_message)
+                record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
                 singer.write_record(stream_name, record)
 
@@ -356,6 +357,76 @@ def get_query_date(start_date, bookmark, conversion_window_date):
     else:
         query_date = min(bookmark, max(start_date, conversion_window_date))
         return singer.utils.strptime_to_utc(query_date)
+
+
+class UserInterestStream(BaseStream):
+    """
+    user_interest stream has `user_interest.user_interest_id` instead of a `user_interest.id`
+    this class sets it to id for the user_interest core stream
+    """
+    def format_field_names(self):
+
+        schema = self.full_schema["properties"]["user_interest"]
+        self.stream_schema["properties"]["id"] = schema["properties"]["user_interest_id"]
+        self.stream_schema["properties"].pop("user_interest_id")
+
+    def build_stream_metadata(self):
+        self.stream_metadata = {
+            (): {
+                "inclusion": "available",
+                "forced-replication-method": "FULL_TABLE",
+                "table-key-properties": self.primary_keys,
+            }
+        }
+
+        for field, props in self.resource_fields.items():
+
+            field = field.split(".")[1]
+            if field == "user_interest_id":
+                field = "id"
+
+            if ("properties", field) not in self.stream_metadata:
+                # Base metadata for every field
+                self.stream_metadata[("properties", field)] = {
+                    "fieldExclusions": props["incompatible_fields"],
+                    "behavior": props["field_details"]["category"],
+                }
+
+                # Add inclusion metadata
+                # Foreign keys are automatically included and they are all id fields
+                if field in self.primary_keys or field in self.automatic_keys:
+                    inclusion = "automatic"
+                elif props["field_details"]["selectable"]:
+                    inclusion = "available"
+                else:
+                    # inclusion = "unsupported"
+                    continue
+                self.stream_metadata[("properties", field)]["inclusion"] = inclusion
+
+            # Save the full field name for sync code to use
+            full_name = props["field_details"]["name"]
+            if "tap-google-ads.api-field-names" not in self.stream_metadata[("properties", field)]:
+                self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"] = []
+
+            if props["field_details"]["selectable"]:
+                self.stream_metadata[("properties", field)]["tap-google-ads.api-field-names"].append(full_name)
+
+    def transform_keys(self, json_message):
+        """
+        This function does a few things with Google's response for sync queries for the user_interest stream:
+        1) clone json_message to transformed_message
+        2) create id field with user_interest_id's value
+        3) pop user_interest_id field off the message
+
+        """
+        transformed_message = {}
+        resource_message = json_message[self.google_ads_resource_names[0]]
+
+        transformed_message.update(resource_message)
+        transformed_message["id"] = resource_message["user_interest_id"]
+        transformed_message.pop("user_interest_id")
+
+        return transformed_message
 
 
 class ReportStream(BaseStream):
@@ -448,28 +519,28 @@ class ReportStream(BaseStream):
 
             self.stream_metadata[("properties", transformed_field_name)]["tap-google-ads.api-field-names"].append(report_field)
 
-    def transform_keys(self, obj):
-        transformed_obj = {}
+    def transform_keys(self, json_message):
+        transformed_message = {}
 
-        for resource_name, value in obj.items():
+        for resource_name, value in json_message.items():
             if resource_name in {"metrics", "segments"}:
-                transformed_obj.update(value)
+                transformed_message.update(value)
             elif resource_name == "ad_group_ad":
                 for key, sub_value in value.items():
                     if key == 'ad':
-                        transformed_obj.update(sub_value)
+                        transformed_message.update(sub_value)
                     else:
-                        transformed_obj.update({f"{resource_name}_{key}": sub_value})
+                        transformed_message.update({f"{resource_name}_{key}": sub_value})
             else:
                 # value = {"a": 1, "b":2}
                 # turns into
                 # {"resource_a": 1, "resource_b": 2}
-                transformed_obj.update(
+                transformed_message.update(
                     {f"{resource_name}_{key}": sub_value
                      for key, sub_value in value.items()}
                 )
 
-        return transformed_obj
+        return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
@@ -527,8 +598,8 @@ class ReportStream(BaseStream):
                 # Pages are fetched automatically while iterating through the response
                 for message in response:
                     json_message = google_message_to_json(message)
-                    transformed_obj = self.transform_keys(json_message)
-                    record = transformer.transform(transformed_obj, stream["schema"])
+                    transformed_message = self.transform_keys(json_message)
+                    record = transformer.transform(transformed_message, stream["schema"])
                     record["_sdc_record_hash"] = generate_hash(record, stream_mdata)
 
                     singer.write_record(stream_name, record)
@@ -565,6 +636,16 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
              },
+        ),
+        "ad_group_criterion": BaseStream(
+            report_definitions.AD_GROUP_CRITERION_FIELDS,
+            ["ad_group_criterion"],
+            resource_schema,
+            ["ad_group_id","criterion_id"],
+            {
+                "campaign_id",
+                "customer_id",
+            },
         ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
@@ -609,6 +690,13 @@ def initialize_core_streams(resource_schema):
             ["id"],
             {"customer_id"},
         ),
+        "campaign_criterion": BaseStream(
+            report_definitions.CAMPAIGN_CRITERION_FIELDS,
+            ["campaign_criterion"],
+            resource_schema,
+            ["campaign_id","criterion_id"],
+            {"customer_id"},
+        ),
         "campaign_labels": BaseStream(
             report_definitions.CAMPAIGN_LABEL_FIELDS,
             ["campaign_label"],
@@ -620,9 +708,75 @@ def initialize_core_streams(resource_schema):
                 "label_id",
             },
         ),
+        "carrier_constant": BaseStream(
+            report_definitions.CARRIER_CONSTANT_FIELDS,
+            ["carrier_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "feed": BaseStream(
+            report_definitions.FEED_FIELDS,
+            ["feed"],
+            resource_schema,
+            ["id"],
+            {"customer_id"},
+        ),
+        "feed_item": BaseStream(
+            report_definitions.FEED_ITEM_FIELDS,
+            ["feed_item"],
+            resource_schema,
+            ["id"],
+            {
+                "customer_id",
+                "feed_id",
+            },
+        ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
             ["label"],
+            resource_schema,
+            ["id"],
+            {"customer_id"},
+        ),
+        "language_constant": BaseStream(
+            report_definitions.LANGUAGE_CONSTANT_FIELDS,
+            ["language_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "mobile_app_category_constant": BaseStream(
+            report_definitions.MOBILE_APP_CATEGORY_CONSTANT_FIELDS,
+            ["mobile_app_category_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "mobile_device_constant": BaseStream(
+            report_definitions.MOBILE_DEVICE_CONSTANT_FIELDS,
+            ["mobile_device_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "operating_system_version_constant": BaseStream(
+            report_definitions.OPERATING_SYSTEM_VERSION_CONSTANT_FIELDS,
+            ["operating_system_version_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "topic_constant": BaseStream(
+            report_definitions.TOPIC_CONSTANT_FIELDS,
+            ["topic_constant"],
+            resource_schema,
+            ["id"],
+        ),
+        "user_interest": UserInterestStream(
+            report_definitions.USER_INTEREST_FIELDS,
+            ["user_interest"],
+            resource_schema,
+            ["id"],
+        ),
+        "user_list": BaseStream(
+            report_definitions.USER_LIST_FIELDS,
+            ["user_list"],
             resource_schema,
             ["id"],
             {"customer_id"},

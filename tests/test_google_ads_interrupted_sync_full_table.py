@@ -42,7 +42,7 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
         """
 
         # Create connection using a recent start date
-        conn_id = connections.ensure_connection(self, original_properties=False)
+        conn_id = connections.ensure_connection(self)
 
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)

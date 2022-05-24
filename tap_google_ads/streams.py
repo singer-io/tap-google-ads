@@ -4,7 +4,7 @@ import hashlib
 from datetime import timedelta
 import singer
 from singer import Transformer
-from singer import utils
+from singer import utils, metrics
 from google.protobuf.json_format import MessageToJson
 from google.ads.googleads.errors import GoogleAdsException
 import backoff
@@ -25,7 +25,7 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 )
 
 DEFAULT_CONVERSION_WINDOW = 30
-
+DEFAULT_PAGE_SIZE = 1000
 
 def get_conversion_window(config):
     """Fetch the conversion window from the config and error on invalid values"""
@@ -81,8 +81,18 @@ def build_parameters():
     return f"PARAMETERS {param_str}"
 
 
-def create_core_stream_query(resource_name, selected_fields):
-    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {build_parameters()}"
+def create_core_stream_query(resource_name, selected_fields, last_evaluated_key, filter_param):
+
+    if last_evaluated_key:
+        # Create a query to fetch records in ascending order since the last saved id.
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE {filter_param} > {last_evaluated_key} ORDER BY {filter_param} ASC {build_parameters()}"
+    elif filter_param:
+        # Create a query to fetch records in ascending order from starting point.
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} ORDER BY {filter_param} ASC {build_parameters()}"
+    else:
+        # Create a query to fetch records without any order.
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name}  {build_parameters()}"
+
     return core_query
 
 
@@ -172,11 +182,12 @@ def filter_out_non_attribute_fields(fields):
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None):
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None, filter_param = None):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
         self.automatic_keys = automatic_keys if automatic_keys else set()
+        self.filter_param = filter_param
         self.extract_field_information(resource_schema)
 
         self.create_full_schema(resource_schema)
@@ -330,22 +341,39 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
         singer.write_state(state)
 
-        query = create_core_stream_query(resource_name, selected_fields)
+        # last run was interrupted if there is a bookmark available for core streams.
+        last_evaluated_key = singer.get_bookmark(state,
+                                            stream["tap_stream_id"],
+                                            customer["customerId"]) or {}
+       
+        query = create_core_stream_query(resource_name, selected_fields, last_evaluated_key.get('last_evaluated_key'), self.filter_param)
         try:
             response = make_request(gas, query, customer["customerId"])
         except GoogleAdsException as err:
             LOGGER.warning("Failed query: %s", query)
             raise err
 
-        with Transformer() as transformer:
-            # Pages are fetched automatically while iterating through the response
-            for message in response:
-                json_message = google_message_to_json(message)
-                transformed_message = self.transform_keys(json_message)
-                record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
+        with metrics.record_counter(stream_name) as counter:
+            with Transformer() as transformer:
+                # Pages are fetched automatically while iterating through the response
+                for message in response:
+                    json_message = google_message_to_json(message)
+                    transformed_message = self.transform_keys(json_message)
+                    record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
-                singer.write_record(stream_name, record)
+                    singer.write_record(stream_name, record)
+                    counter.increment()
 
+                    # Write state(last_evaluated_key) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
+                    if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
+                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_evaluated_key': record[self.primary_keys[0]]})
+
+                        singer.write_state(state)
+
+        # Flush the state for core streams if sync is completed
+        if stream["tap_stream_id"] in state.get('bookmarks', {}):
+            state['bookmarks'].pop(stream["tap_stream_id"])
+            singer.write_state(state)
 
 def get_query_date(start_date, bookmark, conversion_window_date):
     """Return a date within the conversion window and after start date
@@ -620,12 +648,14 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="accessible_bidding_strategy.id"
         ),
         "accounts": BaseStream(
             report_definitions.ACCOUNT_FIELDS,
             ["customer"],
             resource_schema,
             ["id"],
+            filter_param="customer.id"
         ),
         "ad_groups": BaseStream(
             report_definitions.AD_GROUP_FIELDS,
@@ -636,6 +666,8 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
              },
+            filter_param="ad_group.id"
+
         ),
         "ad_group_criterion": BaseStream(
             report_definitions.AD_GROUP_CRITERION_FIELDS,
@@ -657,6 +689,7 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
              },
+            filter_param = "ad_group_ad.ad.id"
         ),
         "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
@@ -664,6 +697,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="bidding_strategy.id"
         ),
         "call_details": BaseStream(
             report_definitions.CALL_VIEW_FIELDS,
@@ -682,6 +716,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="campaign.id"
         ),
         "campaign_budgets": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
@@ -689,6 +724,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="campaign_budget.id"
         ),
         "campaign_criterion": BaseStream(
             report_definitions.CAMPAIGN_CRITERION_FIELDS,
@@ -713,6 +749,7 @@ def initialize_core_streams(resource_schema):
             ["carrier_constant"],
             resource_schema,
             ["id"],
+           filter_param="carrier_constant.id"
         ),
         "feed": BaseStream(
             report_definitions.FEED_FIELDS,
@@ -720,6 +757,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="feed.id"
         ),
         "feed_item": BaseStream(
             report_definitions.FEED_ITEM_FIELDS,
@@ -730,6 +768,7 @@ def initialize_core_streams(resource_schema):
                 "customer_id",
                 "feed_id",
             },
+            filter_param="feed_item.id"
         ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
@@ -737,42 +776,49 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="label.id"
         ),
         "language_constant": BaseStream(
             report_definitions.LANGUAGE_CONSTANT_FIELDS,
             ["language_constant"],
             resource_schema,
             ["id"],
+            filter_param="language_constant.id"
         ),
         "mobile_app_category_constant": BaseStream(
             report_definitions.MOBILE_APP_CATEGORY_CONSTANT_FIELDS,
             ["mobile_app_category_constant"],
             resource_schema,
             ["id"],
+            filter_param="mobile_app_category_constant.id"
         ),
         "mobile_device_constant": BaseStream(
             report_definitions.MOBILE_DEVICE_CONSTANT_FIELDS,
             ["mobile_device_constant"],
             resource_schema,
             ["id"],
+            filter_param="mobile_device_constant.id"
         ),
         "operating_system_version_constant": BaseStream(
             report_definitions.OPERATING_SYSTEM_VERSION_CONSTANT_FIELDS,
             ["operating_system_version_constant"],
             resource_schema,
             ["id"],
+            filter_param="operating_system_version_constant.id"
         ),
         "topic_constant": BaseStream(
             report_definitions.TOPIC_CONSTANT_FIELDS,
             ["topic_constant"],
             resource_schema,
             ["id"],
+            filter_param="topic_constant.id"
         ),
         "user_interest": UserInterestStream(
             report_definitions.USER_INTEREST_FIELDS,
             ["user_interest"],
             resource_schema,
             ["id"],
+            filter_param="user_interest.user_interest_id"
         ),
         "user_list": BaseStream(
             report_definitions.USER_LIST_FIELDS,
@@ -780,6 +826,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+            filter_param="user_list.id"
         ),
     }
 

@@ -345,7 +345,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         last_evaluated_key = singer.get_bookmark(state,
                                             stream["tap_stream_id"],
                                             customer["customerId"]) or {}
-       
+
         query = create_core_stream_query(resource_name, selected_fields, last_evaluated_key.get('last_evaluated_key'), self.filter_param)
         try:
             response = make_request(gas, query, customer["customerId"])

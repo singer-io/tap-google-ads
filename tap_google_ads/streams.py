@@ -80,18 +80,42 @@ def build_parameters():
     param_str = ",".join(f"{k}={v}" for k, v in API_PARAMETERS.items())
     return f"PARAMETERS {param_str}"
 
+def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks):
+    """
+    Generates a where clause based on filter parameter(`key_properties`), and
+    `last_pk_fetched`.
 
-def create_core_stream_query(resource_name, selected_fields, last_evaluated_key, filter_param):
+    Example:
+    filter_param = ['id']
+    last_pk_fetched = 1
+    Returns:
+    WHERE id >= 1 ORDER BY id ASC
 
-    if last_evaluated_key:
-        # Create a query to fetch records in ascending order since the last saved id.
-        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE {filter_param} > {last_evaluated_key} ORDER BY {filter_param} ASC {build_parameters()}"
-    elif filter_param:
-        # Create a query to fetch records in ascending order from starting point.
-        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} ORDER BY {filter_param} ASC {build_parameters()}"
-    else:
-        # Create a query to fetch records without any order.
-        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name}  {build_parameters()}"
+    """
+    where_clause = ""
+    order_by_clause = ""
+    comparision_operator = ">="
+
+    if not composite_pks:
+        # Exclude equality for the stream which do not have composite primary key.
+        comparision_operator = ">"
+
+    if filter_param:
+        # Create ORDER BY clause for the stream which support filter parameter.
+        order_by_clause = "ORDER BY {} ASC".format(filter_param)
+
+    if last_pk_fetched:
+        # Create WHERE clause based on last_pk_fetched.
+        where_clause = 'WHERE {} {} {} '.format(filter_param, comparision_operator, last_pk_fetched)
+
+    return '{}{}'.format(where_clause, order_by_clause)
+
+def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks):
+
+    # Generate query parameter WHERE and ORDER BY.
+    where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks)
+
+    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
 
     return core_query
 
@@ -342,11 +366,14 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         singer.write_state(state)
 
         # last run was interrupted if there is a bookmark available for core streams.
-        last_evaluated_key = singer.get_bookmark(state,
+        last_pk_fetched = singer.get_bookmark(state,
                                             stream["tap_stream_id"],
                                             customer["customerId"]) or {}
 
-        query = create_core_stream_query(resource_name, selected_fields, last_evaluated_key.get('last_evaluated_key'), self.filter_param)
+        # Assign True if the primary key is composite.
+        composite_pks = len(self.primary_keys) > 1
+
+        query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param, composite_pks)
         try:
             response = make_request(gas, query, customer["customerId"])
         except GoogleAdsException as err:
@@ -364,9 +391,9 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                     singer.write_record(stream_name, record)
                     counter.increment()
 
-                    # Write state(last_evaluated_key) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
+                    # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
                     if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
-                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_evaluated_key': record[self.primary_keys[0]]})
+                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': record[self.primary_keys[0]]})
 
                         singer.write_state(state)
 
@@ -667,7 +694,6 @@ def initialize_core_streams(resource_schema):
                 "customer_id",
              },
             filter_param="ad_group.id"
-
         ),
         "ad_group_criterion": BaseStream(
             report_definitions.AD_GROUP_CRITERION_FIELDS,
@@ -678,6 +704,7 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
             },
+            filter_param="ad_group.id"
         ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
@@ -732,6 +759,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["campaign_id","criterion_id"],
             {"customer_id"},
+            filter_param="campaign.id"
         ),
         "campaign_labels": BaseStream(
             report_definitions.CAMPAIGN_LABEL_FIELDS,

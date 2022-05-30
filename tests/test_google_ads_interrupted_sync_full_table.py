@@ -87,7 +87,15 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
 
             # Verify second sync(interrupted_sync) have the less records as compared to first sync(full sync)
             self.assertLess(interrupted_record_count, full_record_count)
-            primary_key = next(iter(self.expected_primary_keys()[stream]))
+
+            # campaign_criterion and ad_group_criterion streams have a composite primary key.
+            # But, to filter out the records, we are using only campaign_id and ad_group_id respectively.
+            if stream == "campaign_criterion":
+                primary_key = "campaign_id"
+            elif stream == "ad_group_criterion":
+                primary_key = "ad_group_id"
+            else:
+                primary_key = next(iter(self.expected_primary_keys()[stream]))
 
             # Verify that all records in the full sync come in Ascending order.
             # That means id of current record is greater than id of last record.

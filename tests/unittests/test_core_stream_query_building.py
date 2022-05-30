@@ -17,11 +17,11 @@ class TestFullTableQuery(unittest.TestCase):
         last_pk_fetched = {}
         composite_pks = False
 
-        expected = 'SELECT id FROM ads  PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id FROM ads  PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)
 
     def test_empty_where_clause(self):
         """
@@ -31,11 +31,11 @@ class TestFullTableQuery(unittest.TestCase):
         filter_params = 'id'
         last_pk_fetched = {}
         composite_pks = False
-        expected = 'SELECT id FROM ads ORDER BY id ASC PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id FROM ads ORDER BY id ASC PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)
 
     def test_where_orderby_clause_composite_pks(self):
         """
@@ -47,24 +47,24 @@ class TestFullTableQuery(unittest.TestCase):
         last_pk_fetched = 4
         composite_pks = True
 
-        expected = 'SELECT id FROM ads WHERE id >= 4 ORDER BY id ASC PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id FROM ads WHERE id >= 4 ORDER BY id ASC PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)
 
     def test_where_orderby_clause_non_composite_pks(self):
         """
         Verify that query contains WHERE(exclusive) and ORDER BY clause if filter_params and
-        last_pk_fetched are available. (interrupted sync). WHERE clause must exclude equality if stream contain
+        last_pk_fetched are available. (interrupted sync). WHERE clause must exclude equality if stream does not contain
         a composite primary key.
         """
         filter_params = 'id'
         last_pk_fetched = 4
         composite_pks = False
 
-        expected = 'SELECT id FROM ads WHERE id > 4 ORDER BY id ASC PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id FROM ads WHERE id > 4 ORDER BY id ASC PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_pk_fetched, filter_params, composite_pks)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)

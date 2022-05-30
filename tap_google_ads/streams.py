@@ -112,7 +112,7 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
 
 def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks):
 
-    # Generate query parameter WHERE and ORDER BY.
+    # Generate a query using WHERE and ORDER BY parameters.
     where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks)
 
     core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
@@ -367,8 +367,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         # last run was interrupted if there is a bookmark available for core streams.
         last_pk_fetched = singer.get_bookmark(state,
-                                            stream["tap_stream_id"],
-                                            customer["customerId"]) or {}
+                                              stream["tap_stream_id"],
+                                              customer["customerId"]) or {}
 
         # Assign True if the primary key is composite.
         composite_pks = len(self.primary_keys) > 1

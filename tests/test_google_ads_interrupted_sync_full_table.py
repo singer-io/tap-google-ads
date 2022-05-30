@@ -17,13 +17,12 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
 
         # call_details, campaign_labels do not have an id field
         # accessible_bidding_strategies, accounts, user_list, and bidding_strategies streams have only 1 record.
-        # campaign_criterion, ad_group_criterion have composite primary keys as ad_group_id, criterion_id and campaign_id, criterion_id respectively.
         # So, skipped those streams.
         streams_to_test = {'ad_groups': 132093547633, 'ads': 586722860308, 'campaign_budgets': 10006446850,
                            'campaigns': 15481829265, 'labels': 21628120997, 'carrier_constant': 70094, 'feed': 351805305,
                            'feed_item': 216977537909, 'language_constant': 1007, 'mobile_app_category_constant': 60009,
                            'mobile_device_constant': 604043, 'operating_system_version_constant': 630166, 'topic_constant': 41,
-                            'user_interest': 959, 'campaign_criterion': 16990616126, 'ad_group_criterion': 131901833709}
+                           'user_interest': 959, 'campaign_criterion': 16990616126, 'ad_group_criterion': 131901833709}
 
         for stream, last_pk_fetched in streams_to_test.items():
             self.run_test(stream, last_pk_fetched)
@@ -98,16 +97,16 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
                 primary_key = next(iter(self.expected_primary_keys()[stream]))
 
             # Verify that all records in the full sync come in Ascending order.
-            # That means id of current record is greater than id of last record.
+            # That means id of current record is greater than id of previous record.
             for i in range(1, full_record_count):
                 self.assertGreaterEqual(full_records[i][primary_key], full_records[i-1][primary_key], 
-                                   msg='id of the current record is less than the id of the previous record.')
+                                        msg='id of the current record is less than the id of the previous record.')
 
             # Verify that all records in the interrupted sync come in Ascending order.
-            # That means id of current record is greater than id of last record.
+            # That means id of current record is greater than id of previous record.
             for i in range(1, interrupted_record_count):
                 self.assertGreaterEqual(interrupted_records[i][primary_key], interrupted_records[i-1][primary_key], 
-                                   msg='id of the current record is less than the id of the previous record.')
+                                        msg='id of the current record is less than the id of the previous record.')
 
             if stream in ["campaign_criterion", "ad_group_criterion"]:
                 # Above streams have composite primary key.

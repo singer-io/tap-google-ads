@@ -82,11 +82,11 @@ def build_parameters():
 
 def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks):
     """
-    Generates a where clause based on filter parameter(`key_properties`), and
+    Generates a where clause and a ORDER BY based on filter parameter(`key_properties`), and
     `last_pk_fetched`.
 
     Example:
-    filter_param = ['id']
+    filter_param = 'id'
     last_pk_fetched = 1
     Returns:
     WHERE id >= 1 ORDER BY id ASC
@@ -94,11 +94,17 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
     """
     where_clause = ""
     order_by_clause = ""
-    comparision_operator = ">="
+
+    # Even If the stream has a composite primary key, we are storing only a single pk value in the bookmark.
+    # So, there might be possible that records with the same single pk value exist with different pk value combinations.
+    # That's why for composite_pks we are using a greater than or equal operator.
+    comparison_operator = ">="
 
     if not composite_pks:
-        # Exclude equality for the stream which do not have composite primary key.
-        comparision_operator = ">"
+        # Exclude equality for the stream which do not have a composite primary key.
+        # Because in single pk case we are sure that no other record will have the same pk.
+        # So, we do not want to fetch the last record again.
+        comparison_operator = ">"
 
     if filter_param:
         # Create ORDER BY clause for the stream which support filter parameter.
@@ -106,7 +112,7 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
 
     if last_pk_fetched:
         # Create WHERE clause based on last_pk_fetched.
-        where_clause = 'WHERE {} {} {} '.format(filter_param, comparision_operator, last_pk_fetched)
+        where_clause = 'WHERE {} {} {} '.format(filter_param, comparison_operator, last_pk_fetched)
 
     return '{}{}'.format(where_clause, order_by_clause)
 

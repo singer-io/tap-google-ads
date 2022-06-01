@@ -7,6 +7,8 @@ from singer import Transformer
 from singer import utils
 from google.protobuf.json_format import MessageToJson
 from google.ads.googleads.errors import GoogleAdsException
+from google.api_core.exceptions import InternalServerError, BadGateway, MethodNotImplemented, ServiceUnavailable, GatewayTimeout, ServerError, TooManyRequests, ResourceExhausted
+from requests.exceptions import ReadTimeout
 import backoff
 from . import report_definitions
 
@@ -117,6 +119,13 @@ retryable_errors = [
 
 
 def should_give_up(ex):
+
+    # ServerError is the parent class of InternalServerError, MethodNotImplemented, BadGateway, ServiceUnavailable, GatewayTimeout classes.
+    # TooManyRequests is the parent class of the ResourceExhausted class.
+    # Return False for all above errors and ReadTimeout error.
+    if isinstance(ex, ServerError) or isinstance(ex, TooManyRequests) or isinstance(ex, ReadTimeout):
+        return False
+
     if isinstance(ex, AttributeError):
         if str(ex) == "'NoneType' object has no attribute 'Call'":
             LOGGER.info('Retrying request due to AttributeError')
@@ -141,12 +150,15 @@ def on_giveup_func(err):
 
 @backoff.on_exception(backoff.expo,
                       (GoogleAdsException,
+                       InternalServerError, MethodNotImplemented,
+                       BadGateway, ServiceUnavailable,
+                       GatewayTimeout, ResourceExhausted, ReadTimeout,
                        AttributeError),
                       max_tries=5,
                       jitter=None,
                       giveup=should_give_up,
                       on_giveup=on_giveup_func,
-                      logger=None)
+                      )
 def make_request(gas, query, customer_id):
     response = gas.search(query=query, customer_id=customer_id)
     return response

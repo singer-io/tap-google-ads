@@ -221,7 +221,7 @@ def filter_out_non_attribute_fields(fields):
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None, filter_param = []):
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None, filter_param = None):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys
@@ -769,6 +769,7 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
              },
+            filter_param= []
         ),
         "campaigns": BaseStream(
             report_definitions.CAMPAIGN_FIELDS,
@@ -804,6 +805,7 @@ def initialize_core_streams(resource_schema):
                 "customer_id",
                 "label_id",
             },
+            filter_param= []
         ),
         "carrier_constant": BaseStream(
             report_definitions.CARRIER_CONSTANT_FIELDS,

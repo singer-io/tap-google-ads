@@ -80,20 +80,29 @@ def build_parameters():
     param_str = ",".join(f"{k}={v}" for k, v in API_PARAMETERS.items())
     return f"PARAMETERS {param_str}"
 
-def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks):
+def generate_where_and_orderby_clause(last_pk_fetched, filter_param):
     """
-    Generates a where clause and a ORDER BY based on filter parameter(`key_properties`), and
+    Generates a WHERE clause and a ORDER BY clause based on filter parameter(`key_properties`), and
     `last_pk_fetched`.
 
     Example:
-    filter_param = 'id'
-    last_pk_fetched = 1
+    Single PK Case:
+    filter_param = ['id']
+    last_pk_fetched = {'id': 1}
     Returns:
-    WHERE id >= 1 ORDER BY id ASC
+    WHERE id > 1 ORDER BY id ASC
+
+    Composite PK Case:
+    filter_param = ['id1', 'id2']
+    last_pk_fetched = {'id1': 1, 'id2': 2}
+    Returns:
+    WHERE id1 >= 1 ORDER BY id1, id2 ASC
 
     """
     where_clause = ""
     order_by_clause = ""
+
+    composite_pks =  len(filter_param) > 1
 
     # Even If the stream has a composite primary key, we are storing only a single pk value in the bookmark.
     # So, there might be possible that records with the same single pk value exist with different pk value combinations.
@@ -108,18 +117,18 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
 
     if filter_param:
         # Create ORDER BY clause for the stream which support filter parameter.
-        order_by_clause = "ORDER BY {} ASC".format(filter_param)
+        order_by_clause = "ORDER BY {} ASC".format(", ".join(filter_param))
 
     if last_pk_fetched:
         # Create WHERE clause based on last_pk_fetched.
-        where_clause = 'WHERE {} {} {} '.format(filter_param, comparison_operator, last_pk_fetched)
+        where_clause = 'WHERE {} {} {} '.format(filter_param[0], comparison_operator, last_pk_fetched[filter_param[0]])
 
     return '{}{}'.format(where_clause, order_by_clause)
 
-def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks):
+def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param):
 
     # Generate a query using WHERE and ORDER BY parameters.
-    where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks)
+    where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param)
 
     core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
 
@@ -376,10 +385,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                                               stream["tap_stream_id"],
                                               customer["customerId"]) or {}
 
-        # Assign True if the primary key is composite.
-        composite_pks = len(self.primary_keys) > 1
-
-        query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param, composite_pks)
+        query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param)
         try:
             response = make_request(gas, query, customer["customerId"])
         except GoogleAdsException as err:
@@ -392,6 +398,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 for message in response:
                     json_message = google_message_to_json(message)
                     transformed_message = self.transform_keys(json_message)
+
+                    # Skip already synced record in interrupted sync.
+                    if not should_sync_record(transformed_message, self.filter_param, self.primary_keys, last_pk_fetched.get('last_pk_fetched')):
+                        continue
+
                     record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
                     singer.write_record(stream_name, record)
@@ -399,14 +410,30 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
                     if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
-                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': record[self.primary_keys[0]]})
-
+                        bookmark_value = {}
+                        for param_index in range(len(self.primary_keys)):
+                            bookmark_value[self.filter_param[param_index]] = record[self.primary_keys[param_index]]
+               
+                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': bookmark_value})
                         singer.write_state(state)
+                        
+                        LOGGER.info("Write state for stream: %s, value: %s", stream_name, bookmark_value)
 
         # Flush the state for core streams if sync is completed
         if stream["tap_stream_id"] in state.get('bookmarks', {}):
             state['bookmarks'].pop(stream["tap_stream_id"])
             singer.write_state(state)
+
+def should_sync_record(record, filter_param, pks, last_pk_fetched):
+
+    # Return True if last_pk_fetched is not available or filter_param(pks) is single
+    if last_pk_fetched and len(filter_param) > 1:
+
+        # Return False if the first primary key value is the same and the second primary key value is less than or equal to last_pk_fetched(2nd pk).
+        if int(record[pks[0]]) == last_pk_fetched[filter_param[0]] and int(record[pks[1]]) <= last_pk_fetched[filter_param[1]]:
+            return False
+
+    return True
 
 def get_query_date(start_date, bookmark, conversion_window_date):
     """Return a date within the conversion window and after start date
@@ -681,14 +708,14 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="accessible_bidding_strategy.id"
+            filter_param= ["accessible_bidding_strategy.id"]
         ),
         "accounts": BaseStream(
             report_definitions.ACCOUNT_FIELDS,
             ["customer"],
             resource_schema,
             ["id"],
-            filter_param="customer.id"
+            filter_param= ["customer.id"]
         ),
         "ad_groups": BaseStream(
             report_definitions.AD_GROUP_FIELDS,
@@ -699,7 +726,7 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
              },
-            filter_param="ad_group.id"
+            filter_param= ["ad_group.id"]
         ),
         "ad_group_criterion": BaseStream(
             report_definitions.AD_GROUP_CRITERION_FIELDS,
@@ -710,7 +737,7 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
             },
-            filter_param="ad_group.id"
+            filter_param= ["ad_group.id", "ad_group_criterion.criterion_id"]
         ),
         "ads": BaseStream(
             report_definitions.AD_GROUP_AD_FIELDS,
@@ -722,7 +749,7 @@ def initialize_core_streams(resource_schema):
                 "campaign_id",
                 "customer_id",
              },
-            filter_param = "ad_group_ad.ad.id"
+            filter_param = ["ad_group_ad.ad.id"]
         ),
         "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
@@ -730,7 +757,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="bidding_strategy.id"
+            filter_param= ["bidding_strategy.id"]
         ),
         "call_details": BaseStream(
             report_definitions.CALL_VIEW_FIELDS,
@@ -749,7 +776,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="campaign.id"
+            filter_param= ["campaign.id"]
         ),
         "campaign_budgets": BaseStream(
             report_definitions.CAMPAIGN_BUDGET_FIELDS,
@@ -757,7 +784,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="campaign_budget.id"
+            filter_param= ["campaign_budget.id"]
         ),
         "campaign_criterion": BaseStream(
             report_definitions.CAMPAIGN_CRITERION_FIELDS,
@@ -765,7 +792,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["campaign_id","criterion_id"],
             {"customer_id"},
-            filter_param="campaign.id"
+            filter_param= ["campaign.id", "campaign_criterion.criterion_id"]
         ),
         "campaign_labels": BaseStream(
             report_definitions.CAMPAIGN_LABEL_FIELDS,
@@ -783,7 +810,7 @@ def initialize_core_streams(resource_schema):
             ["carrier_constant"],
             resource_schema,
             ["id"],
-           filter_param="carrier_constant.id"
+           filter_param= ["carrier_constant.id"]
         ),
         "feed": BaseStream(
             report_definitions.FEED_FIELDS,
@@ -791,7 +818,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="feed.id"
+            filter_param= ["feed.id"]
         ),
         "feed_item": BaseStream(
             report_definitions.FEED_ITEM_FIELDS,
@@ -802,7 +829,7 @@ def initialize_core_streams(resource_schema):
                 "customer_id",
                 "feed_id",
             },
-            filter_param="feed_item.id"
+            filter_param= ["feed_item.id"]
         ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
@@ -810,49 +837,49 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="label.id"
+            filter_param= ["label.id"]
         ),
         "language_constant": BaseStream(
             report_definitions.LANGUAGE_CONSTANT_FIELDS,
             ["language_constant"],
             resource_schema,
             ["id"],
-            filter_param="language_constant.id"
+            filter_param= ["language_constant.id"]
         ),
         "mobile_app_category_constant": BaseStream(
             report_definitions.MOBILE_APP_CATEGORY_CONSTANT_FIELDS,
             ["mobile_app_category_constant"],
             resource_schema,
             ["id"],
-            filter_param="mobile_app_category_constant.id"
+            filter_param= ["mobile_app_category_constant.id"]
         ),
         "mobile_device_constant": BaseStream(
             report_definitions.MOBILE_DEVICE_CONSTANT_FIELDS,
             ["mobile_device_constant"],
             resource_schema,
             ["id"],
-            filter_param="mobile_device_constant.id"
+            filter_param= ["mobile_device_constant.id"]
         ),
         "operating_system_version_constant": BaseStream(
             report_definitions.OPERATING_SYSTEM_VERSION_CONSTANT_FIELDS,
             ["operating_system_version_constant"],
             resource_schema,
             ["id"],
-            filter_param="operating_system_version_constant.id"
+            filter_param= ["operating_system_version_constant.id"]
         ),
         "topic_constant": BaseStream(
             report_definitions.TOPIC_CONSTANT_FIELDS,
             ["topic_constant"],
             resource_schema,
             ["id"],
-            filter_param="topic_constant.id"
+            filter_param= ["topic_constant.id"]
         ),
         "user_interest": UserInterestStream(
             report_definitions.USER_INTEREST_FIELDS,
             ["user_interest"],
             resource_schema,
             ["id"],
-            filter_param="user_interest.user_interest_id"
+            filter_param= ["user_interest.user_interest_id"]
         ),
         "user_list": BaseStream(
             report_definitions.USER_LIST_FIELDS,
@@ -860,7 +887,7 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
-            filter_param="user_list.id"
+            filter_param= ["user_list.id"]
         ),
     }
 

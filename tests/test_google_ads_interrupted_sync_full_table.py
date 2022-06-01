@@ -18,11 +18,24 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
         # call_details, campaign_labels do not have an id field
         # accessible_bidding_strategies, accounts, user_list, and bidding_strategies streams have only 1 record.
         # So, skipped those streams.
-        streams_to_test = {'ad_groups': 132093547633, 'ads': 586722860308, 'campaign_budgets': 10006446850,
-                           'campaigns': 15481829265, 'labels': 21628120997, 'carrier_constant': 70094, 'feed': 351805305,
-                           'feed_item': 216977537909, 'language_constant': 1007, 'mobile_app_category_constant': 60009,
-                           'mobile_device_constant': 604043, 'operating_system_version_constant': 630166, 'topic_constant': 41,
-                           'user_interest': 959, 'campaign_criterion': 16990616126, 'ad_group_criterion': 131901833709}
+        streams_to_test = {
+                            'ad_groups': {"ad_group.id" : 132093547633}, 
+                            'ads': {"ad_group_ad.ad.id" : 586722860308}, 
+                            'campaign_budgets': {"campaign_budget.id" : 10006446850},
+                            'campaigns': {"campaign.id" : 15481829265}, 
+                            'labels': {"label.id" : 21628120997}, 
+                            'carrier_constant': {"carrier_constant.id" : 70094}, 
+                            'feed': {"feed.id" : 351805305},
+                            'feed_item': {"feed_item.id" : 216977537909}, 
+                            'language_constant': {"language_constant.id" : 1007}, 
+                            'mobile_app_category_constant': {"mobile_app_category_constant.id" : 60009},
+                            'mobile_device_constant': {"mobile_device_constant.id" : 604043}, 
+                            'operating_system_version_constant': {"operating_system_version_constant.id" : 630166}, 
+                            'topic_constant': {"topic_constant.id" : 41},
+                            'user_interest': {"user_interest.user_interest_id" : 959},
+                            'campaign_criterion': {"campaign.id": 16513427493,"campaign_criterion.criterion_id": 1000},
+                            'ad_group_criterion': {"ad_group.id": 135883141164, "ad_group_criterion.criterion_id": 2411523055}
+                        }
 
         for stream, last_pk_fetched in streams_to_test.items():
             self.run_test(stream, last_pk_fetched)
@@ -112,10 +125,10 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
                 # Above streams have composite primary key.
                 # These streams fetch records that have an id greater or equal to last_pk_fetched.
                 # Verify id of 1st record in interrupted sync is greater than or equal to last_pk_fetched(id of last synced record).
-                self.assertGreaterEqual(interrupted_records[0][primary_key], last_pk_fetched, msg='id of each record in interrupted sync is less than last_pk_fetched')
+                self.assertGreaterEqual(interrupted_records[0][primary_key], last_pk_fetched[list(last_pk_fetched.keys())[0]], msg='id of each record in interrupted sync is less than last_pk_fetched')
             else:
                 # Verify id of 1st record in interrupted sync is greater than last_pk_fetched(id of last synced record).
-                self.assertGreater(interrupted_records[0][primary_key], last_pk_fetched, msg='id of each record in interrupted sync is less than last_pk_fetched')
+                self.assertGreater(interrupted_records[0][primary_key], last_pk_fetched[list(last_pk_fetched.keys())[0]], msg='id of each record in interrupted sync is less than last_pk_fetched')
 
             # Verify state is flushed after sync completed.
             self.assertNotIn(stream, final_state['bookmarks'].keys())

@@ -123,7 +123,7 @@ def should_give_up(ex):
     # ServerError is the parent class of InternalServerError, MethodNotImplemented, BadGateway, ServiceUnavailable, GatewayTimeout classes.
     # TooManyRequests is the parent class of the ResourceExhausted class.
     # Return False for all above errors and ReadTimeout error.
-    if isinstance(ex, ServerError) or isinstance(ex, TooManyRequests) or isinstance(ex, ReadTimeout):
+    if isinstance(ex, (ServerError, TooManyRequests, ReadTimeout)):
         return False
 
     if isinstance(ex, AttributeError):

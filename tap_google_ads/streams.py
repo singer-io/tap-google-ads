@@ -221,7 +221,7 @@ def filter_out_non_attribute_fields(fields):
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None, filter_param = None):
+    def __init__(self, fields, google_ads_resource_names, resource_schema, primary_keys, automatic_keys = None, filter_param = []):
         self.fields = fields
         self.google_ads_resource_names = google_ads_resource_names
         self.primary_keys = primary_keys

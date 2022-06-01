@@ -1,7 +1,7 @@
 import unittest
 from tap_google_ads.streams import create_core_stream_query
 
-SELECTED_FIELDS = ["id"]
+SELECTED_FIELDS = ["id1", "id2"]
 RESOURCE_NAME = "ads"
 
 class TestFullTableQuery(unittest.TestCase):

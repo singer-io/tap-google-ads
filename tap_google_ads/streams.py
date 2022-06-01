@@ -411,12 +411,12 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                     # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
                     if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
                         bookmark_value = {}
-                        for param_index in range(len(self.primary_keys)):
-                            bookmark_value[self.filter_param[param_index]] = record[self.primary_keys[param_index]]
-               
+                        for param_index, param_value in enumerate(self.primary_keys):
+                            bookmark_value[self.filter_param[param_index]] = record[param_value]
+
                         singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': bookmark_value})
                         singer.write_state(state)
-                        
+
                         LOGGER.info("Write state for stream: %s, value: %s", stream_name, bookmark_value)
 
         # Flush the state for core streams if sync is completed

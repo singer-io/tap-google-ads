@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 from tap_google_ads.streams import make_request
-from google.api_core.exceptions import InternalServerError, BadGateway, MethodNotImplemented, ServiceUnavailable, GatewayTimeout, ResourceExhausted
+from google.api_core.exceptions import InternalServerError, BadGateway, MethodNotImplemented, ServiceUnavailable, GatewayTimeout, TooManyRequests
 from requests.exceptions import ReadTimeout
 
 @patch('time.sleep')
@@ -82,16 +82,16 @@ class TestBackoff(unittest.TestCase):
         # Verify that tap backoff for 5 times
         self.assertEquals(mocked_google_ads_client.search.call_count, 5)
 
-    def test_429_resource_exhausted_error(self, mock_sleep):
+    def test_429_too_may_request_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 5 times in case of ResourceExhausted error.
+        Check whether the tap backoffs properly for 5 times in case of TooManyRequests error.
         """
         mocked_google_ads_client = Mock()
-        mocked_google_ads_client.search.side_effect = ResourceExhausted("Resource has been exhausted")
+        mocked_google_ads_client.search.side_effect = TooManyRequests("Resource has been exhausted")
 
         try:
             make_request(mocked_google_ads_client, "", "")
-        except ResourceExhausted:
+        except TooManyRequests:
             pass
 
         # Verify that tap backoff for 5 times

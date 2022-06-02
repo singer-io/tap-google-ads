@@ -7,7 +7,7 @@ from singer import Transformer
 from singer import utils
 from google.protobuf.json_format import MessageToJson
 from google.ads.googleads.errors import GoogleAdsException
-from google.api_core.exceptions import InternalServerError, BadGateway, MethodNotImplemented, ServiceUnavailable, GatewayTimeout, ServerError, TooManyRequests, ResourceExhausted
+from google.api_core.exceptions import ServerError, TooManyRequests
 from requests.exceptions import ReadTimeout
 import backoff
 from . import report_definitions
@@ -120,8 +120,8 @@ retryable_errors = [
 
 def should_give_up(ex):
 
-    # ServerError is the parent class of InternalServerError, MethodNotImplemented, BadGateway, ServiceUnavailable, GatewayTimeout classes.
-    # TooManyRequests is the parent class of the ResourceExhausted class.
+    # ServerError is the parent class of InternalServerError, MethodNotImplemented, BadGateway,
+    # ServiceUnavailable, GatewayTimeout, DataLoss and Unknown classes.
     # Return False for all above errors and ReadTimeout error.
     if isinstance(ex, (ServerError, TooManyRequests, ReadTimeout)):
         return False
@@ -150,9 +150,8 @@ def on_giveup_func(err):
 
 @backoff.on_exception(backoff.expo,
                       (GoogleAdsException,
-                       InternalServerError, MethodNotImplemented,
-                       BadGateway, ServiceUnavailable,
-                       GatewayTimeout, ResourceExhausted, ReadTimeout,
+                       ServerError, TooManyRequests,
+                       ReadTimeout,
                        AttributeError),
                       max_tries=5,
                       jitter=None,

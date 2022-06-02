@@ -9,7 +9,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_500_internal_server_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of InternalServerError.
+        Check whether the tap backoffs properly for 5 times in case of InternalServerError.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = InternalServerError("Internal error encountered")
@@ -24,7 +24,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_501_not_implemented_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of MethodNotImplemented error.
+        Check whether the tap backoffs properly for 5 times in case of MethodNotImplemented error.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = MethodNotImplemented("Not Implemented")
@@ -39,7 +39,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_502_bad_gaetway_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of BadGateway error.
+        Check whether the tap backoffs properly for 5 times in case of BadGateway error.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = BadGateway("Bad Gateway")
@@ -54,7 +54,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_503_service_unavailable_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of ServiceUnavailable error.
+        Check whether the tap backoffs properly for 5 times in case of ServiceUnavailable error.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = ServiceUnavailable("Service Unavailable")
@@ -69,7 +69,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_504_gateway_timeout_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of GatewayTimeout error.
+        Check whether the tap backoffs properly for 5 times in case of GatewayTimeout error.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = GatewayTimeout("GatewayTimeout")
@@ -84,7 +84,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_429_resource_exhausted_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of ResourceExhausted error.
+        Check whether the tap backoffs properly for 5 times in case of ResourceExhausted error.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = ResourceExhausted("Resource has been exhausted")
@@ -99,7 +99,7 @@ class TestBackoff(unittest.TestCase):
 
     def test_read_timeout_error(self, mock_sleep):
         """
-        Check whether the tap backoffs properly for 3 times in case of ReadTimeout error.
+        Check whether the tap backoffs properly for 5 times in case of ReadTimeout error.
         """
         mocked_google_ads_client = Mock()
         mocked_google_ads_client.search.side_effect = ReadTimeout("HTTPSConnectionPool(host='tap-tester-api.sandbox.stitchdata.com', port=443)")

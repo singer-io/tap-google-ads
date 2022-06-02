@@ -16,11 +16,11 @@ class TestFullTableQuery(unittest.TestCase):
         filter_params = []
         last_evaluated_key = {}
 
-        expected = 'SELECT id1,id2 FROM ads  PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id1,id2 FROM ads  PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)
 
     def test_empty_where_clause(self):
         """
@@ -30,11 +30,11 @@ class TestFullTableQuery(unittest.TestCase):
         filter_params = ['id1']
         last_evaluated_key = {}
 
-        expected = 'SELECT id1,id2 FROM ads ORDER BY id1 ASC PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id1,id2 FROM ads ORDER BY id1 ASC PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)
 
     def test_where_orderby_clause_composite_pks(self):
         """
@@ -45,11 +45,11 @@ class TestFullTableQuery(unittest.TestCase):
         filter_params = ['id1', 'id2']
         last_evaluated_key = {'id1': 4, 'id2': 5}
 
-        expected = 'SELECT id1,id2 FROM ads WHERE id1 >= 4 ORDER BY id1, id2 ASC PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id1,id2 FROM ads WHERE id1 >= 4 ORDER BY id1, id2 ASC PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)
 
     def test_where_orderby_clause_non_composite_pks(self):
         """
@@ -60,8 +60,8 @@ class TestFullTableQuery(unittest.TestCase):
         filter_params = ['id1']
         last_evaluated_key = {'id1': 4}
 
-        expected = 'SELECT id1,id2 FROM ads WHERE id1 > 4 ORDER BY id1 ASC PARAMETERS omit_unselected_resource_names=true'
+        expected_query = 'SELECT id1,id2 FROM ads WHERE id1 > 4 ORDER BY id1 ASC PARAMETERS omit_unselected_resource_names=true'
 
-        actual = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
+        actual_query = create_core_stream_query(RESOURCE_NAME, SELECTED_FIELDS, last_evaluated_key, filter_params)
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_query, actual_query)

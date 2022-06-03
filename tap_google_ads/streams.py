@@ -82,15 +82,26 @@ def build_parameters():
 
 def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks):
     """
-    Generates a where clause and a ORDER BY based on filter parameter(`key_properties`), and
+    Generates a WHERE clause and a ORDER BY clause based on filter parameter(`key_properties`), and
     `last_pk_fetched`.
 
     Example:
+
+    Single PK Case:
+
+    filter_param = 'id'
+    last_pk_fetched = 1
+    composite_pks = False
+    Returns:
+    WHERE id > 1 ORDER BY id ASC
+
+    Composite PK Case:
+
+    composite_pks = True
     filter_param = 'id'
     last_pk_fetched = 1
     Returns:
     WHERE id >= 1 ORDER BY id ASC
-
     """
     where_clause = ""
     order_by_clause = ""
@@ -399,9 +410,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
                     # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
                     if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
-                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': record[self.primary_keys[0]]})
+                        bookmark_value = record[self.primary_keys[0]]
+                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': bookmark_value})
 
                         singer.write_state(state)
+                        LOGGER.info("Write state for stream: %s, value: %s", stream_name, bookmark_value)
 
         # Flush the state for core streams if sync is completed
         if stream["tap_stream_id"] in state.get('bookmarks', {}):

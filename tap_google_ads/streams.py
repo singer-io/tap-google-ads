@@ -596,7 +596,6 @@ class ReportStream(BaseStream):
                 LOGGER.critical(str(err.failure.errors[0].message))
                 raise RuntimeError from None
 
-
             with Transformer() as transformer:
                 # Pages are fetched automatically while iterating through the response
                 for message in response:
@@ -786,6 +785,12 @@ def initialize_core_streams(resource_schema):
             resource_schema,
             ["id"],
             {"customer_id"},
+        ),
+        "geo_target_constant": BaseStream(
+            report_definitions.GEO_TARGET_CONSTANT_FIELDS,
+            ["geo_target_constant"],
+            resource_schema,
+            ["id"],
         ),
     }
 

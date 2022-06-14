@@ -119,13 +119,13 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
 
     if filter_param:
         # Create ORDER BY clause for the stream which support filter parameter.
-        order_by_clause = "ORDER BY {} ASC".format(filter_param)
+        order_by_clause = f"ORDER BY {filter_param} ASC"
 
     if last_pk_fetched:
         # Create WHERE clause based on last_pk_fetched.
-        where_clause = 'WHERE {} {} {} '.format(filter_param, comparison_operator, last_pk_fetched)
+        where_clause = f'WHERE {filter_param} {comparison_operator} {last_pk_fetched} '
 
-    return '{}{}'.format(where_clause, order_by_clause)
+    return f'{where_clause}{order_by_clause}'
 
 def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks):
 

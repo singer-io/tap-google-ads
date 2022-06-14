@@ -28,6 +28,8 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 
 DEFAULT_CONVERSION_WINDOW = 30
 DEFAULT_PAGE_SIZE = 1000
+REQUEST_TIMEOUT = 300 # in seconds
+
 
 def get_conversion_window(config):
     """Fetch the conversion window from the config and error on invalid values"""
@@ -210,7 +212,7 @@ def on_giveup_func(err):
                       on_giveup=on_giveup_func,
                       )
 def make_request(gas, query, customer_id):
-    response = gas.search(query=query, customer_id=customer_id)
+    response = gas.search(query=query, customer_id=customer_id, timeout=REQUEST_TIMEOUT)
     return response
 
 

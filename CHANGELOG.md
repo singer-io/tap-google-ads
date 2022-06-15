@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.1
+  * Handle uncaught exceptions [#61](https://github.com/singer-io/tap-google-ads/pull/61)
+  * Implement interruptible full table streams [#60](https://github.com/singer-io/tap-google-ads/pull/60)
+
 ## v1.3.0 [#58](https://github.com/singer-io/tap-google-ads/pull/58)
   * Adds several new core streams including ad_group_criterion, campaign_criterion, and their attributed resources.
   * Adds new subclass UserInterestStream to handle stream specific name transformations.

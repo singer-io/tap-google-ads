@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='tap-google-ads',
-      version='1.3.0',
+      version='1.3.1',
       description='Singer.io tap for extracting data from the Google Ads API',
       author='Stitch',
       url='http://singer.io',

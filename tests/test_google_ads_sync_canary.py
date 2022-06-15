@@ -1,6 +1,7 @@
 import re
 
 from tap_tester import menagerie, connections, runner
+from tap_tester.logger import LOGGER
 
 from base import GoogleAdsBase
 
@@ -17,7 +18,8 @@ class SyncCanaryTest(GoogleAdsBase):
 
     def test_run(self):
         """
-        Testing that basic sync functions without Critical Errors
+        Testing that basic sync functions without Critical Errors for streams without test data
+        that are not covered in other tests.
 
         Test Data available for the following report streams across the following dates (only the
         first and last date that data was generated is listed).
@@ -70,11 +72,11 @@ class SyncCanaryTest(GoogleAdsBase):
         "2021-12-06T00:00:00.000000Z"
         "2022-03-14T00:00:00.000000Z"
         """
-        print("Canary Sync Test for tap-google-ads")
+        LOGGER.info("Canary Sync Test for tap-google-ads")
 
         conn_id = connections.ensure_connection(self)
 
-        streams_to_test = self.expected_streams() - {
+        streams_to_test = {
             # no test data available, but can generate
             "call_details", # need test call data before data will be returned
             "click_performance_report",  # only last 90 days returned
@@ -118,8 +120,6 @@ class SyncCanaryTest(GoogleAdsBase):
 
         # Verify at least 1 record was replicated for each stream
         for stream in streams_to_test:
-
             with self.subTest(stream=stream):
                 record_count = len(synced_records.get(stream, {'messages': []})['messages'])
-                self.assertGreater(record_count, 0)
-                print(f"{record_count} {stream} record(s) replicated.")
+                LOGGER.info(f"{record_count} {stream} record(s) replicated.")

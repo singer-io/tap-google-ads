@@ -26,10 +26,11 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
                 '<stream-name2>': {'<customer-id>': {last_pk_fetched: <incomplete-bookmark-value>}},
 
         Test Cases:
-            - Verify id value of first record in interrupted sync is less than last_pk_fetched(id of last synced record).
+            - Verify that id of 1st record in interrupted sync is greater than or equal to last_pk_fetched.
             - Verify that all records in the full sync and interrupted sync come in Ascending order.
             - Verify interrupted_sync has the fewer records as compared to full sync
             - Verify state is flushed if sync is completed.
+            - Verify resuming sync replicates all records for streams that were yet-to-be-synced
         """
 
         streams_under_test = {
@@ -109,14 +110,15 @@ class InterruptedSyncFullTableTest(GoogleAdsBase):
 
                 if stream in interrupted_state['bookmarks'].keys():
                     
-                    # Verify second sync(interrupted_sync) have the less records as compared to first sync(full sync)
+                    # Verify second sync(interrupted_sync) have the less records as compared to first sync(full sync) for interrupted stream
                     self.assertLess(interrupted_record_count, full_record_count)
                     
-                    # Verify id value of first record in interrupted sync is less than last_pk_fetched
-                    self.assertGreaterEqual(interrupted_records[0][primary_key], 16990616126, msg='id of each record in interrupted sync is less than last_pk_fetched')
+                    # Verify that id of 1st record in interrupted sync is greater than or equal to last_pk_fetched for interrupted stream.
+                    self.assertGreaterEqual(interrupted_records[0][primary_key], 16990616126, msg='id of first record in interrupted sync is less than last_pk_fetched')
                 
                 else:
-                    # Verify resuming sync replicates all records that were found in the full sync (uninterupted)
+                    # Verify resuming sync replicates all records for streams that were yet-to-be-synced
+
                     for record in interrupted_records:
                         with self.subTest(record_primary_key=record[primary_key]):
                             self.assertIn(record, full_records, msg='Unexpected record replicated in resuming sync.')

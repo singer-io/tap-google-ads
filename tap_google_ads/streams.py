@@ -28,7 +28,7 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 
 DEFAULT_CONVERSION_WINDOW = 30
 DEFAULT_PAGE_SIZE = 1000
-REQUEST_TIMEOUT = 300 # in seconds
+REQUEST_TIMEOUT = 900 # in seconds
 
 
 def get_conversion_window(config):

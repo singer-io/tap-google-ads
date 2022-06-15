@@ -25,7 +25,7 @@ jobs:
             pip install 'setuptools==56.0.0'
             pip install .[dev]
       - slack/notify-on-failure:
-          only_for_branches: master
+          only_for_branches: main
       - persist_to_workspace:
           root: /usr/local/share/virtualenvs
           paths:
@@ -45,7 +45,7 @@ jobs:
             echo "$PYLINT_DISABLE_LIST"
             pylint tap_google_ads --disable "$PYLINT_DISABLE_LIST"
       - slack/notify-on-failure:
-          only_for_branches: master
+          only_for_branches: main
 
   run_unit_tests:
     executor: docker-executor
@@ -65,7 +65,7 @@ jobs:
       - store_artifacts:
           path: htmlcov
       - slack/notify-on-failure:
-          only_for_branches: master
+          only_for_branches: main
 
   run_integration_tests:
     executor: docker-executor
@@ -89,7 +89,7 @@ jobs:
               done
             fi
       - slack/notify-on-failure:
-          only_for_branches: master
+          only_for_branches: main
 
 workflows:
   version: 2

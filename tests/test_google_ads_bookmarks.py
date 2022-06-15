@@ -46,6 +46,9 @@ class BookmarksTest(GoogleAdsBase):
 
         streams_under_test = self.expected_streams() - {
             'ad_group_audience_performance_report',
+            'call_details', # need test call data before data will be returned
+            'campaign_audience_performance_report',
+            'click_performance_report',  # only last 90 days returned
             'display_keyword_performance_report',
             'display_topics_performance_report',
             'keywords_performance_report',
@@ -53,8 +56,6 @@ class BookmarksTest(GoogleAdsBase):
             'search_query_performance_report',
             'shopping_performance_report',
             'video_performance_report',
-            'campaign_audience_performance_report',
-            'call_details', # need test call data before data will be returned
         }
 
         # Run a discovery job
@@ -93,7 +94,6 @@ class BookmarksTest(GoogleAdsBase):
             'placeholder_feed_item_report': data_set_state_value_2,
             'age_range_performance_report': data_set_state_value_1,
             'account_performance_report': data_set_state_value_1,
-            'click_performance_report': data_set_state_value_1,
             'campaign_performance_report': data_set_state_value_1,
             'placeholder_report': data_set_state_value_2,
             'ad_performance_report': data_set_state_value_1,

@@ -123,5 +123,6 @@ class SyncCanaryTest(GoogleAdsBase):
         # Verify at least 1 record was replicated for each stream
         for stream in streams_to_test:
             with self.subTest(stream=stream):
+                self.assertGreater(record_count, 0)
                 record_count = len(synced_records.get(stream, {'messages': []})['messages'])
                 LOGGER.info(f"{record_count} {stream} record(s) replicated.")

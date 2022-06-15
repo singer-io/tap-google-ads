@@ -1,4 +1,5 @@
 import re
+import unittest
 
 from tap_tester import menagerie, connections, runner
 from tap_tester.logger import LOGGER
@@ -16,6 +17,7 @@ class SyncCanaryTest(GoogleAdsBase):
     def name():
         return "tt_google_ads_canary"
 
+    @unittest.skip("USED FOR MANUAL VERIFICATION OF TEST DATA ONLY")
     def test_run(self):
         """
         Testing that basic sync functions without Critical Errors for streams without test data
@@ -76,7 +78,7 @@ class SyncCanaryTest(GoogleAdsBase):
 
         conn_id = connections.ensure_connection(self)
 
-        streams_to_test = {
+        streams_to_test = - self.expected_streams() - {
             # no test data available, but can generate
             "call_details", # need test call data before data will be returned
             "click_performance_report",  # only last 90 days returned

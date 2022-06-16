@@ -14,8 +14,6 @@ from . import report_definitions
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v10"
-
 API_PARAMETERS = {
     "omit_unselected_resource_names": "true"
 }
@@ -422,7 +420,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state, query_limit, schemaless=False): # pylint: disable=unused-argument
-        gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
+        gas = sdk_client.get_service("GoogleAdsService", version=config["version"])
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
@@ -698,7 +696,7 @@ class ReportStream(BaseStream):
         return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state, query_limit, schemaless=False):
-        gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
+        gas = sdk_client.get_service("GoogleAdsService", version=config["version"])
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]

@@ -699,7 +699,7 @@ class ReportStream(BaseStream):
         return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state, schemaless=False):
-        gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
+        gas = sdk_client.get_service("GoogleAdsService", version=config["version"])
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]

@@ -392,7 +392,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state, page_limit=None): # pylint: disable=unused-argument
+    def sync(self, sdk_client, customer, stream, config, state, page_limit): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
@@ -447,7 +447,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                             if counter.value % page_limit == 0 and self.filter_param:
                                 write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
 
-                if stream_name not in stream_do_not_support_limit:
+                if self.filter_param and stream_name not in stream_do_not_support_limit:
                     write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
                     last_pk_fetched_value = record[self.primary_keys[0]]
 
@@ -658,7 +658,7 @@ class ReportStream(BaseStream):
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state, page_limit=None):
+    def sync(self, sdk_client, customer, stream, config, state, page_limit):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]

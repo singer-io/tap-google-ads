@@ -134,6 +134,7 @@ def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, fi
     where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks)
 
     if limit:
+        # Add a LIMIT clause in the query of core streams.
         core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} LIMIT {limit} {build_parameters()}"
     else:
         core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
@@ -409,19 +410,28 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         # Assign True if the primary key is composite.
         composite_pks = len(self.primary_keys) > 1
 
-        stream_do_not_support_limit = ["ad_group_criterion", "campaign_criterion"]
+        # LIMIT clause in the `ad_group_criterion` and `campaign_criterion`(stream which has composite primary keys) may result in the infinite loop.
+        # For example, the limit is 10. campaign_criterion stream have total 20 records with campaign_id = 1.
+        # So, in the first call, the tap retrieves 10 records and the next time query would look like the below,
+        # WHERE campaign_id >= 1
+        # Now, the tap will again fetch records with campaign_id = 1. 
+        # That's why we should not pass the LIMIT clause in the query of these streams.
+        limit_not_possible = ["ad_group_criterion", "campaign_criterion"]
 
-        if self.filter_param and stream_name not in stream_do_not_support_limit:
+        # Set limit for the stream which supports filter parameter(WHERE clause) and do not belong to limit_not_possible category.
+        if self.filter_param and stream_name not in limit_not_possible:
             limit = page_limit
         else:
             limit = None
 
         is_more_records = True
 
+        # retrieve the last saved state.
         last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
 
         with metrics.record_counter(stream_name) as counter:
 
+            # Loop until the last page.
             while is_more_records:
                 query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched_value, self.filter_param, composite_pks, limit=limit)
                 try:
@@ -442,17 +452,18 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                         counter.increment()
 
                         num_rows = num_rows + 1
-                        if stream_name in stream_do_not_support_limit:
+                        if stream_name in limit_not_possible:
                             # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
                             if counter.value % page_limit == 0 and self.filter_param:
                                 write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
 
-                if self.filter_param and stream_name not in stream_do_not_support_limit:
+                if self.filter_param and stream_name not in limit_not_possible:
+                    # Write the id of the last record for the stream, which supports the filter parameter(WHERE clause) and do not belong to limit_not_possible category.
                     write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
                     last_pk_fetched_value = record[self.primary_keys[0]]
 
                     if num_rows >= limit:
-                        is_more_records = True
+                        # Fetch the next page of records
                         continue
 
                 is_more_records = False

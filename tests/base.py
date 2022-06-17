@@ -53,6 +53,7 @@ class GoogleAdsBase(unittest.TestCase):
             'start_date':   '2021-12-01T00:00:00Z',
             'user_id':      'not used?',  # Useless config property carried over from AdWords
             'customer_ids': ','.join(self.get_customer_ids()),
+            'limit': 1,
             # 'conversion_window_days': '30',
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
                                     "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],

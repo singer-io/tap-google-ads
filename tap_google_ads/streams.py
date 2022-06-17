@@ -425,7 +425,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
             limit = None
 
         is_more_records = True
-
+        record = None
         # Retrieve the last saved state. If last_pk_fetched is not found in the state, then the WHERE clause will not be added to the state.
         last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
 
@@ -455,7 +455,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                             if counter.value % page_limit == 0 and self.filter_param:
                                 write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
 
-                if self.filter_param and stream_name not in limit_not_possible:
+                if record and self.filter_param and stream_name not in limit_not_possible:
                     # Write the id of the last record for the stream, which supports the filter parameter(WHERE clause) and do not belong to limit_not_possible category.
                     write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
                     last_pk_fetched_value = record[self.primary_keys[0]]

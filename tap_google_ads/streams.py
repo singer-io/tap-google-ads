@@ -456,7 +456,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                         continue
 
                 is_more_records = False
-     
+
 
         # Flush the state for core streams if sync is completed
         if stream["tap_stream_id"] in state.get('bookmarks', {}):

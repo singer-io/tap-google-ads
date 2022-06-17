@@ -27,7 +27,6 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 )
 
 DEFAULT_CONVERSION_WINDOW = 30
-DEFAULT_PAGE_SIZE = 1000
 
 def get_conversion_window(config):
     """Fetch the conversion window from the config and error on invalid values"""
@@ -129,12 +128,15 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
 
     return f'{where_clause}{order_by_clause}'
 
-def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks):
+def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks, limit=None):
 
     # Generate a query using WHERE and ORDER BY parameters.
     where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks)
 
-    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
+    if limit:
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} LIMIT {limit} {build_parameters()}"
+    else:
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
 
     return core_query
 
@@ -231,6 +233,12 @@ def filter_out_non_attribute_fields(fields):
             for field_name, field_data in fields.items()
             if field_data["field_details"]["category"] == "ATTRIBUTE"}
 
+def write_bookmark_for_core_streams(state, stream, customer_id, last_pk_fetched):
+    # Write bookmark for core streams.
+    singer.write_bookmark(state, stream, customer_id, {'last_pk_fetched': last_pk_fetched})
+
+    singer.write_state(state)
+    LOGGER.info("Write state for stream: %s, value: %s", stream, last_pk_fetched)
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
@@ -384,7 +392,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state): # pylint: disable=unused-argument
+    def sync(self, sdk_client, customer, stream, config, state, page_limit=None): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
@@ -401,31 +409,54 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         # Assign True if the primary key is composite.
         composite_pks = len(self.primary_keys) > 1
 
-        query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param, composite_pks)
-        try:
-            response = make_request(gas, query, customer["customerId"])
-        except GoogleAdsException as err:
-            LOGGER.warning("Failed query: %s", query)
-            raise err
+        stream_do_not_support_limit = ["ad_group_criterion", "campaign_criterion"]
+        
+        if self.filter_param and stream_name not in stream_do_not_support_limit:
+            limit = page_limit
+        else:
+            limit = None
 
+        is_more_records = True
+
+        last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
+        
         with metrics.record_counter(stream_name) as counter:
-            with Transformer() as transformer:
-                # Pages are fetched automatically while iterating through the response
-                for message in response:
-                    json_message = google_message_to_json(message)
-                    transformed_message = self.transform_keys(json_message)
-                    record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
-                    singer.write_record(stream_name, record)
-                    counter.increment()
+            while is_more_records:
+                query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched_value, self.filter_param, composite_pks, limit=limit)
+                try:
+                    response = make_request(gas, query, customer["customerId"])
+                except GoogleAdsException as err:
+                    LOGGER.warning("Failed query: %s", query)
+                    raise err
+                
+                num_rows = 0
+                with Transformer() as transformer:
+                    # Pages are fetched automatically while iterating through the response
+                    for message in response:
+                        json_message = google_message_to_json(message)
+                        transformed_message = self.transform_keys(json_message)
+                        record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
-                    # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
-                    if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
-                        bookmark_value = record[self.primary_keys[0]]
-                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': bookmark_value})
+                        singer.write_record(stream_name, record)
+                        counter.increment()
 
-                        singer.write_state(state)
-                        LOGGER.info("Write state for stream: %s, value: %s", stream_name, bookmark_value)
+                        num_rows = num_rows + 1
+                        if stream_name in stream_do_not_support_limit:
+                            # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
+                            if counter.value % page_limit == 0 and self.filter_param:
+                                write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
+                    
+                if stream_name not in stream_do_not_support_limit:
+                    write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
+                    last_pk_fetched_value = record[self.primary_keys[0]]
+
+                    if num_rows >= limit:
+                        is_more_records = True
+                        continue
+                
+                is_more_records = False
+                    
 
         # Flush the state for core streams if sync is completed
         if stream["tap_stream_id"] in state.get('bookmarks', {}):

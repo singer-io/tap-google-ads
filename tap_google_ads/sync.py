@@ -6,6 +6,7 @@ from tap_google_ads.client import create_sdk_client
 from tap_google_ads.streams import initialize_core_streams, initialize_reports
 
 LOGGER = singer.get_logger()
+DEFAULT_PAGE_LIMIT = 1000
 
 
 def get_currently_syncing(state):
@@ -54,6 +55,18 @@ def shuffle(shuffle_list, shuffle_key, current_value, sort_function):
 
     return top_half + bottom_half
 
+def get_page_limit(config):
+    """
+    This function will get page size from config,
+    and will return the default value if an invalid page limit is given.
+    """
+    page_limit = config.get('limit', DEFAULT_PAGE_LIMIT)
+
+    try:
+        return int(float(page_limit)) if int(float(page_limit)) > 0 else DEFAULT_PAGE_LIMIT
+    except Exception:
+        LOGGER.warning("Invalid page limit entered")
+        return DEFAULT_PAGE_LIMIT
 
 def do_sync(config, catalog, resource_schema, state):
     # QA ADDED WORKAROUND [START]
@@ -61,6 +74,9 @@ def do_sync(config, catalog, resource_schema, state):
         customers = json.loads(config["login_customer_ids"])
     except TypeError:  # falling back to raw value
         customers = config["login_customer_ids"]
+
+    # Get page limit
+    page_limit = get_page_limit(config)
     # QA ADDED WORKAROUND [END]
     customers = sort_customers(customers)
 
@@ -108,7 +124,7 @@ def do_sync(config, catalog, resource_schema, state):
             else:
                 stream_obj = report_streams[stream_name]
 
-            stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
+            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, page_limit=page_limit)
 
     state.pop("currently_syncing", None)
     singer.write_state(state)

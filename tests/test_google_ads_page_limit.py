@@ -29,33 +29,33 @@ class TesGoogleAdstPagination(GoogleAdsBase):
         # Run a discovery job
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
-        # partition catalogs for use in table/field selection
+        # Partition catalogs for use in table/field selection
         test_catalogs = [catalog for catalog in found_catalogs
                            if catalog.get('stream_name') in streams_to_test]
 
-        # select fields
+        # Select fields
         self.select_all_streams_and_fields(conn_id, test_catalogs, select_all_fields=False)
 
         # Run a sync
         record_count_by_stream = self.run_and_verify_sync(conn_id)
 
-        # acquire records from target output
+        # Acquire records from target output
         synced_records = runner.get_records_from_target_output()
 
         for stream in streams_to_test:
             with self.subTest(stream=stream):
 
-                # expected values
+                # Expected values
                 expected_primary_keys = self.expected_primary_keys()[stream]
          
-                # verify that we can paginate with all fields selected
+                # Verify that we can paginate with all fields selected
                 record_count_sync = record_count_by_stream.get(stream, 0)
                 self.assertGreater(record_count_sync, self.LIMIT,
                                     msg="The number of records is not over the stream max limit")
 
                 primary_keys_list = [tuple([message.get('data').get(expected_pk) for expected_pk in expected_primary_keys])
-                                        for message in synced_records.get(stream).get('messages')
-                                        if message.get('action') == 'upsert']
+                                    for message in synced_records.get(stream).get('messages')
+                                    if message.get('action') == 'upsert']
 
                 primary_keys_list_1 = primary_keys_list[:self.LIMIT]
                 primary_keys_list_2 = primary_keys_list[self.LIMIT:2*self.LIMIT]

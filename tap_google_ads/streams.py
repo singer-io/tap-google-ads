@@ -414,7 +414,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         # For example, the limit is 10. campaign_criterion stream have total 20 records with campaign_id = 1.
         # So, in the first call, the tap retrieves 10 records and the next time query would look like the below,
         # WHERE campaign_id >= 1
-        # Now, the tap will again fetch records with campaign_id = 1. 
+        # Now, the tap will again fetch records with campaign_id = 1.
         # That's why we should not pass the LIMIT clause in the query of these streams.
         limit_not_possible = ["ad_group_criterion", "campaign_criterion"]
 
@@ -426,7 +426,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         is_more_records = True
 
-        # retrieve the last saved state.
+        # Retrieve the last saved state. If last_pk_fetched is not found in the state, then the WHERE clause will not be added to the state.
         last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
 
         with metrics.record_counter(stream_name) as counter:
@@ -439,18 +439,16 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 except GoogleAdsException as err:
                     LOGGER.warning("Failed query: %s", query)
                     raise err
-
                 num_rows = 0
+
                 with Transformer() as transformer:
                     # Pages are fetched automatically while iterating through the response
                     for message in response:
                         json_message = google_message_to_json(message)
                         transformed_message = self.transform_keys(json_message)
                         record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
-
                         singer.write_record(stream_name, record)
                         counter.increment()
-
                         num_rows = num_rows + 1
                         if stream_name in limit_not_possible:
                             # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
@@ -461,11 +459,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                     # Write the id of the last record for the stream, which supports the filter parameter(WHERE clause) and do not belong to limit_not_possible category.
                     write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
                     last_pk_fetched_value = record[self.primary_keys[0]]
-
+                    # Fetch the next page of records
                     if num_rows >= limit:
-                        # Fetch the next page of records
                         continue
 
+                # Break the loop if no more records are available or the LIMIT clause is not possible.
                 is_more_records = False
 
 

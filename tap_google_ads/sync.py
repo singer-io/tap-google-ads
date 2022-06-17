@@ -63,9 +63,13 @@ def get_page_limit(config):
     page_limit = config.get('limit', DEFAULT_PAGE_LIMIT)
 
     try:
-        return int(float(page_limit)) if int(float(page_limit)) > 0 else DEFAULT_PAGE_LIMIT
+        if int(float(page_limit)) > 0:
+            return int(float(page_limit))
+        else:
+            LOGGER.warning("The entered page limit is invalid; it will be set to the default page limit of 1000")
+            return DEFAULT_PAGE_LIMIT
     except Exception:
-        LOGGER.warning("Invalid page limit entered")
+        LOGGER.warning("The entered page limit is invalid; it will be set to the default page limit of 1000")
         return DEFAULT_PAGE_LIMIT
 
 def do_sync(config, catalog, resource_schema, state):

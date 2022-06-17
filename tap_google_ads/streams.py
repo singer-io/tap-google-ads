@@ -410,7 +410,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         composite_pks = len(self.primary_keys) > 1
 
         stream_do_not_support_limit = ["ad_group_criterion", "campaign_criterion"]
-        
+
         if self.filter_param and stream_name not in stream_do_not_support_limit:
             limit = page_limit
         else:
@@ -419,7 +419,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         is_more_records = True
 
         last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
-        
+
         with metrics.record_counter(stream_name) as counter:
 
             while is_more_records:
@@ -429,7 +429,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                 except GoogleAdsException as err:
                     LOGGER.warning("Failed query: %s", query)
                     raise err
-                
+
                 num_rows = 0
                 with Transformer() as transformer:
                     # Pages are fetched automatically while iterating through the response
@@ -446,7 +446,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                             # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
                             if counter.value % page_limit == 0 and self.filter_param:
                                 write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
-                    
+
                 if stream_name not in stream_do_not_support_limit:
                     write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
                     last_pk_fetched_value = record[self.primary_keys[0]]
@@ -454,9 +454,9 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                     if num_rows >= limit:
                         is_more_records = True
                         continue
-                
+
                 is_more_records = False
-                    
+     
 
         # Flush the state for core streams if sync is completed
         if stream["tap_stream_id"] in state.get('bookmarks', {}):
@@ -658,7 +658,7 @@ class ReportStream(BaseStream):
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state):
+    def sync(self, sdk_client, customer, stream, config, state, page_limit=None):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]

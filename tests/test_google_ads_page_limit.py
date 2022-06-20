@@ -4,7 +4,7 @@ from base import GoogleAdsBase
 
 class TesGoogleAdstPagination(GoogleAdsBase):
     """
-    Ensure tap can replicate multiple pages of data for streams that use page limit.
+    Ensure tap can replicate multiple pages of data for streams that use query limit.
     """
     API_LIMIT = 1
 

@@ -393,7 +393,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state, page_limit): # pylint: disable=unused-argument
+    def sync(self, sdk_client, customer, stream, config, state, query_limit): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
@@ -420,7 +420,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         # Set limit for the stream which supports filter parameter(WHERE clause) and do not belong to limit_not_possible category.
         if self.filter_param and stream_name not in limit_not_possible:
-            limit = page_limit
+            limit = query_limit
         else:
             limit = None
 
@@ -452,7 +452,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                         num_rows = num_rows + 1
                         if stream_name in limit_not_possible:
                             # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
-                            if counter.value % page_limit == 0 and self.filter_param:
+                            if counter.value % query_limit == 0 and self.filter_param:
                                 write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
 
                 if record and self.filter_param and stream_name not in limit_not_possible:
@@ -667,7 +667,7 @@ class ReportStream(BaseStream):
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state, page_limit):
+    def sync(self, sdk_client, customer, stream, config, state, query_limit):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]

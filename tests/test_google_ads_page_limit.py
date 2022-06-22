@@ -1,12 +1,12 @@
 from tap_tester import menagerie, connections, runner
-
+from math import ceil
 from base import GoogleAdsBase
 
 class TesGoogleAdstPagination(GoogleAdsBase):
     """
     Ensure tap can replicate multiple pages of data for streams that use query limit.
     """
-    API_LIMIT = 1
+    LIMIT = 2
 
     @staticmethod
     def name():
@@ -18,10 +18,14 @@ class TesGoogleAdstPagination(GoogleAdsBase):
         This requires we ensure more than 1 page of data exists at all times for any given stream.
         • Verify by pks that the data replicated matches the data we expect.
         """
-        streams_to_test = {'ad_groups', 'ads', 'campaign_budgets', 'campaigns', 'labels', 'carrier_constant', 
-                           'feed', 'feed_item', 'language_constant', 'mobile_app_category_constant',
-                           'mobile_device_constant', 'operating_system_version_constant', 'topic_constant',
-                           'user_interest'}
+        streams_to_test = {stream for stream in self.expected_streams()
+                          if not self.is_report(stream)}
+
+        # LIMIT parameter is not availble for call_details, campaign_labels, campaign_criterion, ad_group_criterion
+        streams_to_test = streams_to_test - {'call_details', 'campaign_labels', 'campaign_criterion', 'ad_group_criterion'}
+        
+        # We do not have enough records for accessible_bidding_strategies, accounts, bidding_strategies, and user_list streams.
+        streams_to_test = streams_to_test - {'accessible_bidding_strategies', 'accounts', 'bidding_strategies', 'user_list'}
 
         # Create connection
         conn_id = connections.ensure_connection(self)
@@ -57,12 +61,23 @@ class TesGoogleAdstPagination(GoogleAdsBase):
                                     for message in synced_records.get(stream).get('messages')
                                     if message.get('action') == 'upsert']
 
-                primary_keys_list_1 = primary_keys_list[:self.LIMIT]
-                primary_keys_list_2 = primary_keys_list[self.LIMIT:2*self.LIMIT]
+                # Chunk the replicated records (just primary keys) into expected pages
+                pages = []
+                page_count = ceil(len(primary_keys_list) / self.LIMIT)
+                page_size = self.LIMIT
+                for page_index in range(page_count):
+                    page_start = page_index * page_size
+                    page_end = (page_index + 1) * page_size
+                    pages.append(set(primary_keys_list[page_start:page_end]))
 
-                primary_keys_page_1 = set(primary_keys_list_1)
-                primary_keys_page_2 = set(primary_keys_list_2)
+                # Verify by primary keys that data is unique for each page
+                for current_index, current_page in enumerate(pages):
+                    with self.subTest(current_page_primary_keys=current_page):
 
-                # Verify by primary keys that data is unique for page
-                self.assertTrue(
-                    primary_keys_page_1.isdisjoint(primary_keys_page_2))
+                        for other_index, other_page in enumerate(pages):
+                            if current_index == other_index:
+                                continue  # don't compare the page to itself
+
+                            self.assertTrue(
+                                current_page.isdisjoint(other_page), msg=f'other_page_primary_keys={other_page}'
+                            )

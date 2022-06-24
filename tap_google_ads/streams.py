@@ -28,7 +28,7 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 
 DEFAULT_CONVERSION_WINDOW = 30
 DEFAULT_PAGE_SIZE = 1000
-REQUEST_TIMEOUT = 900 # in seconds
+DEFAULT_REQUEST_TIMEOUT = 900 # in seconds
 
 
 def get_conversion_window(config):
@@ -44,6 +44,18 @@ def get_conversion_window(config):
         return conversion_window
 
     raise RuntimeError("Conversion Window must be between 1 - 30 inclusive, 60, or 90")
+
+
+def get_request_timeout(config):
+    """Get `request_timeout` value from config and error on invalid values"""
+    request_timeout = config.get("request_timeout") or DEFAULT_REQUEST_TIMEOUT
+
+    try:
+        request_timeout = int(request_timeout)
+    except:
+        LOGGER.warning(f"The provided request_timeout {request_timeout} is invalid; it will be set to the default request timeout of {DEFAULT_REQUEST_TIMEOUT}.")
+        request_timeout = DEFAULT_REQUEST_TIMEOUT
+    return request_timeout
 
 def create_nested_resource_schema(resource_schema, fields):
     new_schema = {
@@ -210,9 +222,10 @@ def on_giveup_func(err):
                       jitter=None,
                       giveup=should_give_up,
                       on_giveup=on_giveup_func,
-                      )
-def make_request(gas, query, customer_id):
-    response = gas.search(query=query, customer_id=customer_id, timeout=REQUEST_TIMEOUT)
+                      logger=None)
+def make_request(gas, query, customer_id, config):
+    request_timeout = get_request_timeout(config)
+    response = gas.search(query=query, customer_id=customer_id, timeout=request_timeout)
     return response
 
 
@@ -405,7 +418,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param, composite_pks)
         try:
-            response = make_request(gas, query, customer["customerId"])
+            response = make_request(gas, query, customer["customerId"], config)
         except GoogleAdsException as err:
             LOGGER.warning("Failed query: %s", query)
             raise err
@@ -674,7 +687,7 @@ class ReportStream(BaseStream):
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
 
             try:
-                response = make_request(gas, query, customer["customerId"])
+                response = make_request(gas, query, customer["customerId"], config)
             except GoogleAdsException as err:
                 LOGGER.warning("Failed query: %s", query)
                 LOGGER.critical(str(err.failure.errors[0].message))

@@ -52,7 +52,7 @@ def get_request_timeout(config):
 
     try:
         request_timeout = int(request_timeout)
-    except:
+    except (ValueError, TypeError):
         LOGGER.warning(f"The provided request_timeout {request_timeout} is invalid; it will be set to the default request timeout of {DEFAULT_REQUEST_TIMEOUT}.")
         request_timeout = DEFAULT_REQUEST_TIMEOUT
     return request_timeout

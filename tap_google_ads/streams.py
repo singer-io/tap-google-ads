@@ -174,12 +174,20 @@ def generate_hash(record, metadata):
     return hashlib.sha256(hash_bytes).hexdigest()
 
 
+class TimeoutException(Exception):
+    pass
+
+
 retryable_errors = [
     "QuotaError.RESOURCE_EXHAUSTED",
     "QuotaError.RESOURCE_TEMPORARILY_EXHAUSTED",
     "InternalError.INTERNAL_ERROR",
     "InternalError.TRANSIENT_ERROR",
     "InternalError.DEADLINE_EXCEEDED",
+]
+
+timeout_errors = [
+    "RequestError.RPC_DEADLINE_TOO_SHORT",
 ]
 
 
@@ -200,17 +208,20 @@ def should_give_up(ex):
     for googleads_error in ex.failure.errors:
         quota_error = str(googleads_error.error_code.quota_error)
         internal_error = str(googleads_error.error_code.internal_error)
-        for err in [quota_error, internal_error]:
+        request_error = str(googleads_error.error_code.request_error)
+        for err in [quota_error, internal_error, request_error]:
             if err in retryable_errors:
                 LOGGER.info(f'Retrying request due to {err}')
                 return False
-    return True
+            if err in timeout_errors:
+                raise TimeoutException('Request was not able to complete within allotted timeout. Try reducing the amount of data being requested before increasing timeout.')
+        return True
 
 
 def on_giveup_func(err):
     """This function lets us know that backoff ran, but it does not print
     Google's verbose message and stack trace"""
-    LOGGER.warning("Giving up make_request after %s tries", err.get("tries"))
+    LOGGER.warning("Giving up request after %s tries", err.get("tries"))
 
 
 @backoff.on_exception(backoff.expo,

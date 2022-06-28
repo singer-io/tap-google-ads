@@ -234,7 +234,9 @@ def on_giveup_func(err):
                       giveup=should_give_up,
                       on_giveup=on_giveup_func,
                       logger=None)
-def make_request(gas, query, customer_id, config={}):
+def make_request(gas, query, customer_id, config=None):
+    if config = None:
+        config = {}
     request_timeout = get_request_timeout(config)
     response = gas.search(query=query, customer_id=customer_id, timeout=request_timeout)
     return response

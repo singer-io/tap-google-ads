@@ -57,7 +57,7 @@ def shuffle(shuffle_list, shuffle_key, current_value, sort_function):
 
 def get_query_limit(config):
     """
-    This function will get page size from config,
+    This function will get the query_limit from config,
     and will return the default value if an invalid query limit is given.
     """
     query_limit = config.get('query_limit', DEFAULT_QUERY_LIMIT)

@@ -30,7 +30,7 @@ class TestBackoff(unittest.TestCase):
         mocked_google_ads_client.search.side_effect = MethodNotImplemented("Not Implemented")
 
         try:
-            make_request(mocked_google_ads_client, "", "")
+            make_request(mocked_google_ads_client, "", "", "")
         except MethodNotImplemented:
             pass
 
@@ -45,7 +45,7 @@ class TestBackoff(unittest.TestCase):
         mocked_google_ads_client.search.side_effect = BadGateway("Bad Gateway")
 
         try:
-            make_request(mocked_google_ads_client, "", "")
+            make_request(mocked_google_ads_client, "", "", "")
         except BadGateway:
             pass
 
@@ -60,7 +60,7 @@ class TestBackoff(unittest.TestCase):
         mocked_google_ads_client.search.side_effect = ServiceUnavailable("Service Unavailable")
 
         try:
-            make_request(mocked_google_ads_client, "", "")
+            make_request(mocked_google_ads_client, "", "", "")
         except ServiceUnavailable:
             pass
 
@@ -75,7 +75,7 @@ class TestBackoff(unittest.TestCase):
         mocked_google_ads_client.search.side_effect = GatewayTimeout("GatewayTimeout")
 
         try:
-            make_request(mocked_google_ads_client, "", "")
+            make_request(mocked_google_ads_client, "", "", "")
         except GatewayTimeout:
             pass
 
@@ -90,7 +90,7 @@ class TestBackoff(unittest.TestCase):
         mocked_google_ads_client.search.side_effect = TooManyRequests("Resource has been exhausted")
 
         try:
-            make_request(mocked_google_ads_client, "", "")
+            make_request(mocked_google_ads_client, "", "", "")
         except TooManyRequests:
             pass
 
@@ -105,7 +105,7 @@ class TestBackoff(unittest.TestCase):
         mocked_google_ads_client.search.side_effect = ReadTimeout("HTTPSConnectionPool(host='tap-tester-api.sandbox.stitchdata.com', port=443)")
 
         try:
-            make_request(mocked_google_ads_client, "", "")
+            make_request(mocked_google_ads_client, "", "", "")
         except ReadTimeout:
             pass
 

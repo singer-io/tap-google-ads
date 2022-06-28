@@ -60,7 +60,7 @@ def get_query_limit(config):
     This function will get page size from config,
     and will return the default value if an invalid query limit is given.
     """
-    query_limit = config.get('limit', DEFAULT_QUERY_LIMIT)
+    query_limit = config.get('query_limit', DEFAULT_QUERY_LIMIT)
 
     try:
         if int(float(query_limit)) > 0:

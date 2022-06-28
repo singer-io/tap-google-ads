@@ -4,7 +4,7 @@ from tap_google_ads.sync import get_query_limit, DEFAULT_QUERY_LIMIT
 
 def get_config(value):
     return {
-        "limit": value
+        "query_limit": value
         }
 
 class TestQueryLimitParam(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestQueryLimitParam(unittest.TestCase):
         """ Verify that limit is set to 100 if int 100 is given in the config """
         expected_value = 100
         actual_value = get_query_limit(get_config(100))
-        
+
         self.assertEqual(actual_value, expected_value)
 
     def test_float_query_limit_field(self):
@@ -25,7 +25,7 @@ class TestQueryLimitParam(unittest.TestCase):
         actual_value = get_query_limit(get_config(100.05))
 
         self.assertEqual(actual_value, expected_value)
-    
+
     def test_zero_int_query_limit_field(self):
         """ Verify that limit is set to DEFAULT_QUERY_LIMIT if 0 is given in the config """
 

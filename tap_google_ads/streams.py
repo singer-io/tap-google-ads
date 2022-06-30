@@ -28,6 +28,8 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 
 DEFAULT_CONVERSION_WINDOW = 30
 DEFAULT_PAGE_SIZE = 1000
+DEFAULT_REQUEST_TIMEOUT = 900 # in seconds
+
 
 def get_conversion_window(config):
     """Fetch the conversion window from the config and error on invalid values"""
@@ -42,6 +44,18 @@ def get_conversion_window(config):
         return conversion_window
 
     raise RuntimeError("Conversion Window must be between 1 - 30 inclusive, 60, or 90")
+
+
+def get_request_timeout(config):
+    """Get `request_timeout` value from config and error on invalid values"""
+    request_timeout = config.get("request_timeout") or DEFAULT_REQUEST_TIMEOUT
+
+    try:
+        request_timeout = int(request_timeout)
+    except (ValueError, TypeError):
+        LOGGER.warning(f"The provided request_timeout {request_timeout} is invalid; it will be set to the default request timeout of {DEFAULT_REQUEST_TIMEOUT}.")
+        request_timeout = DEFAULT_REQUEST_TIMEOUT
+    return request_timeout
 
 def create_nested_resource_schema(resource_schema, fields):
     new_schema = {
@@ -160,12 +174,20 @@ def generate_hash(record, metadata):
     return hashlib.sha256(hash_bytes).hexdigest()
 
 
+class TimeoutException(Exception):
+    pass
+
+
 retryable_errors = [
     "QuotaError.RESOURCE_EXHAUSTED",
     "QuotaError.RESOURCE_TEMPORARILY_EXHAUSTED",
     "InternalError.INTERNAL_ERROR",
     "InternalError.TRANSIENT_ERROR",
     "InternalError.DEADLINE_EXCEEDED",
+]
+
+timeout_errors = [
+    "RequestError.RPC_DEADLINE_TOO_SHORT",
 ]
 
 
@@ -186,17 +208,20 @@ def should_give_up(ex):
     for googleads_error in ex.failure.errors:
         quota_error = str(googleads_error.error_code.quota_error)
         internal_error = str(googleads_error.error_code.internal_error)
-        for err in [quota_error, internal_error]:
+        request_error = str(googleads_error.error_code.request_error)
+        for err in [quota_error, internal_error, request_error]:
             if err in retryable_errors:
                 LOGGER.info(f'Retrying request due to {err}')
                 return False
-    return True
+            if err in timeout_errors:
+                raise TimeoutException('Request was not able to complete within allotted timeout. Try reducing the amount of data being requested before increasing timeout.')
+        return True
 
 
 def on_giveup_func(err):
     """This function lets us know that backoff ran, but it does not print
     Google's verbose message and stack trace"""
-    LOGGER.warning("Giving up make_request after %s tries", err.get("tries"))
+    LOGGER.warning("Giving up request after %s tries", err.get("tries"))
 
 
 @backoff.on_exception(backoff.expo,
@@ -208,9 +233,12 @@ def on_giveup_func(err):
                       jitter=None,
                       giveup=should_give_up,
                       on_giveup=on_giveup_func,
-                      )
-def make_request(gas, query, customer_id):
-    response = gas.search(query=query, customer_id=customer_id)
+                      logger=None)
+def make_request(gas, query, customer_id, config=None):
+    if config is None:
+        config = {}
+    request_timeout = get_request_timeout(config)
+    response = gas.search(query=query, customer_id=customer_id, timeout=request_timeout)
     return response
 
 
@@ -403,7 +431,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param, composite_pks)
         try:
-            response = make_request(gas, query, customer["customerId"])
+            response = make_request(gas, query, customer["customerId"], config)
         except GoogleAdsException as err:
             LOGGER.warning("Failed query: %s", query)
             raise err
@@ -672,7 +700,7 @@ class ReportStream(BaseStream):
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
 
             try:
-                response = make_request(gas, query, customer["customerId"])
+                response = make_request(gas, query, customer["customerId"], config)
             except GoogleAdsException as err:
                 LOGGER.warning("Failed query: %s", query)
                 LOGGER.critical(str(err.failure.errors[0].message))

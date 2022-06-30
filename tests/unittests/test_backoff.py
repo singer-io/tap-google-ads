@@ -111,3 +111,6 @@ class TestBackoff(unittest.TestCase):
 
         # Verify that tap backoff for 5 times
         self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+
+if __name__ == '__main__':
+    unittest.main()

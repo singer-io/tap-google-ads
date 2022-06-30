@@ -6,7 +6,7 @@ class TesGoogleAdstPagination(GoogleAdsBase):
     """
     Ensure tap can replicate multiple pages of data for streams that use query limit.
     """
-    LIMIT = 2
+    DEFAULT_QUERY_LIMIT = 2
 
     @staticmethod
     def name():
@@ -54,7 +54,7 @@ class TesGoogleAdstPagination(GoogleAdsBase):
          
                 # Verify that we can paginate with all fields selected
                 record_count_sync = record_count_by_stream.get(stream, 0)
-                self.assertGreater(record_count_sync, self.LIMIT,
+                self.assertGreater(record_count_sync, self.DEFAULT_QUERY_LIMIT,
                                     msg="The number of records is not over the stream max limit")
 
                 primary_keys_list = [tuple([message.get('data').get(expected_pk) for expected_pk in expected_primary_keys])
@@ -63,11 +63,11 @@ class TesGoogleAdstPagination(GoogleAdsBase):
 
                 # Chunk the replicated records (just primary keys) into expected pages
                 pages = []
-                page_count = ceil(len(primary_keys_list) / self.LIMIT)
-                page_size = self.LIMIT
+                page_count = ceil(len(primary_keys_list) / self.DEFAULT_QUERY_LIMIT)
+                query_limit = self.DEFAULT_QUERY_LIMIT
                 for page_index in range(page_count):
-                    page_start = page_index * page_size
-                    page_end = (page_index + 1) * page_size
+                    page_start = page_index * query_limit
+                    page_end = (page_index + 1) * query_limit
                     pages.append(set(primary_keys_list[page_start:page_end]))
 
                 # Verify by primary keys that data is unique for each page

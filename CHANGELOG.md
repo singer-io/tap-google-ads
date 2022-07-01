@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.2
+  * Add timeout parameter to Google Ads search requests
+  * Allow for request_timeout config parameter to be provided [#64](https://github.com/singer-io/tap-google-ads/pull/64)
+
 ## v1.3.1
   * Handle uncaught exceptions [#61](https://github.com/singer-io/tap-google-ads/pull/61)
   * Implement interruptible full table streams [#60](https://github.com/singer-io/tap-google-ads/pull/60)

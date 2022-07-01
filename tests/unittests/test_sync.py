@@ -21,8 +21,8 @@ class TestEndDate(unittest.TestCase):
     def get_queries_from_sync(self, fake_make_request):
         all_queries_requested = []
         for request_sent in fake_make_request.call_args_list:
-            # The function signature is gas, query, customer_id
-            _, query, _ = request_sent.args
+            # The function signature is gas, query, customer_id, config
+            _, query, _, _ = request_sent.args
             all_queries_requested.append(query)
         return all_queries_requested
 

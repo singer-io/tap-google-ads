@@ -51,7 +51,8 @@ class TestEndDate(unittest.TestCase):
              "stream": "hi",
              "metadata": []},
             config,
-            {}
+            {},
+            None
         )
 
     @patch('singer.utils.now')

@@ -27,7 +27,6 @@ REPORTS_WITH_90_DAY_MAX = frozenset(
 )
 
 DEFAULT_CONVERSION_WINDOW = 30
-DEFAULT_PAGE_SIZE = 1000
 DEFAULT_REQUEST_TIMEOUT = 900 # in seconds
 
 
@@ -143,12 +142,16 @@ def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_p
 
     return f'{where_clause}{order_by_clause}'
 
-def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks):
+def create_core_stream_query(resource_name, selected_fields, last_pk_fetched, filter_param, composite_pks, limit=None):
 
     # Generate a query using WHERE and ORDER BY parameters.
     where_order_by_clause = generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks)
 
-    core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
+    if limit:
+        # Add a LIMIT clause in the query of core streams.
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} LIMIT {limit} {build_parameters()}"
+    else:
+        core_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} {where_order_by_clause} {build_parameters()}"
 
     return core_query
 
@@ -259,6 +262,12 @@ def filter_out_non_attribute_fields(fields):
             for field_name, field_data in fields.items()
             if field_data["field_details"]["category"] == "ATTRIBUTE"}
 
+def write_bookmark_for_core_streams(state, stream, customer_id, last_pk_fetched):
+    # Write bookmark for core streams.
+    singer.write_bookmark(state, stream, customer_id, {'last_pk_fetched': last_pk_fetched})
+
+    singer.write_state(state)
+    LOGGER.info("Write state for stream: %s, value: %s", stream, last_pk_fetched)
 
 class BaseStream:  # pylint: disable=too-many-instance-attributes
 
@@ -412,7 +421,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state): # pylint: disable=unused-argument
+    def sync(self, sdk_client, customer, stream, config, state, query_limit): # pylint: disable=unused-argument
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
@@ -429,31 +438,62 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         # Assign True if the primary key is composite.
         composite_pks = len(self.primary_keys) > 1
 
-        query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched.get('last_pk_fetched'), self.filter_param, composite_pks)
-        try:
-            response = make_request(gas, query, customer["customerId"], config)
-        except GoogleAdsException as err:
-            LOGGER.warning("Failed query: %s", query)
-            raise err
+        # LIMIT clause in the `ad_group_criterion` and `campaign_criterion`(stream which has composite primary keys) may result in the infinite loop.
+        # For example, the limit is 10. campaign_criterion stream have total 20 records with campaign_id = 1.
+        # So, in the first call, the tap retrieves 10 records and the next time query would look like the below,
+        # WHERE campaign_id >= 1
+        # Now, the tap will again fetch records with campaign_id = 1.
+        # That's why we should not pass the LIMIT clause in the query of these streams.
+        limit_not_possible = ["ad_group_criterion", "campaign_criterion"]
+
+        # Set limit for the stream which supports filter parameter(WHERE clause) and do not belong to limit_not_possible category.
+        if self.filter_param and stream_name not in limit_not_possible:
+            limit = query_limit
+        else:
+            limit = None
+
+        is_more_records = True
+        record = None
+        # Retrieve the last saved state. If last_pk_fetched is not found in the state, then the WHERE clause will not be added to the state.
+        last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
 
         with metrics.record_counter(stream_name) as counter:
-            with Transformer() as transformer:
-                # Pages are fetched automatically while iterating through the response
-                for message in response:
-                    json_message = google_message_to_json(message)
-                    transformed_message = self.transform_keys(json_message)
-                    record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
 
-                    singer.write_record(stream_name, record)
-                    counter.increment()
+            # Loop until the last page.
+            while is_more_records:
+                query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched_value, self.filter_param, composite_pks, limit=limit)
+                try:
+                    response = make_request(gas, query, customer["customerId"], config)
+                except GoogleAdsException as err:
+                    LOGGER.warning("Failed query: %s", query)
+                    raise err
+                num_rows = 0
 
-                    # Write state(last_pk_fetched) using primary key(id) value for core streams after DEFAULT_PAGE_SIZE records
-                    if counter.value % DEFAULT_PAGE_SIZE == 0 and self.filter_param:
-                        bookmark_value = record[self.primary_keys[0]]
-                        singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], {'last_pk_fetched': bookmark_value})
+                with Transformer() as transformer:
+                    # Pages are fetched automatically while iterating through the response
+                    for message in response:
+                        json_message = google_message_to_json(message)
+                        transformed_message = self.transform_keys(json_message)
+                        record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
+                        singer.write_record(stream_name, record)
+                        counter.increment()
+                        num_rows = num_rows + 1
+                        if stream_name in limit_not_possible:
+                            # Write state(last_pk_fetched) using primary key(id) value for core streams after query_limit records
+                            if counter.value % query_limit == 0 and self.filter_param:
+                                write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
 
-                        singer.write_state(state)
-                        LOGGER.info("Write state for stream: %s, value: %s", stream_name, bookmark_value)
+                if record and self.filter_param and stream_name not in limit_not_possible:
+                    # Write the id of the last record for the stream, which supports the filter parameter(WHERE clause) and do not belong to limit_not_possible category.
+                    write_bookmark_for_core_streams(state, stream["tap_stream_id"], customer["customerId"], record[self.primary_keys[0]])
+                    last_pk_fetched_value = record[self.primary_keys[0]]
+                    # Fetch the next page of records
+                    if num_rows >= limit:
+                        continue
+
+                # Break the loop if no more records are available or the LIMIT clause is not possible.
+                is_more_records = False
+
 
         # Flush the state for core streams if sync is completed
         if stream["tap_stream_id"] in state.get('bookmarks', {}):
@@ -655,7 +695,7 @@ class ReportStream(BaseStream):
 
         return transformed_message
 
-    def sync(self, sdk_client, customer, stream, config, state):
+    def sync(self, sdk_client, customer, stream, config, state, query_limit):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]

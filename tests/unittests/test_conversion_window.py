@@ -69,6 +69,7 @@ class TestBookmarkWithinConversionWindow(unittest.TestCase):
              "metadata": []},
             config,
             state,
+            None
         )
         all_queries_requested = []
         for request_sent in fake_make_request.call_args_list:
@@ -143,6 +144,7 @@ class TestBookmarkOnConversionWindow(unittest.TestCase):
              "metadata": []},
             config,
             state,
+            None
         )
         all_queries_requested = []
         for request_sent in fake_make_request.call_args_list:
@@ -213,6 +215,7 @@ class TestStartDateWithinConversionWindow(unittest.TestCase):
              "metadata": []},
             config,
             state,
+            None
         )
         all_queries_requested = []
         for request_sent in fake_make_request.call_args_list:

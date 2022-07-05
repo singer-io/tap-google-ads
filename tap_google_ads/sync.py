@@ -4,6 +4,7 @@ from tap_google_ads.client import create_sdk_client
 from tap_google_ads.streams import initialize_core_streams, initialize_reports
 
 LOGGER = singer.get_logger()
+DEFAULT_QUERY_LIMIT = 1000000
 
 
 def get_currently_syncing(state):
@@ -52,6 +53,22 @@ def shuffle(shuffle_list, shuffle_key, current_value, sort_function):
 
     return top_half + bottom_half
 
+def get_query_limit(config):
+    """
+    This function will get the query_limit from config,
+    and will return the default value if an invalid query limit is given.
+    """
+    query_limit = config.get('query_limit', DEFAULT_QUERY_LIMIT)
+
+    try:
+        if int(float(query_limit)) > 0:
+            return int(float(query_limit))
+        else:
+            LOGGER.warning(f"The entered query limit is invalid; it will be set to the default query limit of {DEFAULT_QUERY_LIMIT}")
+            return DEFAULT_QUERY_LIMIT
+    except Exception:
+        LOGGER.warning(f"The entered query limit is invalid; it will be set to the default query limit of {DEFAULT_QUERY_LIMIT}")
+        return DEFAULT_QUERY_LIMIT
 
 def do_sync(config, catalog, resource_schema, state):
     # QA ADDED WORKAROUND [START]
@@ -59,6 +76,9 @@ def do_sync(config, catalog, resource_schema, state):
         customers = json.loads(config["login_customer_ids"])
     except TypeError:  # falling back to raw value
         customers = config["login_customer_ids"]
+
+    # Get query limit
+    query_limit = get_query_limit(config)
     # QA ADDED WORKAROUND [END]
     customers = sort_customers(customers)
 
@@ -106,7 +126,7 @@ def do_sync(config, catalog, resource_schema, state):
             else:
                 stream_obj = report_streams[stream_name]
 
-            stream_obj.sync(sdk_client, customer, catalog_entry, config, state)
+            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit)
 
     state.pop("currently_syncing", None)
     singer.write_state(state)

@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.3.3
+  * Update applicable core streams to use limit clause. Updates tests [#68](https://github.com/singer-io/tap-google-ads/pull/68)
+
 ## v1.3.2
   * Add timeout parameter to Google Ads search requests
   * Allow for request_timeout config parameter to be provided [#64](https://github.com/singer-io/tap-google-ads/pull/64)

@@ -70,8 +70,10 @@ def get_query_limit(config):
         LOGGER.warning(f"The entered query limit is invalid; it will be set to the default query limit of {DEFAULT_QUERY_LIMIT}")
         return DEFAULT_QUERY_LIMIT
 
-def do_sync(config, catalog, resource_schema, state, schemaless=False):
+
+def do_sync(config, catalog, resource_schema, state):
     # QA ADDED WORKAROUND [START]
+
     try:
         customers = json.loads(config["customer_ids"])
     except TypeError:  # falling back to raw value

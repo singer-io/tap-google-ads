@@ -85,7 +85,9 @@ def get_selected_fields(stream_mdata):
         if mdata["breadcrumb"]:
             inclusion = mdata["metadata"].get("inclusion")
             selected = mdata["metadata"].get("selected")
-            if utils.should_sync_field(inclusion, selected) and mdata["breadcrumb"][1] != "_sdc_record_hash" and "tap-google-ads.api-field-names" in mdata["metadata"]:
+            if utils.should_sync_field(inclusion, selected) \
+                    and mdata["breadcrumb"][1] != "_sdc_record_hash" \
+                    and "tap-google-ads.api-field-names" in mdata["metadata"]:
                 selected_fields.update(mdata["metadata"]["tap-google-ads.api-field-names"])
 
     return selected_fields
@@ -94,6 +96,7 @@ def get_selected_fields(stream_mdata):
 def build_parameters():
     param_str = ",".join(f"{k}={v}" for k, v in API_PARAMETERS.items())
     return f"PARAMETERS {param_str}"
+
 
 def generate_where_and_orderby_clause(last_pk_fetched, filter_param, composite_pks):
     """
@@ -699,7 +702,7 @@ class ReportStream(BaseStream):
         return transformed_message
 
     def sync(self, sdk_client, customer, stream, config, state, schemaless=False):
-        gas = sdk_client.get_service("GoogleAdsService", version=config["version"])
+        gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]

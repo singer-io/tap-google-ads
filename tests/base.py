@@ -56,7 +56,7 @@ class GoogleAdsBase(unittest.TestCase):
             'query_limit': 2,
             # 'conversion_window_days': '30',
             'login_customer_ids': [{"customerId": os.getenv('TAP_GOOGLE_ADS_CUSTOMER_ID'),
-                                    "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID'),}],
+                                    "loginCustomerId": os.getenv('TAP_GOOGLE_ADS_LOGIN_CUSTOMER_ID')}],
         }
 
         if original:
@@ -458,11 +458,11 @@ class GoogleAdsBase(unittest.TestCase):
 
 
     def setUp(self):
-        missing_envs = [x for x in [os.getenv('TAP_ADWORDS_DEVELOPER_TOKEN'),
-                                    os.getenv('TAP_ADWORDS_OAUTH_CLIENT_ID'),
-                                    os.getenv('TAP_ADWORDS_OAUTH_CLIENT_SECRET'),
-                                    os.getenv('TAP_ADWORDS_REFRESH_TOKEN'),
-                                    os.getenv('TAP_ADWORDS_CUSTOMER_IDS')] if x == None]
+        missing_envs = [x for x in [os.getenv('TAP_ADS_DEVELOPER_TOKEN'),
+                                    os.getenv('TAP_ADS_OAUTH_CLIENT_ID'),
+                                    os.getenv('TAP_ADS_OAUTH_CLIENT_SECRET'),
+                                    os.getenv('TAP_ADS_REFRESH_TOKEN'),
+                                    os.getenv('TAP_ADS_CUSTOMER_IDS')] if x == None]
         if len(missing_envs) != 0:
             raise Exception("Missing environment variables: {}".format(missing_envs))
 

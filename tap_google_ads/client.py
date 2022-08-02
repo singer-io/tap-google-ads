@@ -1,5 +1,7 @@
 from google.ads.googleads.client import GoogleAdsClient
 
+from tap_google_ads.streams import API_VERSION
+
 
 def create_sdk_client(config, login_customer_id=None):
     CONFIG = {
@@ -11,7 +13,7 @@ def create_sdk_client(config, login_customer_id=None):
     }
 
     if login_customer_id:
-        CONFIG["login_customer_id"] = login_customer_id
+        CONFIG["customer_id"] = login_customer_id
 
-    sdk_client = GoogleAdsClient.load_from_dict(CONFIG, version=config["version"])
+    sdk_client = GoogleAdsClient.load_from_dict(CONFIG, version=API_VERSION)
     return sdk_client

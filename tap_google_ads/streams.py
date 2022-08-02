@@ -480,7 +480,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                             record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
                             singer.write_record(stream_name, record)
                         else:
-                            singer.write(stream_name, json_message)
+                            singer.write_record(stream_name, json_message)
                         counter.increment()
                         num_rows = num_rows + 1
                         if stream_name in limit_not_possible:

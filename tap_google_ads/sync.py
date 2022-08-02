@@ -72,6 +72,7 @@ def get_query_limit(config):
 
 def do_sync(config, catalog, resource_schema, state):
     # QA ADDED WORKAROUND [START]
+
     try:
         customers = json.loads(config["customer_ids"])
     except TypeError:  # falling back to raw value

@@ -21,6 +21,7 @@ OPERATING_SYSTEM_VERSION_CONSTANT_FIELDS = []
 TOPIC_CONSTANT_FIELDS = []
 USER_INTEREST_FIELDS = []
 USER_LIST_FIELDS = []
+GEO_TARGET_CONSTANT_FIELDS = []
 
 # Report streams
 ACCOUNT_PERFORMANCE_REPORT_FIELDS = [
@@ -389,6 +390,7 @@ AD_PERFORMANCE_REPORT_FIELDS = [
     "segments.year",
 ]
 AGE_RANGE_PERFORMANCE_REPORT_FIELDS = [
+    "age_range_view.resource_name",
     "ad_group.base_ad_group",
     "ad_group.id",
     "ad_group.name",
@@ -414,6 +416,7 @@ AGE_RANGE_PERFORMANCE_REPORT_FIELDS = [
     "campaign.id",
     "campaign.name",
     "campaign.status",
+    "campaign.advertising_channel_type",
     "customer.currency_code",
     "customer.descriptive_name",
     "customer.descriptive_name",
@@ -1036,6 +1039,7 @@ EXPANDED_LANDING_PAGE_REPORT_FIELDS = [
     "segments.year",
 ]
 GENDER_PERFORMANCE_REPORT_FIELDS = [
+    "gender_view.resource_name",
     "ad_group.base_ad_group",
     "ad_group.id",
     "ad_group.name",
@@ -1056,6 +1060,7 @@ GENDER_PERFORMANCE_REPORT_FIELDS = [
     "ad_group_criterion.url_custom_parameters",
     "bidding_strategy.name",
     "bidding_strategy.type",
+    "campaign.advertising_channel_type",
     "campaign.base_campaign",
     "campaign.bidding_strategy",
     "campaign.id",
@@ -1884,4 +1889,15 @@ VIDEO_PERFORMANCE_REPORT_FIELDS = [
     "video.duration_millis",
     "video.id",
     "video.title",
+]
+LOCATION_PERFORMANCE_REPORT_FIELDS = [
+    "campaign_criterion.location.geo_target_constant",
+    "customer.id",
+    "metrics.average_cpc",
+    "metrics.clicks",
+    "metrics.cost_micros",
+    "metrics.ctr",
+    "metrics.impressions",
+    "segments.date",
+    "location_view.resource_name"
 ]

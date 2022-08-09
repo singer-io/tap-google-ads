@@ -402,7 +402,7 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {"video_id"},
-            },
+            }
 
             # Custom Reports TODO Post Beta feature
         }
@@ -863,7 +863,7 @@ class GoogleAdsBase(unittest.TestCase):
                 'click_type',
                 'clicks',
                 'interactions',
-            },
+            }
         }
     def assertIsDateFormat(self, value, str_format):
         """

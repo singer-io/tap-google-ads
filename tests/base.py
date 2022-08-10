@@ -30,7 +30,7 @@ class GoogleAdsBase(unittest.TestCase):
     REPLICATION_KEY_FORMAT = "%Y-%m-%dT00:00:00.000000Z"
 
     start_date = ""
-    end_date = "2022-04-01T00:00:00Z"
+    end_date = "2022-03-15T00:00:00Z"
 
     @staticmethod
     def tap_name():

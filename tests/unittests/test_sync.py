@@ -119,5 +119,16 @@ class TestEndDate(unittest.TestCase):
                 )
             )
 
+    @patch('tap_google_ads.streams.make_request')
+    def test_end_date_one_day_before_start(self, fake_make_request):
+        start_date = datetime(2022, 3, 6, 0, 0, 0)
+        end_date = datetime(2022, 3, 5, 0, 0, 0)
+        self.run_sync(start_date, end_date, fake_make_request)
+        all_queries_requested = self.get_queries_from_sync(fake_make_request)
+
+        # verify no requests are made with an invalid start/end date configuration
+        self.assertEqual(len(all_queries_requested), 0)
+
+
 if __name__ == '__main__':
     unittest.main()

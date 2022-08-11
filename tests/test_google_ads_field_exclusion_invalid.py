@@ -93,6 +93,7 @@ class FieldExclusionInvalidGoogleAds(GoogleAdsBase):
 
         # bump start date from default
         self.start_date = dt.strftime(dt.today() - timedelta(days=1), self.START_DATE_FORMAT)
+        self.end_date = None
         conn_id = connections.ensure_connection(self, original_properties=False)
 
         # Run a discovery job

@@ -32,7 +32,7 @@ class BookmarksTest(GoogleAdsBase):
     def test_run(self):
         """
         Testing that the tap sets and uses bookmarks correctly where
-        state < (end_date - converstion window), therefore the state should be used
+        state < (today - converstion window), therefore the state should be used
         on sync 2
 
         Note:

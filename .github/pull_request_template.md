@@ -1,11 +1,19 @@
-# Description of change
-(write a short description here or paste a link to JIRA)
+<!-- Don't forget to set this PR title as: [{ticked_id}] {ticket_name} -->
 
-# QA steps
- - [ ] automated tests passing
- - [ ] manual qa steps passing
+[Ticket link](https://railsware.atlassian.net/browse/CPL-)
 
-# Risks
+### Problem/domain
 
-# Rollback steps
- - revert this branch
+### Tech changes
+
+### Product changes
+
+<!-- This section is optional -->
+
+### How to test
+
+<!-- Please ALWAYS fill in this section! It's vital for the proper holding of Test Fest. Add "N/A" if it's a non-testable change -->
+
+### How to deploy
+
+<!-- This section is optional -->

@@ -167,6 +167,14 @@ def create_report_query(resource_name, selected_fields, start_date, end_date):
     return report_query
 
 
+def create_one_day_report_query(resource_name, selected_fields, query_date):
+    format_str = "%Y-%m-%d"
+    query_date = utils.strftime(query_date, format_str=format_str)
+    report_query = f"SELECT {','.join(selected_fields)} FROM {resource_name} WHERE segments.date = '{query_date}' {build_parameters()}"
+
+    return report_query
+
+
 def generate_hash(record, metadata):
     metadata = singer.metadata.to_map(metadata)
     fields_to_hash = []
@@ -766,6 +774,77 @@ class ReportStream(BaseStream):
         singer.write_state(state)
 
 
+class OneDayResultsReportStream(ReportStream):
+    def sync(self, sdk_client, customer, stream, config, state, query_limit):
+        gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
+        resource_name = self.google_ads_resource_names[0]
+        stream_name = stream["stream"]
+        stream_mdata = stream["metadata"]
+        selected_fields = get_selected_fields(stream_mdata)
+        replication_key = "date"
+        state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
+        singer.write_state(state)
+
+        conversion_window = timedelta(
+            days=get_conversion_window(config)
+        )
+        conversion_window_date = utils.now().replace(hour=0, minute=0, second=0, microsecond=0) - conversion_window
+
+        bookmark_object = singer.get_bookmark(state, stream["tap_stream_id"], customer["customerId"], default={})
+
+        bookmark_value = bookmark_object.get(replication_key)
+
+        query_date = get_query_date(
+            start_date=config["start_date"],
+            bookmark=bookmark_value,
+            conversion_window_date=singer.utils.strftime(conversion_window_date)
+        )
+
+        end_date = config.get("end_date")
+        if end_date:
+            end_date = utils.strptime_to_utc(end_date)
+        else:
+            end_date = utils.now()
+
+        if stream_name in REPORTS_WITH_90_DAY_MAX:
+            cutoff = end_date.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=90)
+            query_date = max(query_date, cutoff)
+            if query_date == cutoff:
+                LOGGER.info(
+                    f"Stream: {stream_name} supports only 90 days of data. "
+                    f"Setting start date to {utils.strftime(query_date, '%Y-%m-%d')}."
+                )
+
+        while query_date <= end_date:
+            query = create_one_day_report_query(resource_name, selected_fields, query_date)
+            LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
+
+            try:
+                response = make_request(gas, query, customer["customerId"], config)
+            except GoogleAdsException as err:
+                LOGGER.warning("Failed query: %s", query)
+                LOGGER.critical(str(err.failure.errors[0].message))
+                raise RuntimeError from None
+
+
+            with Transformer() as transformer:
+                # Pages are fetched automatically while iterating through the response
+                for message in response:
+                    json_message = google_message_to_json(message)
+                    transformed_message = self.transform_keys(json_message)
+                    record = transformer.transform(transformed_message, stream["schema"])
+                    record["_sdc_record_hash"] = generate_hash(record, stream_mdata)
+
+                    singer.write_record(stream_name, record)
+
+            new_bookmark_value = {replication_key: utils.strftime(query_date)}
+            singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], new_bookmark_value)
+
+            singer.write_state(state)
+
+            query_date += timedelta(days=1)
+
+
 def initialize_core_streams(resource_schema):
     return {
         "accessible_bidding_strategies": BaseStream(
@@ -1019,7 +1098,7 @@ def initialize_reports(resource_schema):
                 "campaign_criterion_criterion_id",
             },
         ),
-        "click_performance_report": ReportStream(
+        "click_performance_report": OneDayResultsReportStream(
             report_definitions.CLICK_PERFORMANCE_REPORT_FIELDS,
             ["click_view"],
             resource_schema,

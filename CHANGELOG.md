@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.4
+  * Updates API Version to 11
+  * Updates pkg version to 17.0.0
+  * [#79](https://github.com/singer-io/tap-google-ads/pull/79)
+
 ## v1.3.3
   * Update applicable core streams to use limit clause. Updates tests [#68](https://github.com/singer-io/tap-google-ads/pull/68)
 

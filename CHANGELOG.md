@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.0
+  * Updates API version to 12
+  * Updates pkg version to 19.0.0
+  * Removes `gmail_ad` fields from `ad_performance_report` as they are no longer available after API version bump.
+  * [#76](https://github.com/singer-io/tap-google-ads/pull/76)
+
 ## v1.3.4
   * Updates API Version to 11
   * Updates pkg version to 17.0.0

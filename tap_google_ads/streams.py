@@ -14,7 +14,7 @@ from . import report_definitions
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v11"
+API_VERSION = "v12"
 
 API_PARAMETERS = {
     "omit_unselected_resource_names": "true"

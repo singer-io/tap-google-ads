@@ -30,6 +30,7 @@ class GoogleAdsBase(unittest.TestCase):
     REPLICATION_KEY_FORMAT = "%Y-%m-%dT00:00:00.000000Z"
 
     start_date = ""
+    end_date = "2022-03-15T00:00:00Z"
 
     @staticmethod
     def tap_name():
@@ -51,6 +52,7 @@ class GoogleAdsBase(unittest.TestCase):
         """Configurable properties, with a switch to override the 'start_date' property"""
         return_value = {
             'start_date':   '2021-12-01T00:00:00Z',
+            'end_date': self.end_date,
             'user_id':      'not used?',  # Useless config property carried over from AdWords
             'customer_ids': ','.join(self.get_customer_ids()),
             'query_limit': 2,

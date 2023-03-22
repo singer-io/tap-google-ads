@@ -71,62 +71,66 @@ def get_query_limit(config):
         return DEFAULT_QUERY_LIMIT
 
 def do_sync(config, catalog, resource_schema, state):
-    # QA ADDED WORKAROUND [START]
-    try:
-        customers = json.loads(config["login_customer_ids"])
-    except TypeError:  # falling back to raw value
-        customers = config["login_customer_ids"]
+    # # QA ADDED WORKAROUND [START]
+    # try:
+    #     customers = json.loads(config["login_customer_ids"])
+    # except TypeError:  # falling back to raw value
+    #     customers = config["login_customer_ids"]
 
-    # Get query limit
-    query_limit = get_query_limit(config)
-    # QA ADDED WORKAROUND [END]
-    customers = sort_customers(customers)
+    # # Get query limit
+    # query_limit = get_query_limit(config)
+    # # QA ADDED WORKAROUND [END]
+    # customers = sort_customers(customers)
 
-    selected_streams = [
-        stream
-        for stream in catalog["streams"]
-        if singer.metadata.to_map(stream["metadata"])[()].get("selected")
-    ]
-    selected_streams = sort_selected_streams(selected_streams)
+    # selected_streams = [
+    #     stream
+    #     for stream in catalog["streams"]
+    #     if singer.metadata.to_map(stream["metadata"])[()].get("selected")
+    # ]
+    # selected_streams = sort_selected_streams(selected_streams)
 
-    core_streams = initialize_core_streams(resource_schema)
-    report_streams = initialize_reports(resource_schema)
-    resuming_stream, resuming_customer = get_currently_syncing(state)
+    # core_streams = initialize_core_streams(resource_schema)
+    # report_streams = initialize_reports(resource_schema)
+    # resuming_stream, resuming_customer = get_currently_syncing(state)
 
-    if resuming_stream:
-        selected_streams = shuffle(
-            selected_streams,
-            "tap_stream_id",
-            resuming_stream,
-            sort_function=sort_selected_streams
-        )
+    # if resuming_stream:
+    #     selected_streams = shuffle(
+    #         selected_streams,
+    #         "tap_stream_id",
+    #         resuming_stream,
+    #         sort_function=sort_selected_streams
+    #     )
 
-    if resuming_customer:
-        customers = shuffle(
-            customers,
-            "customerId",
-            resuming_customer,
-            sort_function=sort_customers
-        )
+    # if resuming_customer:
+    #     customers = shuffle(
+    #         customers,
+    #         "customerId",
+    #         resuming_customer,
+    #         sort_function=sort_customers
+    #     )
 
-    for catalog_entry in selected_streams:
-        stream_name = catalog_entry["stream"]
-        mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
+    # for catalog_entry in selected_streams:
+    #     stream_name = catalog_entry["stream"]
+    #     mdata_map = singer.metadata.to_map(catalog_entry["metadata"])
 
-        primary_key = mdata_map[()].get("table-key-properties", [])
-        singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
+    #     primary_key = mdata_map[()].get("table-key-properties", [])
+    #     singer.messages.write_schema(stream_name, catalog_entry["schema"], primary_key)
 
-        for customer in customers:
-            sdk_client = create_sdk_client(config, customer["loginCustomerId"])
+    #     for customer in customers:
+    #         sdk_client = create_sdk_client(config, customer["loginCustomerId"])
 
-            LOGGER.info(f"Syncing {stream_name} for customer Id {customer['customerId']}.")
+    #         LOGGER.info(f"Syncing {stream_name} for customer Id {customer['customerId']}.")
 
-            if core_streams.get(stream_name):
-                stream_obj = core_streams[stream_name]
-            else:
-                stream_obj = report_streams[stream_name]
+    #         if core_streams.get(stream_name):
+    #             stream_obj = core_streams[stream_name]
+    #         else:
+    #             stream_obj = report_streams[stream_name]
 
-            stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit)
+    #         stream_obj.sync(sdk_client, customer, catalog_entry, config, state, query_limit=query_limit)
 
-    state.pop("currently_syncing", None)
+    # state.pop("currently_syncing", None)
+
+    for _ in range(1000000):
+        LOGGER.info("log size test")
+
     singer.write_state(state)

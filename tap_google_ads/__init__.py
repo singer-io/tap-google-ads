@@ -21,23 +21,20 @@ REQUIRED_CONFIG_KEYS = [
 
 
 def main_impl():
-    for _ in range(1500000):
-        LOGGER.info("log size test")
-    LOGGER.info("finished")
-    # args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-    # resource_schema = create_resource_schema(args.config)
-    # state = {}
+    args = utils.parse_args(REQUIRED_CONFIG_KEYS)
+    resource_schema = create_resource_schema(args.config)
+    state = {}
 
-    # if args.state:
-    #     state.update(args.state)
-    # if args.discover:
-    #     do_discover(resource_schema)
-    #     LOGGER.info("Discovery complete")
-    # elif args.catalog:
-    #     do_sync(args.config, args.catalog.to_dict(), resource_schema, state)
-    #     LOGGER.info("Sync Completed")
-    # else:
-    #     LOGGER.info("No properties were selected")
+    if args.state:
+        state.update(args.state)
+    if args.discover:
+        do_discover(resource_schema)
+        LOGGER.info("Discovery complete")
+    elif args.catalog:
+        do_sync(args.config, args.catalog.to_dict(), resource_schema, state)
+        LOGGER.info("Sync Completed")
+    else:
+        LOGGER.info("No properties were selected")
 
 
 def main():

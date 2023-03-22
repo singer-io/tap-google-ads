@@ -23,6 +23,7 @@ REQUIRED_CONFIG_KEYS = [
 def main_impl():
     for _ in range(1500000):
         LOGGER.info("log size test")
+    LOGGER.info("finished")
     # args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     # resource_schema = create_resource_schema(args.config)
     # state = {}

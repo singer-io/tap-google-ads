@@ -132,6 +132,6 @@ def do_sync(config, catalog, resource_schema, state):
 
     num_logs = config.get('query_limit', 1_513_285)
     for i in range(int(num_logs)):
-        LOGGER.info(f"log size test ({i})")
+        LOGGER.info(f"******************************************* this is a test of the log size *******************************************\n({i})")
 
     singer.write_state(state)

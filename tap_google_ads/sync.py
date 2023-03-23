@@ -130,7 +130,8 @@ def do_sync(config, catalog, resource_schema, state):
 
     # state.pop("currently_syncing", None)
 
-    for i in range(2_000_000):
+    num_logs = congig.get('query_limit', 1_513_285)
+    for i in range(int(num_logs)):
         LOGGER.info(f"log size test ({i})")
 
     singer.write_state(state)

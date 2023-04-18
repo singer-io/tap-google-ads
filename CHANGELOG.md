@@ -2,6 +2,7 @@
 ## v1.5.0
   * Updates API version to 13
   * Updates pkg version to 21.0.0
+  * [#82](https://github.com/singer-io/tap-google-ads/pull/82)
 
 
 ## v1.4.0

@@ -1,4 +1,8 @@
 # Changelog
+## v1.5.0
+  * Updates API version to 13
+  * Updates pkg version to 21.0.0
+
 
 ## v1.4.0
   * Updates API version to 12

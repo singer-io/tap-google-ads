@@ -976,6 +976,13 @@ def initialize_core_streams(resource_schema):
             },
             filter_param="feed_item.id"
         ),
+        "geo_constants": BaseStream(
+            report_definitions.GEO_CONSTANTS_FIELDS,
+            ["geo_target_constant"],
+            resource_schema,
+            ["id"],
+            filter_param="geo_target_constant.id"
+        ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
             ["label"],

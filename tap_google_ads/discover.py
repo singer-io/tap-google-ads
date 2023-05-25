@@ -34,6 +34,7 @@ STREAMS = [
     "feed_item_target",
     "feed_placeholder_view",
     "gender_view",
+    "geo_target_constant",
     "geographic_view",
     "keyword_view",
     "label",

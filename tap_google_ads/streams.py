@@ -230,7 +230,7 @@ def on_giveup_func(err):
 @backoff.on_exception(backoff.expo,
                       (GoogleAdsException,
                        ServerError, TooManyRequests,
-                        ReadTimeout,
+                       ReadTimeout,
                        AttributeError),
                       max_tries=5,
                       jitter=None,

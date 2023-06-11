@@ -12,7 +12,11 @@ class TesGoogleAdstPagination(GoogleAdsBase):
     def name():
         return "tt_google_ads_pagination"
 
-    def test_run(self):
+    def test_run(self,):
+        for _ in range(0,6):
+            self.run_test()
+
+    def run_test(self):
         """
         • Verify that for each stream you can get multiple pages of data.  
         This requires we ensure more than 1 page of data exists at all times for any given stream.

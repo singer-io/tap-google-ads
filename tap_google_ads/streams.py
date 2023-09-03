@@ -515,10 +515,9 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
     def add_account_name(self, customer, record):
         """Add account name to the record"""
 
-        return {
-            "Account name": customer["customerName"],
-            **record
-        }
+        record["Account name"] = customer["customerName"]
+
+        return record
 
 
 def get_query_date(start_date, bookmark, conversion_window_date):

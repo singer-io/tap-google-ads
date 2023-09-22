@@ -14,7 +14,7 @@ from . import report_definitions
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v13"
+API_VERSION = "v14"
 
 API_PARAMETERS = {
     "omit_unselected_resource_names": "true"
@@ -700,7 +700,9 @@ class ReportStream(BaseStream):
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
-        selected_fields = get_selected_fields(stream_mdata)
+        #selected_fields = get_selected_fields(stream_mdata)
+        selected_fields =[ field for field in self.fields if not field.startswith('segments') and not field.startswith('bidding_strategy') ]
+        
         replication_key = "date"
         state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
         singer.write_state(state)

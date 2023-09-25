@@ -287,11 +287,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         self.build_stream_metadata()
 
     
-    def get_custom_fields(self, fields_dict: dict, stream_name: str)  -> Optional[list]:
+    def get_custom_fields(self, fields_dict: Optional[dict], stream_name: str)  -> Optional[list]:
         """Getting custom fields of the stream
 
         Args:
-            fields (Optional[dics]): a dict with custon fields if defined
+            fields (Optional[dict]): a dict with custon fields if defined
             stream_name (str): the associated stream name
 
         Returns:

@@ -11,10 +11,11 @@ from google.api_core.exceptions import ServerError, TooManyRequests
 from requests.exceptions import ReadTimeout
 import backoff
 from . import report_definitions
+from typing import Optional
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v13"
+API_VERSION = "v14"
 
 API_PARAMETERS = {
     "omit_unselected_resource_names": "true"
@@ -84,10 +85,10 @@ def get_selected_fields(stream_mdata):
     for mdata in stream_mdata:
         if mdata["breadcrumb"]:
             inclusion = mdata["metadata"].get("inclusion")
-            selected = mdata["metadata"].get("selected")
+            selected = mdata["metadata"].get("selected", "true")
+            
             if utils.should_sync_field(inclusion, selected) and mdata["breadcrumb"][1] != "_sdc_record_hash":
                 selected_fields.update(mdata["metadata"]["tap-google-ads.api-field-names"])
-
     return selected_fields
 
 
@@ -285,6 +286,24 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
 
         self.build_stream_metadata()
 
+    
+    def get_custom_fields(self, fields_dict: Optional[dict], stream_name: str)  -> Optional[list]:
+        """Getting custom fields of the stream
+
+        Args:
+            fields (Optional[dict]): a dict with custon fields if defined
+            stream_name (str): the associated stream name
+
+        Returns:
+            Optional[list]: the list of fields of the given stream
+        """
+        custom_fields = None
+        if fields_dict and stream_name in fields_dict:
+            custom_fields = fields_dict.get( stream_name )
+        elif self.fields:
+            custom_fields = [ field for field in self.fields if not field.startswith('segments') and not field.startswith('bidding_strategy') ]
+                                    
+        return custom_fields
 
     def extract_field_information(self, resource_schema):
         self.field_exclusions = defaultdict(set)
@@ -426,7 +445,12 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
-        selected_fields = get_selected_fields(stream_mdata)
+        
+        if cf := self.get_custom_fields(config.get("fields"), stream_name):
+            selected_fields = cf
+        else: 
+            selected_fields = get_selected_fields(stream_mdata)
+        
         state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
         singer.write_state(state)
 
@@ -695,12 +719,21 @@ class ReportStream(BaseStream):
 
         return transformed_message
 
+    
+    
+        
+
     def sync(self, sdk_client, customer, stream, config, state, query_limit):
         gas = sdk_client.get_service("GoogleAdsService", version=API_VERSION)
         resource_name = self.google_ads_resource_names[0]
         stream_name = stream["stream"]
         stream_mdata = stream["metadata"]
-        selected_fields = get_selected_fields(stream_mdata)
+        
+        if cf := self.get_custom_fields(config.get("fields"), stream_name):
+            selected_fields = cf
+        else: 
+            selected_fields = get_selected_fields(stream_mdata)
+        
         replication_key = "date"
         state = singer.set_currently_syncing(state, [stream_name, customer["customerId"]])
         singer.write_state(state)

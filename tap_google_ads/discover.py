@@ -131,7 +131,7 @@ def build_resource_metadata(api_objects, resource):
         7: {"type": ["null", "integer"]},
         8: {"type": ["null", "integer"]},
         9: {"type": ["null", "object", "string"], "properties": {}},
-        10: {"type": ["null", "object", "string"], "properties": {}},
+        10: {"type": ["null", "string"], "properties": {}},
         11: {"type": ["null", "string"]},
         12: {"type": ["null", "integer"]},
     }

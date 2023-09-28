@@ -767,14 +767,6 @@ class ReportStream(BaseStream):
 
 def initialize_core_streams(resource_schema):
     return {
-        "accessible_bidding_strategies": BaseStream(
-            report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
-            ["accessible_bidding_strategy"],
-            resource_schema,
-            ["id"],
-            {"customer_id"},
-            filter_param="accessible_bidding_strategy.id"
-        ),
         "accounts": BaseStream(
             report_definitions.ACCOUNT_FIELDS,
             ["customer"],

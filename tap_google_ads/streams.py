@@ -754,7 +754,7 @@ class ReportStream(BaseStream):
                     transformed_message = self.transform_keys(json_message)
                     record = transformer.transform(transformed_message, stream["schema"])
                     record["_sdc_record_hash"] = generate_hash(record, stream_mdata)
- 
+
                     singer.write_record(stream_name, record)
 
             new_bookmark_value = {replication_key: utils.strftime(query_date)}

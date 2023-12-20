@@ -1,3 +1,4 @@
+#pylint: disable=unnecessary-comprehension
 from collections import defaultdict
 import json
 import hashlib

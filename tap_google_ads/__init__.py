@@ -8,7 +8,7 @@ from tap_google_ads.sync import do_sync
 
 
 LOGGER = singer.get_logger()
-
+logging.getLogger('google.ads.googleads.client').setLevel(logging.INFO)
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",

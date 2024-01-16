@@ -12,7 +12,7 @@ setup(name='tap-google-ads',
       install_requires=[
           'singer-python==6.0.0',
           'requests==2.26.0',
-          'backoff==1.8.0',
+          'backoff==2.2.1',
           'google-ads==22.1.0',
           'protobuf==4.24.4',
 

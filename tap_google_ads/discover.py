@@ -9,7 +9,8 @@ from tap_google_ads.streams import initialize_reports
 
 LOGGER = singer.get_logger()
 
-STREAMS = [
+STREAMS = ["campaign_asset",
+    "asset",
     "accessible_bidding_strategy",
     "ad_group",
     "ad_group_ad",

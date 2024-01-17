@@ -805,8 +805,8 @@ def initialize_core_streams(resource_schema):
             ["campaign_asset"],
             resource_schema,
             ["resource_name"],
-            {"customer_id"},
-            
+            {"customer_id",
+             "asset_id"}
         ),
         "asset": BaseStream(
             report_definitions.ASSET_FIELDS,

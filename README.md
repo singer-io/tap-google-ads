@@ -10,6 +10,8 @@ This tap:
 - Extracts the following resources from Google Ads
   - [Accessible Bidding Strategies](https://developers.google.com/google-ads/api/reference/rpc/v10/AccessibleBiddingStrategy)
   - [Accounts](https://developers.google.com/google-ads/api/reference/rpc/v10/Customer)
+  - [Asset](https://developers.google.com/google-ads/api/reference/rpc/v15/Asset)
+  - [Campaign Asset](https://developers.google.com/google-ads/api/reference/rpc/v15/CampaignAsset)
   - [Ad Groups](https://developers.google.com/google-ads/api/reference/rpc/v10/AdGroup)
   - [Ads](https://developers.google.com/google-ads/api/reference/rpc/v10/Ad)
   - [Bidding Strategies](https://developers.google.com/google-ads/api/reference/rpc/v10/BiddingStrategy)

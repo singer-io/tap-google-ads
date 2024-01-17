@@ -800,6 +800,22 @@ class ReportStream(BaseStream):
 
 def initialize_core_streams(resource_schema):
     return {
+        "campaign_asset": BaseStream(
+            report_definitions.CAMPAIGN_ASSET_FIELDS,
+            ["campaign_asset"],
+            resource_schema,
+            ["resource_name"],
+            {"customer_id",
+             "asset_id"}
+        ),
+        "asset": BaseStream(
+            report_definitions.ASSET_FIELDS,
+            ["asset"],
+            resource_schema,
+            ["id"],
+            {"customer_id"},
+            filter_param = "asset.id"
+        ),
         "accessible_bidding_strategies": BaseStream(
             report_definitions.ACCESSIBLE_BIDDING_STRATEGY_FIELDS,
             ["accessible_bidding_strategy"],

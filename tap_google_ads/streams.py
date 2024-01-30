@@ -499,7 +499,11 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                         json_message = google_message_to_json(message)
                         transformed_message = self.transform_keys(json_message)
                         record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
-                        singer.write_record(stream_name, record)
+                        time_extracted = utils.now()
+                        singer.write_record(
+                            stream_name=stream_name,
+                            record=record,
+                            time_extracted=time_extracted)
                         counter.increment()
                         num_rows = num_rows + 1
                         if stream_name in limit_not_possible:

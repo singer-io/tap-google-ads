@@ -15,7 +15,7 @@ from typing import Optional
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v14"
+API_VERSION = "v15"
 
 API_PARAMETERS = {
     "omit_unselected_resource_names": "true"
@@ -492,6 +492,7 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                     LOGGER.warning("Failed query: %s", query)
                     raise err
                 num_rows = 0
+                time_extracted = utils.now()
 
                 with Transformer() as transformer:
                     # Pages are fetched automatically while iterating through the response
@@ -499,7 +500,10 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                         json_message = google_message_to_json(message)
                         transformed_message = self.transform_keys(json_message)
                         record = transformer.transform(transformed_message, stream["schema"], singer.metadata.to_map(stream_mdata))
-                        singer.write_record(stream_name, record)
+                        singer.write_record(
+                            stream_name=stream_name,
+                            record=record,
+                            time_extracted=time_extracted)
                         counter.increment()
                         num_rows = num_rows + 1
                         if stream_name in limit_not_possible:

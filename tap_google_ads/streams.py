@@ -482,7 +482,8 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
         last_pk_fetched_value = last_pk_fetched.get('last_pk_fetched')
 
         with metrics.record_counter(stream_name) as counter:
-
+            
+            time_extracted = utils.now()
             # Loop until the last page.
             while is_more_records:
                 query = create_core_stream_query(resource_name, selected_fields, last_pk_fetched_value, self.filter_param, composite_pks, limit=limit)
@@ -492,7 +493,6 @@ class BaseStream:  # pylint: disable=too-many-instance-attributes
                     LOGGER.warning("Failed query: %s", query)
                     raise err
                 num_rows = 0
-                time_extracted = utils.now()
 
                 with Transformer() as transformer:
                     # Pages are fetched automatically while iterating through the response
@@ -775,6 +775,7 @@ class ReportStream(BaseStream):
         while query_date <= end_date:
             query = create_report_query(resource_name, selected_fields, query_date)
             LOGGER.info(f"Requesting {stream_name} data for {utils.strftime(query_date, '%Y-%m-%d')}.")
+            time_extracted = utils.now()
 
             try:
                 response = make_request(gas, query, customer["customerId"], config)
@@ -792,7 +793,10 @@ class ReportStream(BaseStream):
                     record = transformer.transform(transformed_message, stream["schema"])
                     record["_sdc_record_hash"] = generate_hash(record, stream_mdata)
 
-                    singer.write_record(stream_name, record)
+                    singer.write_record(
+                            stream_name=stream_name,
+                            record=record,
+                            time_extracted=time_extracted)
 
             new_bookmark_value = {replication_key: utils.strftime(query_date)}
             singer.write_bookmark(state, stream["tap_stream_id"], customer["customerId"], new_bookmark_value)

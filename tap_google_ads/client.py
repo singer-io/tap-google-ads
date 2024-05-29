@@ -39,6 +39,7 @@ class GoogleAdsClientServiceAccount(GoogleAdsClient):
 
 
 def create_sdk_client(config, login_customer_id=None):
+    # TODO Update function to handle service account loaded from environment variable string
     CONFIG = {
         "use_proto_plus": False,
         "developer_token": config["developer_token"],

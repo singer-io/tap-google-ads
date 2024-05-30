@@ -12,13 +12,10 @@ LOGGER = singer.get_logger()
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",
-    "oauth_client_id",
-    "oauth_client_secret",
-    "refresh_token",
-    "customer_ids",
+    "impersonated_email",
     "developer_token",
+    "auth_method"
 ]
-
 
 def main_impl():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)

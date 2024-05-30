@@ -1,11 +1,25 @@
 import os
+import json
 from google.ads.googleads.client import GoogleAdsClient
-from google.oauth2.service_account import Credentials as ServiceAccountCreds
+from google.oauth2 import service_account
 
 
 def get_service_account_credentials():
-    service_account_info = os.getenv["SERVICE_ACCOUNT_INFO_STRING"]
-    return ServiceAccountCreds.from_service_account_info(service_account_info)
+    """
+    Converts Service Account credentials as a string.
+
+    Returns:
+        A dict containing kwargs that will be provided to the
+        GoogleAdsClient initializer.
+
+    Raises:
+        ValueError: If the configuration lacks a required field.
+    """
+    service_account_info = os.getenv("SERVICE_ACCOUNT_INFO_STRING")
+    if service_account_info:
+        return service_account.Credentials.from_service_account_info(json.loads(service_account_info))
+    else:
+        raise ValueError("SERVICE_ACCOUNT_INFO_STRING environment variable not set")
 
 
 class GoogleAdsClientServiceAccount(GoogleAdsClient):
@@ -38,18 +52,36 @@ class GoogleAdsClientServiceAccount(GoogleAdsClient):
         }
 
 
-def create_sdk_client(config, login_customer_id=None):
-    # TODO Update function to handle service account loaded from environment variable string
-    CONFIG = {
-        "use_proto_plus": False,
-        "developer_token": config["developer_token"],
-        "client_id": config["oauth_client_id"],
-        "client_secret": config["oauth_client_secret"],
-        "refresh_token": config["refresh_token"],
-    }
+def create_sdk_client(config, login_customer_id=None, auth_method=None):
+    """
+    Determines configuration dictionary based on authentication method.
 
-    if login_customer_id:
-        CONFIG["login_customer_id"] = login_customer_id
+    Args:
+        config_data: a dict containing client configuration.
+
+    Returns:
+        GoogleAdsClient.
+    """
+
+    if config.get("auth_method") == "Service_Account":
+        CONFIG = {
+            "use_proto_plus": False,
+            "developer_token": config["developer_token"],
+            "json_key_file_path": get_service_account_credentials(),
+            "impersonated_email": config["impersonated_email"],
+        }
+
+    else:
+        CONFIG = {
+            "use_proto_plus": False,
+            "developer_token": config["developer_token"],
+            "client_id": config["oauth_client_id"],
+            "client_secret": config["oauth_client_secret"],
+            "refresh_token": config["refresh_token"],
+        }
+
+    # if login_customer_id:
+        # CONFIG["login_customer_id"] = login_customer_id
 
     sdk_client = GoogleAdsClient.load_from_dict(CONFIG)
     return sdk_client

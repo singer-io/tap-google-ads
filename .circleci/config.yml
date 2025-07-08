@@ -43,7 +43,7 @@ jobs:
             aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             source dev_env.sh
             echo "$PYLINT_DISABLE_LIST"
-            pylint tap_google_ads --disable "$PYLINT_DISABLE_LIST"
+            pylint tap_google_ads --disable "$PYLINT_DISABLE_LIST,too-many-positional-arguments"
       - slack/notify-on-failure:
           only_for_branches: main
 

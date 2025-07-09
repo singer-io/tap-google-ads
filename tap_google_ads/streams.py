@@ -15,7 +15,7 @@ from typing import Optional
 
 LOGGER = singer.get_logger()
 
-API_VERSION = "v18"
+API_VERSION = "v19"
 
 API_PARAMETERS = {
     "omit_unselected_resource_names": "true"

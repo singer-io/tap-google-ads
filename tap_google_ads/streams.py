@@ -877,25 +877,6 @@ def initialize_core_streams(resource_schema):
             ["id"],
            filter_param="carrier_constant.id"
         ),
-        "feed": BaseStream(
-            report_definitions.FEED_FIELDS,
-            ["feed"],
-            resource_schema,
-            ["id"],
-            {"customer_id"},
-            filter_param="feed.id"
-        ),
-        "feed_item": BaseStream(
-            report_definitions.FEED_ITEM_FIELDS,
-            ["feed_item"],
-            resource_schema,
-            ["id"],
-            {
-                "customer_id",
-                "feed_id",
-            },
-            filter_param="feed_item.id"
-        ),
         "labels": BaseStream(
             report_definitions.LABEL_FIELDS,
             ["label"],
@@ -1104,23 +1085,6 @@ def initialize_reports(resource_schema):
             resource_schema,
             ["_sdc_record_hash"],
             {"landing_page_view_unexpanded_final_url"},
-        ),
-        "placeholder_feed_item_report": ReportStream(
-            report_definitions.PLACEHOLDER_FEED_ITEM_REPORT_FIELDS,
-            ["feed_item"],
-            resource_schema,
-            ["_sdc_record_hash"],
-            {
-                "feed_id",
-                "feed_item_id",
-             }
-        ),
-        "placeholder_report": ReportStream(
-            report_definitions.PLACEHOLDER_REPORT_FIELDS,
-            ["feed_placeholder_view"],
-            resource_schema,
-            ["_sdc_record_hash"],
-            {"feed_placeholder_view_placeholder_type"},
         ),
         "placement_performance_report": ReportStream(
             report_definitions.PLACEMENT_PERFORMANCE_REPORT_FIELDS,

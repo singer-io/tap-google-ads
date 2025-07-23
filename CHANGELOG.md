@@ -7,6 +7,11 @@
   * Updates `singer-python` to 6.1.1
   * [#97](https://github.com/singer-io/tap-google-ads/pull/97)
 
+## v1.9.1
+  * Bump dependency versions for twistlock compliance
+  * Update circleci config to handle linting errors
+  * [#96](https://github.com/singer-io/tap-google-ads/pull/96)
+
 ## v1.9.0
   * Updates API version to 17
   * [#95](https://github.com/singer-io/tap-google-ads/pull/95)

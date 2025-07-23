@@ -118,6 +118,11 @@ class GoogleAdsBase(unittest.TestCase):
                     "customer_id",
                 },
             },
+            "assets": {
+                self.PRIMARY_KEYS: {"id"},
+                self.REPLICATION_METHOD: self.FULL_TABLE,
+                self.AUTOMATIC_KEYS: set(),
+            },
             "bidding_strategies": {
                 self.PRIMARY_KEYS:{"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,

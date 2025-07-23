@@ -816,6 +816,13 @@ def initialize_core_streams(resource_schema):
              },
             filter_param = "ad_group_ad.ad.id"
         ),
+        "assets": BaseStream(
+            report_definitions.ASSET_FIELDS,
+            ["asset"],
+            resource_schema,
+            ["id"],
+            filter_param="asset.id"
+        ),
         "bidding_strategies": BaseStream(
             report_definitions.BIDDING_STRATEGY_FIELDS,
             ["bidding_strategy"],

@@ -16,6 +16,7 @@ STREAMS = [
     "ad_group_criterion",
     "ad_group_audience_view",
     "age_range_view",
+    "asset",
     "bidding_strategy",
     "call_view",
     "campaign",

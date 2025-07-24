@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.0.0
+## v1.10.0
   * Updates API version to 20
   * Add new stream `assets`
   * Remove feed-related streams

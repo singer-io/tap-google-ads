@@ -56,6 +56,7 @@ class InterruptedSyncRemoveStreamTest(GoogleAdsBase):
                               'account_performance_report',
                               'search_query_performance_report',
                               'user_location_performance_report',
+                              'assets'
         }
 
         # Create connection using a recent start date

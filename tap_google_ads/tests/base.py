@@ -152,16 +152,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
             },
-            "PLACEHOLDER_FEED_ITEM_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
-            "PLACEHOLDER_REPORT": {
-                self.PRIMARY_KEYS: {"TODO"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-            },
             "PLACEMENT_PERFORMANCE_REPORT": {
                 self.PRIMARY_KEYS: {"TODO"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,

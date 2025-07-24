@@ -19,8 +19,6 @@ class FieldExclusion3(FieldExclusionGoogleAdsBase):
         "keywordless_query_report",
         "keywords_performance_report",
         "landing_page_report",
-        "placeholder_feed_item_report",
-        "placeholder_report",
      }
 
     def test_run(self):

@@ -60,12 +60,10 @@ def main_impl():
         LOGGER.info("Discovery complete")
     elif args.catalog:
         do_sync(args.config, args.catalog.to_dict(), resource_schema, state)
+        fail_connection(state)
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")
-
-    fail_connection(state)
-
 
 def main():
 

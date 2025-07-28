@@ -1,11 +1,10 @@
 # Changelog
 
-## v1.10.0
+## v2.0.0
   * Updates API version to 20
   * Add new stream `assets`
   * Remove feed-related streams
   * Updates pkg version to 27.0.0
-  * Updates `requests` to 2.32.4
   * Updates `singer-python` to 6.1.1
   * [#97](https://github.com/singer-io/tap-google-ads/pull/97)
 

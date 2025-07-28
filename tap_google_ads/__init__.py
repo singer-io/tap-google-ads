@@ -26,23 +26,28 @@ def fail_connection(state):
     Fail the connection once every 7 days to ensure customers are aware of the version deprecation.
     """
     today = datetime.datetime.now(datetime.timezone.utc)
-    
+
     # Get the last triggered date from state
     last_triggered_raw = state.get('last_exception_triggered')
     last_triggered_date = utils.strptime_with_tz(last_triggered_raw) if last_triggered_raw else None
+    iso_today = today.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    if not last_triggered_date or (today - last_triggered_date > datetime.timedelta(days=7)):
-        iso_today = today.strftime('%Y-%m-%dT%H:%M:%SZ')
-        state['last_exception_triggered'] = iso_today
-        singer.write_state(state)
+    if last_triggered_date and (today - last_triggered_date <= datetime.timedelta(days=7)):
+        return
 
+    state['last_exception_triggered'] = iso_today
+    singer.write_state(state)
+
+    if not last_triggered_date:
+        return
+    else:
         # Raise exception to trigger Stitch notification
         raise Exception(
             "Current version 1 of this integration is available till 2025-08-20 only."
             "Please upgrade to version 2 to ensure continued extraction."
         )
 
-    
+
 def main_impl():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
@@ -58,7 +63,7 @@ def main_impl():
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")
-    
+
     fail_connection(state)
 
 

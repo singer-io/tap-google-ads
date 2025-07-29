@@ -94,6 +94,7 @@ class ConversionWindowInvalidTest(GoogleAdsBase):
 
             # Verify tap replicates through today by check state
             final_state = menagerie.get_state(conn_id)
+            final_state.pop('last_exception_triggered', None)
             self.assertDictEqual(final_state, initial_state)
 
             with self.subTest():

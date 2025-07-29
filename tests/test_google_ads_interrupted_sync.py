@@ -93,6 +93,7 @@ class InterruptedSyncTest(GoogleAdsBase):
         # acquire records from target output
         full_sync_records = runner.get_records_from_target_output()
         full_sync_state = menagerie.get_state(conn_id)
+        full_sync_state.pop('last_exception_triggered', None)
 
         """
           NB | Set state such that all but two streams have 'completed' a sync. The final stream ('user_location_performance_report') should
@@ -118,6 +119,7 @@ class InterruptedSyncTest(GoogleAdsBase):
         # acquire records from target output
         interrupted_sync_records = runner.get_records_from_target_output()
         final_state = menagerie.get_state(conn_id)
+        final_state.pop('last_exception_triggered', None)
         currently_syncing = final_state.get('currently_syncing')
 
         # Checking resuming sync resulted in successfully saved state

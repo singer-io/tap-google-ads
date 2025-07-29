@@ -161,19 +161,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.FULL_TABLE,
                 self.AUTOMATIC_KEYS: set(),
             },
-            "feed": {
-                self.PRIMARY_KEYS: {"id"},
-                self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.AUTOMATIC_KEYS: {"customer_id"},
-            },
-            "feed_item": {
-                self.PRIMARY_KEYS: {"id"},
-                self.REPLICATION_METHOD: self.FULL_TABLE,
-                self.AUTOMATIC_KEYS: {
-                    "customer_id",
-                    "feed_id",
-                },
-            },
             "labels": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.FULL_TABLE,
@@ -350,15 +337,6 @@ class GoogleAdsBase(unittest.TestCase):
                 self.REPLICATION_METHOD: self.INCREMENTAL,
                 self.REPLICATION_KEYS: {"date"},
                 self.AUTOMATIC_KEYS: {"landing_page_view_unexpanded_final_url"},
-            },
-            "placeholder_feed_item_report": {  # "feed_item", "feed_item_target"
-                self.PRIMARY_KEYS: {"_sdc_record_hash"},
-                self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"date"},
-                self.AUTOMATIC_KEYS: {
-                    "feed_id",
-                    "feed_item_id",
-                },
             },
             "placeholder_report": { # "feed_placeholder_view"
                 self.PRIMARY_KEYS: {"_sdc_record_hash"},
@@ -829,11 +807,6 @@ class GoogleAdsBase(unittest.TestCase):
                 'view_through_conversions',  # View-through conv.,
                 'cost_per_conversion',  # Cost / conv.,
                 'ad_group_criterion_age_range', # 'Age',
-            },
-            'placeholder_feed_item_report': {
-                'clicks',
-                'impressions',
-                'placeholder_type',
             },
             'placeholder_report': {
                 'clicks',

@@ -23,7 +23,7 @@ REQUIRED_CONFIG_KEYS = [
 
 def fail_connection(state):
     """
-    Fail the connection once every 7 days to ensure customers are aware of the version deprecation.
+    Fail the connection once every 3 days to ensure customers are aware of the version deprecation.
     """
     today = datetime.datetime.now(datetime.timezone.utc)
 
@@ -32,7 +32,7 @@ def fail_connection(state):
     last_triggered_date = utils.strptime_with_tz(last_triggered_raw) if last_triggered_raw else None
     iso_today = today.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    if last_triggered_date and (today - last_triggered_date <= datetime.timedelta(days=7)):
+    if last_triggered_date and (today - last_triggered_date <= datetime.timedelta(days=3)):
         return
 
     state['last_exception_triggered'] = iso_today

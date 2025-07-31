@@ -36,7 +36,6 @@ def main_impl():
     else:
         LOGGER.info("No properties were selected")
 
-
 def main():
 
     google_logger = logging.getLogger("google")

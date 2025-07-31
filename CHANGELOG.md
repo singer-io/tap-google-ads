@@ -8,6 +8,9 @@
   * Updates `singer-python` to 6.1.1
   * [#97](https://github.com/singer-io/tap-google-ads/pull/97)
 
+## v1.10.0
+  * Fail the connection once every 3 days to ensure customers are aware of the version deprecation. [#100](https://github.com/singer-io/tap-google-ads/pull/100)
+
 ## v1.9.1
   * Bump dependency versions for twistlock compliance
   * Update circleci config to handle linting errors

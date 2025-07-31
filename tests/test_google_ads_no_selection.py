@@ -45,4 +45,5 @@ class NoStreamsSelected(GoogleAdsBase):
 
         # Verify state is empty
         state = menagerie.get_state(conn_id)
+        state.pop('last_exception_triggered', None)
         self.assertDictEqual(dict(), state)

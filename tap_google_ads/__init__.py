@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import singer
+import datetime
 from singer import utils
 from tap_google_ads.discover import create_resource_schema
 from tap_google_ads.discover import do_discover
@@ -20,6 +21,34 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
+def fail_connection(state):
+    """
+    Fail the connection once every 3 days to ensure customers are aware of the version deprecation.
+    """
+    today = datetime.datetime.now(datetime.timezone.utc)
+
+    # Get the last triggered date from state
+    last_triggered_raw = state.get('last_exception_triggered')
+    last_triggered_date = utils.strptime_with_tz(last_triggered_raw) if last_triggered_raw else None
+    iso_today = today.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    if last_triggered_date and (today - last_triggered_date <= datetime.timedelta(days=3)):
+        return
+
+    state['last_exception_triggered'] = iso_today
+    singer.write_state(state)
+
+    if not last_triggered_date:
+        return
+    else:
+        raise Exception(
+            "Google Ads API v18 will be deprecated on August 20, 2025. " \
+            "Starting from this date, all connections running on tap-google-ads v1 will fail. " \
+            "To avoid disruptions, please upgrade to v2 as soon as possible. " \
+            "If you have any questions or need assistance, feel free to contact support."
+        )
+
+
 def main_impl():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
     resource_schema = create_resource_schema(args.config)
@@ -32,10 +61,10 @@ def main_impl():
         LOGGER.info("Discovery complete")
     elif args.catalog:
         do_sync(args.config, args.catalog.to_dict(), resource_schema, state)
+        fail_connection(state)
         LOGGER.info("Sync Completed")
     else:
         LOGGER.info("No properties were selected")
-
 
 def main():
 

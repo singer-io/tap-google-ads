@@ -43,9 +43,9 @@ def fail_connection(state):
     else:
         # Raise exception to trigger Stitch notification
         raise Exception(
-            "Google Ads API v18 will be deprecated on August 20, 2025." \
-            "Starting from this date, all connections using tap version v1.10.0 will fail." \
-            "To avoid disruptions, please upgrade to v2.0.0 as soon as possible." \
+            "Google Ads API v18 will be deprecated on August 20, 2025. " \
+            "Starting from this date, all connections running on tap-google-ads v1 will fail. " \
+            "To avoid disruptions, please upgrade to v2 as soon as possible. " \
             "If you have any questions or need assistance, feel free to contact support."
         )
 

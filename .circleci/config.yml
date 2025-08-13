@@ -27,23 +27,18 @@ jobs:
       - slack/notify-on-failure:
           only_for_branches: main
       - persist_to_workspace:
-          root: /usr/local/share/virtualenvs
+          root: /
           paths:
-            - tap-google-ads
-      - persist_to_workspace:
-          root: /root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu
-          paths:
-            - bin
-            - lib
+            - root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu/bin
+            - root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu/lib
+            - usr/local/share/virtualenvs/tap-google-ads
 
   run_pylint:
     executor: docker-executor
     steps:
       - checkout
       - attach_workspace:
-          at: /usr/local/share/virtualenvs
-      - attach_workspace:
-          at: /root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu
+          at: /
       - run:
           name: 'Run pylint'
           command: |
@@ -62,7 +57,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /usr/local/share/virtualenvs
+          at: /
       - run:
           name: 'Run Unit Tests'
           command: |
@@ -82,7 +77,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /usr/local/share/virtualenvs
+          at: /
       - run:
           name: 'Run Integration Tests'
           no_output_timeout: 30m

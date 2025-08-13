@@ -30,8 +30,7 @@ jobs:
       - persist_to_workspace:
           root: /
           paths:
-            - root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu/bin
-            - root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu/lib
+            - root/.local/share/uv/python
             - usr/local/share/virtualenvs/tap-google-ads
 
   run_pylint:

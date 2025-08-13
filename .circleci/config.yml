@@ -34,6 +34,7 @@ jobs:
           root: /root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu
           paths:
             - bin
+            - lib
 
   run_pylint:
     executor: docker-executor

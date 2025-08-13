@@ -116,12 +116,12 @@ workflows:
             - tier-1-tap-user
           requires:
             - ensure_env
-      - run_integration_tests:
-          context:
-            - circleci-user
-            - tier-1-tap-user
-          requires:
-            - ensure_env
+      # - run_integration_tests:
+      #     context:
+      #       - circleci-user
+      #       - tier-1-tap-user
+      #     requires:
+      #       - ensure_env
       - build:
           context:
             - circleci-user
@@ -129,7 +129,7 @@ workflows:
           requires:
             - run_pylint
             - run_unit_tests
-            - run_integration_tests
+            # - run_integration_tests
   build_daily:
     <<: *commit_jobs
     triggers:

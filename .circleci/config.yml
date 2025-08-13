@@ -30,12 +30,19 @@ jobs:
           root: /usr/local/share/virtualenvs
           paths:
             - tap-google-ads
+      - persist_to_workspace:
+          root: /root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu
+          paths:
+            - bin
+
   run_pylint:
     executor: docker-executor
     steps:
       - checkout
       - attach_workspace:
           at: /usr/local/share/virtualenvs
+      - attach_workspace:
+          at: /root/.local/share/uv/python/cpython-3.11.13-linux-x86_64-gnu
       - run:
           name: 'Run pylint'
           command: |

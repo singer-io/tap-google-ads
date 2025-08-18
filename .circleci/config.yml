@@ -5,7 +5,7 @@ orbs:
 executors:
   docker-executor:
     docker:
-      - image: 218546966473.dkr.ecr.us-east-1.amazonaws.com/circle-ci:stitch-tap-tester
+      - image: 218546966473.dkr.ecr.us-east-1.amazonaws.com/circle-ci:stitch-tap-tester-uv
 
 jobs:
   build:
@@ -19,23 +19,26 @@ jobs:
       - run:
           name: 'Setup virtual env'
           command: |
-            python3 -mvenv /usr/local/share/virtualenvs/tap-google-ads
+            uv venv --python 3.11 /usr/local/share/virtualenvs/tap-google-ads
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
-            pip install 'pip==23.3.2'
-            pip install 'setuptools==56.0.0'
-            pip install .[dev]
+            uv pip install 'pip==23.3.2'
+            uv pip install 'setuptools==56.0.0'
+            uv pip install .[dev]
+            uv pip install awscli --upgrade
       - slack/notify-on-failure:
           only_for_branches: main
       - persist_to_workspace:
-          root: /usr/local/share/virtualenvs
+          root: /
           paths:
-            - tap-google-ads
+            - root/.local/share/uv/python
+            - usr/local/share/virtualenvs/tap-google-ads
+
   run_pylint:
     executor: docker-executor
     steps:
       - checkout
       - attach_workspace:
-          at: /usr/local/share/virtualenvs
+          at: /
       - run:
           name: 'Run pylint'
           command: |
@@ -43,6 +46,7 @@ jobs:
             aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             source dev_env.sh
             echo "$PYLINT_DISABLE_LIST"
+            uv pip install pylint
             pylint tap_google_ads --disable "$PYLINT_DISABLE_LIST,too-many-positional-arguments"
       - slack/notify-on-failure:
           only_for_branches: main
@@ -52,13 +56,14 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /usr/local/share/virtualenvs
+          at: /
       - run:
           name: 'Run Unit Tests'
           command: |
             source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
-            pip install nose2
-            nose2 -v -s tests/unittests
+            uv pip install pytest coverage
+            coverage run -m pytest tests/unittests
+            coverage html
       - store_test_results:
           path: test_output/report.xml
       - store_artifacts:
@@ -72,11 +77,12 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /usr/local/share/virtualenvs
+          at: /
       - run:
           name: 'Run Integration Tests'
           no_output_timeout: 30m
           command: |
+            source /usr/local/share/virtualenvs/tap-google-ads/bin/activate
             aws s3 cp s3://com-stitchdata-dev-deployment-assets/environments/tap-tester/tap_tester_sandbox dev_env.sh
             source dev_env.sh
             mkdir /tmp/${CIRCLE_PROJECT_REPONAME}

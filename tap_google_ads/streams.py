@@ -7,7 +7,7 @@ from singer import Transformer
 from singer import utils, metrics
 from google.protobuf.json_format import MessageToJson
 from google.ads.googleads.errors import GoogleAdsException
-from google.api_core.exceptions import ServerError, TooManyRequests
+from google.api_core.exceptions import ServerError, TooManyRequests, Unauthorized
 from requests.exceptions import ReadTimeout
 import backoff
 from . import report_definitions
@@ -237,6 +237,7 @@ def on_giveup_func(err):
                       giveup=should_give_up,
                       on_giveup=on_giveup_func,
                       logger=None)
+@backoff.on_exception(backoff.expo, Unauthorized, max_tries=5, jitter=None,logger=None)
 def make_request(gas, query, customer_id, config=None):
     if config is None:
         config = {}

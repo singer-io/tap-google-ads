@@ -20,7 +20,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
     def test_501_not_implemented_error(self, mock_sleep):
         """
@@ -35,7 +35,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
     def test_502_bad_gaetway_error(self, mock_sleep):
         """
@@ -50,7 +50,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
     def test_503_service_unavailable_error(self, mock_sleep):
         """
@@ -65,7 +65,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
     def test_504_gateway_timeout_error(self, mock_sleep):
         """
@@ -80,7 +80,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
     def test_429_too_may_request_error(self, mock_sleep):
         """
@@ -95,7 +95,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
     def test_read_timeout_error(self, mock_sleep):
         """
@@ -110,7 +110,7 @@ class TestBackoff(unittest.TestCase):
             pass
 
         # Verify that tap backoff for 5 times
-        self.assertEquals(mocked_google_ads_client.search.call_count, 5)
+        self.assertEqual(mocked_google_ads_client.search.call_count, 5)
 
 if __name__ == '__main__':
     unittest.main()

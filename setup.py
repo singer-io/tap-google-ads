@@ -23,8 +23,8 @@ setup(name='tap-google-ads',
       extras_require= {
           'dev': [
               'pylint',
-              'nose',
               'ipdb',
+              'setuptools',
           ]
       },
       entry_points='''

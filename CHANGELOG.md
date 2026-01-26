@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.0.1
+  * Bump dependency versions for dependabot issue [#104](https://github.com/singer-io/tap-google-ads/pull/104)
+
 ## v2.0.0
   * Updates API version to 20
   * Add new stream `assets`

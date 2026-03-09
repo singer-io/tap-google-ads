@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.0.2
+  * Bump protobuf for dependabot issue [#105](https://github.com/singer-io/tap-google-ads/pull/105)
+
 ## v2.0.1
   * Bump dependency versions for dependabot issue [#104](https://github.com/singer-io/tap-google-ads/pull/104)
 

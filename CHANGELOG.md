@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.1.0
+  * Upgrade Google Ads API version from v20 to v24
+  * Upgrade `google-ads` SDK from 27.0.0 to 30.1.0
+  * Rename metrics deprecated in v22:
+    - `metrics.average_cpv` → `metrics.trueview_average_cpv`
+    - `metrics.video_view_rate` → `metrics.video_trueview_view_rate`
+    - `metrics.video_views` → `metrics.video_trueview_views`
+  * Remove `call_ad` fields from ad_performance_report (CallAd removed in v23)
+  * Remove `campaign.video_brand_safety_suitability` field (moved to Customer level in v24)
+  * Remove unused `CallAdInfo` schema definition
+  * Rename `campaign.start_date` → `campaign.start_date_time` and `campaign.end_date` → `campaign.end_date_time` (replaced in v23, removed in v24)
+  * Add new conversion-date metrics and competitive metrics to shopping_performance_report (added in v23)
+  * Add `segments.conversion_attribution_event_type` to shopping_performance_report (added in v24)
+  * Add new conversion-date metrics to geo_performance_report and user_location_performance_report (added in v23)
+
 ## v2.0.2
   * Bump protobuf for dependabot issue [#105](https://github.com/singer-io/tap-google-ads/pull/105)
 

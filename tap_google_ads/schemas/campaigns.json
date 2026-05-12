@@ -65,7 +65,8 @@
       "type": [
         "null",
         "string"
-      ]
+      ],
+      "format": "date-time"
     },
     "excludedParentAssetFieldTypes": {
       "type": [
@@ -195,7 +196,8 @@
       "type": [
         "null",
         "string"
-      ]
+      ],
+      "format": "date-time"
     },
     "status": {
       "type": [
@@ -247,6 +249,12 @@
     },
     "vanityPharma": {
       "$ref": "#/definitions/VanityPharma"
+    },
+    "videoBrandSafetySuitability": {
+      "type": [
+        "null",
+        "string"
+      ]
     },
     "definitions": {
       "AppCampaignSetting": {

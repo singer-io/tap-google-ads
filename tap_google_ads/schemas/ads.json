@@ -19,6 +19,9 @@
     "appPreRegistrationAd": {
       "$ref": "#/definitions/AppPreRegistrationAdInfo"
     },
+    "callAd": {
+      "$ref": "#/definitions/CallAdInfo"
+    },
     "devicePreference": {
       "type": [
         "null",
@@ -621,6 +624,98 @@
             "items": {
               "$ref": "#/definitions/AdVideoAsset"
             }
+          }
+        }
+      },
+      "CallAdInfo": {
+        "type": [
+          "null",
+          "object"
+        ],
+        "properties": {
+          "businessName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "callTracked": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "conversionAction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conversionReportingState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "countryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description1": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description2": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disableCallConversion": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "headline1": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "headline2": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "path1": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "path2": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phoneNumberVerificationUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

@@ -15,10 +15,6 @@ setup(name='tap-google-ads',
           'backoff==2.2.1',
           'google-ads==30.1.0',
           'protobuf==6.33.6',
-
-          # Necessary to handle gRPC exceptions properly, documented
-          # in an issue here: https://github.com/googleapis/python-api-core/issues/301
-          'grpcio-status==1.73.1',
       ],
       extras_require= {
           'dev': [
